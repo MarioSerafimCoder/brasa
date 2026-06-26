@@ -1,0 +1,129 @@
+/* ==========================================================
+   BRasa Design System
+   Version: 1.0
+========================================================== */
+
+:root {
+
+    /* ======================================================
+       COLORS
+    ====================================================== */
+
+    --color-primary: #F97316;
+    --color-primary-hover: #FB923C;
+    --color-primary-dark: #C2410C;
+
+    --color-white: #FFFFFF;
+    --color-black: #000000;
+
+    --bg-primary: #080808;
+    --bg-secondary: #101010;
+    --bg-surface: #181818;
+
+    --glass: rgba(255,255,255,.05);
+    --glass-hover: rgba(255,255,255,.08);
+
+    --border: rgba(255,255,255,.08);
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #C8C8C8;
+    --text-muted: #777777;
+
+    --success: #22C55E;
+    --warning: #FACC15;
+    --danger: #EF4444;
+
+    /* ======================================================
+       SHADOWS
+    ====================================================== */
+
+    --shadow-sm: 0 6px 18px rgba(0,0,0,.20);
+
+    --shadow-md: 0 12px 30px rgba(0,0,0,.35);
+
+    --shadow-lg: 0 18px 45px rgba(0,0,0,.45);
+
+    /* ======================================================
+       GLASS EFFECT
+    ====================================================== */
+
+    --glass-blur: blur(18px);
+
+    /* ======================================================
+       BORDER RADIUS
+    ====================================================== */
+
+    --radius-xs: 8px;
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 28px;
+    --radius-xl: 36px;
+
+    /* ======================================================
+       SPACING
+    ====================================================== */
+
+    --space-xs: .5rem;
+    --space-sm: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+    --space-2xl: 5rem;
+
+    /* ======================================================
+       TRANSITIONS
+    ====================================================== */
+
+    --transition-fast: .18s ease;
+
+    --transition: .28s ease;
+
+    --transition-slow: .45s ease;
+
+    /* ======================================================
+       TYPOGRAPHY
+    ====================================================== */
+
+    --font-family:
+        "Inter",
+        sans-serif;
+
+    --font-size-xs: .75rem;
+
+    --font-size-sm: .875rem;
+
+    --font-size-md: 1rem;
+
+    --font-size-lg: 1.25rem;
+
+    --font-size-xl: 2rem;
+
+    --font-size-2xl: 3rem;
+
+    --font-weight-regular: 400;
+
+    --font-weight-medium: 500;
+
+    --font-weight-semibold: 600;
+
+    --font-weight-bold: 700;
+
+    /* ======================================================
+       LAYOUT
+    ====================================================== */
+
+    --sidebar-width: 270px;
+
+    --header-height: 82px;
+
+    --container-width: 1600px;
+
+    /* ======================================================
+       MOVIE CARD
+    ====================================================== */
+
+    --movie-width: 190px;
+
+    --movie-height: 285px;
+
+}
