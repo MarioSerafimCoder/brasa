@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRasa • Buscar</title>
+    <title>BRasa • Filmes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,8 +17,8 @@
             <div class="page-sidebar__logo">BRasa</div>
             <nav>
                 <a href="../index.html"><i data-lucide="house"></i>Início</a>
-                <a class="active" href="search.html"><i data-lucide="search"></i>Buscar</a>
-                <a href="movies.html"><i data-lucide="film"></i>Filmes</a>
+                <a href="search.html"><i data-lucide="search"></i>Buscar</a>
+                <a class="active" href="movies.html"><i data-lucide="film"></i>Filmes</a>
                 <a href="#"><i data-lucide="tv"></i>Séries</a>
                 <button class="page-sidebar__sync" type="button" data-library-sync><i data-lucide="refresh-cw"></i><span>Atualizar</span></button>
                 <a href="settings.html"><i data-lucide="settings"></i>Configurações</a>
@@ -29,18 +29,13 @@
             <section class="library-page">
                 <header class="library-header">
                     <div>
-                        <p class="library-kicker">Busca</p>
-                        <h1 class="library-title">Encontre seu próximo filme</h1>
-                        <p class="library-subtitle">Pesquise por título, ano, gênero ou sinopse dentro da sua biblioteca local.</p>
+                        <p class="library-kicker">Filmes</p>
+                        <h1 class="library-title">Biblioteca</h1>
+                        <p class="library-subtitle">Por padrão, os filmes aparecem do mais recente adicionado para o mais antigo.</p>
                     </div>
                 </header>
 
                 <div class="library-tools">
-                    <label class="search-box">
-                        <i data-lucide="search"></i>
-                        <input id="searchInput" type="search" placeholder="Buscar no BRasa..." autocomplete="off" autofocus>
-                    </label>
-
                     <label class="filter-control">
                         <span>Gênero</span>
                         <span class="select-shell">
@@ -66,6 +61,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" src="../js/pages/search.js"></script>
+    <script type="module" src="../js/pages/movies.js"></script>
 </body>
 </html>

@@ -11,7 +11,6 @@ import {
 applyPreferences();
 
 const movies = getMovies();
-const searchInput = document.getElementById("searchInput");
 const genreFilter = document.getElementById("genreFilter");
 const sortFilter = document.getElementById("sortFilter");
 const movieGrid = document.getElementById("movieGrid");
@@ -37,7 +36,6 @@ function fillGenres() {
 }
 
 function bindEvents() {
-    searchInput.addEventListener("input", render);
     genreFilter.addEventListener("change", render);
     sortFilter.addEventListener("change", render);
     bindMovieGridNavigation(movieGrid);
@@ -47,7 +45,6 @@ function render() {
     renderMovieGrid(
         movieGrid,
         filterMovies(movies, {
-            query: searchInput.value,
             genre: genreFilter.value,
             sort: sortFilter.value
         })

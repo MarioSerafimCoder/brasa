@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRasa • Configurações</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/library.css">
+    <link rel="stylesheet" href="../css/settings.css">
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="page-sidebar">
+            <div class="page-sidebar__logo">BRasa</div>
+            <nav>
+                <a href="../index.html"><i data-lucide="house"></i>Início</a>
+                <a href="search.html"><i data-lucide="search"></i>Buscar</a>
+                <a href="movies.html"><i data-lucide="film"></i>Filmes</a>
+                <a href="#"><i data-lucide="tv"></i>Séries</a>
+                <button class="page-sidebar__sync" type="button" data-library-sync><i data-lucide="refresh-cw"></i><span>Atualizar</span></button>
+                <a class="active" href="settings.html"><i data-lucide="settings"></i>Configurações</a>
+            </nav>
+        </aside>
+
+        <main class="page-main">
+            <section class="settings-page">
+                <header class="settings-header">
+                    <h1>Configurações</h1>
+                    <p>Preferências salvas neste navegador para deixar o BRasa com o seu jeito.</p>
+                </header>
+
+                <div class="settings-grid">
+                    <section class="settings-section">
+                        <h2>Aparência</h2>
+                        <div class="settings-options">
+                            <div class="setting-field" data-setting="theme" data-type="radio">
+                                <span>Tema</span>
+                                <div class="choice-row">
+                                    <label><input type="radio" name="theme" value="light"> Claro</label>
+                                    <label><input type="radio" name="theme" value="dark"> Escuro</label>
+                                    <label><input type="radio" name="theme" value="auto"> Automático</label>
+                                </div>
+                            </div>
+
+                            <label class="setting-field">
+                                <span>Cor de destaque</span>
+                                <select data-setting="accent">
+                                    <option value="brasa">Vermelho BRasa</option>
+                                    <option value="blue">Azul</option>
+                                    <option value="green">Verde</option>
+                                    <option value="purple">Roxo</option>
+                                    <option value="orange">Laranja</option>
+                                </select>
+                                <p class="settings-note">Serve apenas para botões e destaques.</p>
+                            </label>
+
+                            <label class="setting-field">
+                                <span>Tamanho da interface</span>
+                                <select data-setting="density">
+                                    <option value="compact">Compacta</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="comfortable">Confortável</option>
+                                </select>
+                            </label>
+
+                            <label class="setting-field">
+                                <span>Estilo dos pôsteres</span>
+                                <select data-setting="posterStyle">
+                                    <option value="poster">Apenas pôster</option>
+                                    <option value="poster-info">Pôster + informações</option>
+                                    <option value="compact-grid">Grid compacto</option>
+                                </select>
+                            </label>
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h2>Reprodução</h2>
+                        <div class="settings-options">
+                            <label class="toggle-row">
+                                <input type="checkbox" data-setting="skipIntro">
+                                Pular abertura automaticamente
+                            </label>
+                            <label class="toggle-row">
+                                <input type="checkbox" data-setting="skipCredits">
+                                Pular créditos automaticamente
+                            </label>
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h2>Legendas</h2>
+                        <div class="settings-options">
+                            <label class="setting-field">
+                                <span>Idioma padrão</span>
+                                <select data-setting="subtitleLanguage">
+                                    <option value="pt-br">Português Brasil</option>
+                                    <option value="en">English</option>
+                                    <option value="off">Desativadas</option>
+                                </select>
+                            </label>
+                            <label class="setting-field">
+                                <span>Tamanho</span>
+                                <select data-setting="subtitleSize">
+                                    <option value="small">Pequena</option>
+                                    <option value="medium">Média</option>
+                                    <option value="large">Grande</option>
+                                    <option value="xlarge">Extra</option>
+                                </select>
+                            </label>
+                            <label class="setting-field">
+                                <span>Fonte</span>
+                                <select data-setting="subtitleFont">
+                                    <option value="Inter">Inter</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Verdana">Verdana</option>
+                                    <option value="Georgia">Georgia</option>
+                                </select>
+                            </label>
+                            <label class="setting-field">
+                                <span>Cor</span>
+                                <input type="color" data-setting="subtitleColor">
+                            </label>
+                            <label class="setting-field">
+                                <span>Fundo</span>
+                                <input type="color" data-setting="subtitleBackground">
+                            </label>
+                            <label class="setting-field">
+                                <span>Opacidade</span>
+                                <input type="range" min="0" max="100" data-setting="subtitleOpacity">
+                            </label>
+                            <label class="toggle-row">
+                                <input type="checkbox" data-setting="subtitleOutline">
+                                Contorno
+                            </label>
+                            <label class="setting-field">
+                                <span>Posição</span>
+                                <select data-setting="subtitlePosition">
+                                    <option value="bottom">Inferior</option>
+                                    <option value="middle">Meio</option>
+                                    <option value="top">Superior</option>
+                                </select>
+                            </label>
+                            <label class="setting-field">
+                                <span>Sincronização (+/- segundos)</span>
+                                <input type="number" step="0.5" data-setting="subtitleSync">
+                            </label>
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h2>Áudio</h2>
+                        <div class="settings-options">
+                            <label class="setting-field">
+                                <span>Idioma padrão</span>
+                                <select data-setting="audioLanguage">
+                                    <option value="original">Original</option>
+                                    <option value="pt-br">Português Brasil</option>
+                                    <option value="en">English</option>
+                                </select>
+                            </label>
+                            <label class="setting-field">
+                                <span>Volume máximo</span>
+                                <input type="range" min="10" max="100" data-setting="maxVolume">
+                            </label>
+                            <label class="toggle-row">
+                                <input type="checkbox" data-setting="normalizeVolume">
+                                Normalizar volume
+                            </label>
+                            <label class="toggle-row">
+                                <input type="checkbox" data-setting="preferSurround">
+                                Preferir surround quando disponível
+                            </label>
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h2>Biblioteca</h2>
+                        <div class="settings-options">
+                            <label class="setting-field">
+                                <span>Escolher como exibir</span>
+                                <select data-setting="libraryView">
+                                    <option value="grid">Grid</option>
+                                    <option value="list">Lista</option>
+                                </select>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script type="module" src="../js/pages/settings.js"></script>
+</body>
+</html>

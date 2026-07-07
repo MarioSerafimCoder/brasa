@@ -16,7 +16,7 @@ export default function Sidebar() {
 
                     <li class="active">
 
-                        <a href="#">
+                        <a href="index.html">
 
                             <i data-lucide="house"></i>
 
@@ -28,11 +28,11 @@ export default function Sidebar() {
 
                     <li>
 
-                        <a href="#">
+                        <a href="pages/search.html">
 
                             <i data-lucide="search"></i>
 
-                            <span>Explorar</span>
+                            <span>Buscar</span>
 
                         </a>
 
@@ -40,7 +40,7 @@ export default function Sidebar() {
 
                     <li>
 
-                        <a href="#">
+                        <a href="pages/movies.html">
 
                             <i data-lucide="film"></i>
 
@@ -54,6 +54,18 @@ export default function Sidebar() {
 
                         <a href="#">
 
+                            <i data-lucide="tv"></i>
+
+                            <span>Séries</span>
+
+                        </a>
+
+                    </li>
+
+                    <li>
+
+                        <a href="#content">
+
                             <i data-lucide="heart"></i>
 
                             <span>Favoritos</span>
@@ -64,7 +76,19 @@ export default function Sidebar() {
 
                     <li>
 
-                        <a href="#">
+                        <button class="sidebar__sync" type="button" data-library-sync>
+
+                            <i data-lucide="refresh-cw"></i>
+
+                            <span>Atualizar</span>
+
+                        </button>
+
+                    </li>
+
+                    <li>
+
+                        <a href="pages/collection.html">
 
                             <i data-lucide="library"></i>
 
@@ -80,7 +104,7 @@ export default function Sidebar() {
 
             <div class="sidebar__footer">
 
-                <a href="#">
+                <a href="pages/settings.html">
 
                     <i data-lucide="settings"></i>
 

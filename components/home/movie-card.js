@@ -19,7 +19,9 @@ export default function MovieCard({
 
     progress = 0,
 
-    favorite = false
+    favorite = false,
+
+    video = ""
 
 } = {}) {
 
@@ -27,7 +29,10 @@ export default function MovieCard({
 
         <article
             class="movie-card"
-            data-movie-id="${id}">
+            data-movie-id="${id}"
+            role="button"
+            tabindex="0"
+            aria-label="Abrir ${title}">
 
             <div class="movie-card__poster">
 
@@ -45,7 +50,7 @@ export default function MovieCard({
                             class="movie-card__button movie-card__button--play"
                             data-action="play"
                             data-movie-id="${id}"
-                            aria-label="Assistir">
+                            aria-label="Assistir ${title}">
 
                             <i data-lucide="play"></i>
 
@@ -55,7 +60,7 @@ export default function MovieCard({
                             class="movie-card__button"
                             data-action="details"
                             data-movie-id="${id}"
-                            aria-label="Detalhes">
+                            aria-label="Detalhes de ${title}">
 
                             <i data-lucide="info"></i>
 
@@ -65,7 +70,7 @@ export default function MovieCard({
                             class="movie-card__button"
                             data-action="favorite"
                             data-movie-id="${id}"
-                            aria-label="Favoritar">
+                            aria-label="Favoritar ${title}">
 
                             <i
                                 data-lucide="${
@@ -86,6 +91,17 @@ export default function MovieCard({
                         <span class="movie-card__quality">
 
                             ${quality}
+
+                        </span>
+                    `
+                    : ""
+                }
+
+                ${video
+                    ? `
+                        <span class="movie-card__available">
+
+                            Local
 
                         </span>
                     `

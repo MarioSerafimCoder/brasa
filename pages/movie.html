@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>BRasa • Filme</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="../css/variables.css">
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/movie.css">
+
+</head>
+
+<body>
+
+    <div class="movie-page">
+
+        <header class="movie-header">
+
+            <a href="../index.html" class="back-button">
+
+                ← Voltar
+
+            </a>
+
+            <h1 id="movie-title">
+
+                Carregando...
+
+            </h1>
+
+        </header>
+
+        <main class="movie-content">
+
+            <div id="playerShell" class="player-shell">
+
+                <video
+                    id="moviePlayer"
+                    preload="metadata"
+                    playsinline
+                    width="100%"
+                    controlslist="nodownload noremoteplayback"
+                    disablepictureinpicture
+                    poster="">
+
+                    <source id="movieSource" src="">
+
+                    Seu navegador não suporta vídeo.
+
+                </video>
+
+                <div id="playerInfoOverlay" class="player-info-overlay">
+
+                    <p id="playerInfoMeta" class="player-info-overlay__meta"></p>
+
+                    <h2 id="playerInfoTitle"></h2>
+
+                    <p id="playerInfoOverview"></p>
+
+                </div>
+
+                <div class="player-controls" aria-label="Controles do player">
+
+                    <input
+                        id="progressSeek"
+                        class="player-progress"
+                        type="range"
+                        min="0"
+                        max="1000"
+                        value="0"
+                        aria-label="Progresso do filme">
+
+                    <div class="player-controls__row">
+
+                        <div class="player-controls__group">
+
+                            <button id="playPauseButton" class="player-control-button" type="button" aria-label="Reproduzir">
+                                <i data-lucide="play"></i>
+                            </button>
+
+                            <button id="rewindButton" class="player-control-button" type="button" aria-label="Voltar 15 segundos">
+                                <i data-lucide="rotate-ccw"></i>
+                                <span>15</span>
+                            </button>
+
+                            <button id="forwardButton" class="player-control-button" type="button" aria-label="Avançar 15 segundos">
+                                <i data-lucide="rotate-cw"></i>
+                                <span>15</span>
+                            </button>
+
+                            <span id="timeDisplay" class="time-display">0:00 / 0:00</span>
+
+                        </div>
+
+                        <div class="player-controls__group player-controls__group--right">
+
+                            <button id="muteButton" class="player-control-button" type="button" aria-label="Mudo">
+                                <i data-lucide="volume-2"></i>
+                            </button>
+
+                            <input
+                                id="volumeSlider"
+                                class="volume-slider"
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.05"
+                                value="1"
+                                aria-label="Volume">
+
+                            <label id="subtitleOption" class="player-select" hidden>
+                                <span>Legendas</span>
+                                <select id="subtitleTrackSelect"></select>
+                            </label>
+
+                            <label id="subtitleSizeOption" class="player-select" hidden>
+                                <span>Tamanho</span>
+                                <select id="subtitleSizeSelect">
+                                    <option value="small">Pequena</option>
+                                    <option value="medium" selected>Média</option>
+                                    <option value="large">Grande</option>
+                                    <option value="xlarge">Extra</option>
+                                </select>
+                            </label>
+
+                            <div id="subtitleSyncOption" class="subtitle-sync" hidden>
+                                <span>Sync</span>
+                                <button id="subtitleDelayDown" class="player-mini-button" type="button" aria-label="Atrasar legenda">-</button>
+                                <strong id="subtitleDelayValue">0.0s</strong>
+                                <button id="subtitleDelayUp" class="player-mini-button" type="button" aria-label="Adiantar legenda">+</button>
+                            </div>
+
+                            <label id="audioOption" class="player-select" hidden>
+                                <span>Áudio</span>
+                                <select id="audioTrackSelect"></select>
+                            </label>
+
+                            <button id="fullscreenButton" class="player-control-button" type="button" aria-label="Tela cheia">
+                                <i data-lucide="maximize"></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <p id="movieStatus" class="movie-status" hidden></p>
+
+            </div>
+
+            <section class="movie-info">
+
+                <div class="movie-meta">
+
+                    <span id="movieYear"></span>
+
+                    <span id="movieDuration"></span>
+
+                    <span id="movieQuality"></span>
+
+                </div>
+
+                <div id="movieGenres" class="genres"></div>
+
+                <p id="movieOverview"></p>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script type="module" src="../js/pages/movie.js"></script>
+
+</body>
+
+</html>

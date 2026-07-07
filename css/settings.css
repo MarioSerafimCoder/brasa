@@ -1,0 +1,183 @@
+.settings-page{
+
+    padding:var(--space-xl) var(--content-padding) var(--space-2xl);
+
+}
+
+.settings-header{
+
+    margin-bottom:var(--space-xl);
+
+}
+
+.settings-header h1{
+
+    font-size:clamp(2rem, 5vw, 4rem);
+
+    line-height:1;
+
+}
+
+.settings-header p{
+
+    max-width:760px;
+
+    margin-top:1rem;
+
+    color:var(--text-secondary);
+
+    line-height:1.65;
+
+}
+
+.settings-grid{
+
+    display:grid;
+
+    gap:1.25rem;
+
+}
+
+.settings-section{
+
+    padding:1.25rem;
+
+    border:1px solid var(--glass-border);
+
+    border-radius:var(--radius-sm);
+
+    background:var(--glass);
+
+}
+
+.settings-section h2{
+
+    font-size:1.2rem;
+
+    margin-bottom:1rem;
+
+}
+
+.settings-options{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+
+    gap:1rem;
+
+}
+
+.setting-field{
+
+    display:grid;
+
+    gap:.5rem;
+
+}
+
+.setting-field span,
+.setting-field > label:first-child{
+
+    color:var(--text-secondary);
+
+    font-size:var(--font-size-sm);
+
+}
+
+.setting-field select,
+.setting-field input[type="number"],
+.setting-field input[type="color"]{
+
+    height:42px;
+
+    padding:0 .8rem;
+
+    border-radius:var(--radius-xs);
+
+    background:var(--bg-surface);
+
+    border:1px solid var(--glass-border);
+
+    color:var(--text-primary);
+
+}
+
+.setting-field select{
+
+    appearance:none;
+
+    -webkit-appearance:none;
+
+    background:
+        linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%) calc(100% - 18px) 50% / 7px 7px no-repeat,
+        linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%) calc(100% - 13px) 50% / 7px 7px no-repeat,
+        var(--bg-surface);
+
+    padding-right:2.4rem;
+
+}
+
+.setting-field select option{
+
+    background:#181818;
+
+    color:#FFFFFF;
+
+}
+
+.setting-field input[type="range"]{
+
+    accent-color:var(--color-primary);
+
+}
+
+.choice-row{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:.5rem;
+
+}
+
+.choice-row label,
+.toggle-row{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:.5rem;
+
+    min-height:38px;
+
+    padding:0 .75rem;
+
+    border-radius:var(--radius-xs);
+
+    background:rgba(255,255,255,.05);
+
+    border:1px solid var(--glass-border);
+
+    color:var(--text-secondary);
+
+}
+
+.choice-row input,
+.toggle-row input{
+
+    accent-color:var(--color-primary);
+
+}
+
+.settings-note{
+
+    margin-top:.75rem;
+
+    color:var(--text-muted);
+
+    font-size:var(--font-size-sm);
+
+}

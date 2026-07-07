@@ -2,9 +2,11 @@ import Button from "../shared/button.js";
 
 export default function Hero({
 
+    id = "",
+
     title = "Título do Filme",
 
-    subtitle = "Uma breve descrição do filme.",
+    overview = "Uma breve descrição do filme.",
 
     backdrop = "",
 
@@ -22,13 +24,9 @@ export default function Hero({
 
 } = {}) {
 
-    const hero = document.querySelector("#hero");
+    return `
 
-    if (!hero) return;
-
-    hero.innerHTML = `
-
-        <section class="hero">
+        <section class="hero" data-movie-id="${id}">
 
             <div class="hero__background">
 
@@ -71,7 +69,7 @@ export default function Hero({
 
                 <p class="hero__description">
 
-                    ${subtitle}
+                    ${overview}
 
                 </p>
 
@@ -88,12 +86,16 @@ export default function Hero({
                     ${Button({
                         text: "Assistir",
                         icon: "▶",
-                        variant: "primary"
+                        variant: "primary",
+                        classes: "js-open-movie",
+                        id: "hero-play"
                     })}
 
                     ${Button({
                         text: "Detalhes",
-                        variant: "secondary"
+                        variant: "secondary",
+                        classes: "js-open-movie",
+                        id: "hero-details"
                     })}
 
                 </div>
