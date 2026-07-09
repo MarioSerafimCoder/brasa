@@ -181,3 +181,65 @@
     font-size:var(--font-size-sm);
 
 }
+
+/* UX refinement layer */
+
+.settings-page{
+
+    padding:var(--space-lg) var(--content-padding) var(--space-2xl);
+
+}
+
+.settings-header{
+
+    margin-bottom:1.35rem;
+
+}
+
+.settings-header h1{
+
+    font-size:clamp(1.75rem, 3.4vw, 3rem);
+
+    letter-spacing:0;
+
+}
+
+.settings-section{
+
+    border-radius:14px;
+
+}
+
+.color-swatches{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:.5rem;
+
+}
+
+.color-swatch{
+
+    width:32px;
+
+    height:32px;
+
+    border-radius:999px;
+
+    background:var(--swatch-color);
+
+    border:2px solid rgba(255,255,255,.18);
+
+    box-shadow:0 0 0 1px rgba(0,0,0,.35);
+
+}
+
+.color-swatch.is-active{
+
+    border-color:var(--color-primary);
+
+    box-shadow:0 0 0 3px rgba(249,115,22,.2);
+
+}

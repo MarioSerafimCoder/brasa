@@ -7,11 +7,20 @@
  * Atualiza os ícones Lucide após alterações no DOM.
  */
 
+let iconRefreshQueued = false;
+
 function refreshIcons() {
 
     if (window.lucide) {
 
-        lucide.createIcons();
+        if (iconRefreshQueued) return;
+
+        iconRefreshQueued = true;
+
+        window.requestAnimationFrame(() => {
+            iconRefreshQueued = false;
+            lucide.createIcons();
+        });
 
     }
 

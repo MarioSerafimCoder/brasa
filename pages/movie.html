@@ -29,7 +29,7 @@
 
         <header class="movie-header">
 
-            <a href="../index.html" class="back-button">
+            <a href="../index.html?intro=skip" class="back-button" data-navigation="instant">
 
                 ← Voltar
 
@@ -45,7 +45,48 @@
 
         <main class="movie-content">
 
-            <div id="playerShell" class="player-shell">
+            <section id="movieLanding" class="movie-landing">
+
+                <div class="movie-landing__media">
+                    <img id="movieLandingBackdrop" src="" alt="">
+                </div>
+
+                <div class="movie-landing__shade"></div>
+
+                <div class="movie-landing__content">
+                    <div class="movie-landing__copy">
+                        <div id="movieLandingMeta" class="movie-landing__meta"></div>
+                        <h2 id="movieLandingTitle">Carregando...</h2>
+                        <p id="movieLandingOverview"></p>
+
+                        <div class="movie-landing__actions">
+                            <button id="landingPlayButton" class="landing-action landing-action--primary" type="button">
+                                <i data-lucide="play"></i>
+                                <span>Play</span>
+                            </button>
+
+                            <button id="landingFavoriteButton" class="landing-action landing-action--icon" type="button" aria-pressed="false">
+                                <i data-lucide="heart"></i>
+                                <span>Favoritar</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <div id="playerShell" class="player-shell is-hidden">
+
+                <div class="player-topbar" aria-label="Navegação do player">
+                    <button id="playerBackButton" class="player-topbar__button" type="button" aria-label="Voltar para detalhes">
+                        <i data-lucide="arrow-left"></i>
+                        <span>Voltar</span>
+                    </button>
+
+                    <button id="playerCloseButton" class="player-topbar__button player-topbar__button--icon" type="button" aria-label="Fechar player">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
 
                 <video
                     id="moviePlayer"
@@ -180,11 +221,19 @@
 
             </section>
 
+            <section class="watch-next">
+                <div class="watch-next__header">
+                    <p>Baseado no gênero</p>
+                    <h2>O que assistir a seguir</h2>
+                </div>
+                <div id="watchNextGrid" class="watch-next__grid"></div>
+            </section>
+
         </main>
 
     </div>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@latest" async onload="window.lucide?.createIcons?.()"></script>
 
     <script type="module" src="../js/pages/movie.js"></script>
 

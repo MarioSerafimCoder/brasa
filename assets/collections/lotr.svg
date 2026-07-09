@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="O Senhor dos Anéis e O Hobbit">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#1c1917"/><stop offset="1" stop-color="#166534"/></linearGradient></defs>
+  <rect width="1200" height="420" fill="url(#g)"/>
+  <path d="M790 260l130-190 145 190z" fill="#bbf7d0" opacity=".28"/>
+  <path d="M930 260l95-145 120 145z" fill="#fef3c7" opacity=".22"/>
+  <circle cx="820" cy="132" r="60" fill="none" stroke="#f59e0b" stroke-width="18" opacity=".8"/>
+  <text x="70" y="175" fill="#fff7ed" font-family="Inter,Arial,sans-serif" font-size="62" font-weight="850">O Senhor dos Anéis</text>
+  <text x="74" y="238" fill="#fde68a" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="800">&amp; O Hobbit</text>
+</svg>

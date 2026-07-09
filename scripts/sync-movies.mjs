@@ -5,9 +5,15 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const moviesDir = path.join(rootDir, "assets", "movies");
+const seriesDirs = [
+    { dir: path.join(rootDir, "assets", "series"), kids: false },
+    { dir: path.join(rootDir, "assets", "kids-series"), kids: true }
+];
 const postersDir = path.join(rootDir, "assets", "posters");
+const seriesPostersDir = path.join(rootDir, "assets", "series-posters");
 const subtitlesDir = path.join(rootDir, "assets", "subtitles");
 const dataFile = path.join(rootDir, "data", "movies.js");
+const seriesDataFile = path.join(rootDir, "data", "series.js");
 const overridesFile = path.join(rootDir, "data", "movie-overrides.json");
 const envFile = path.join(rootDir, ".env");
 
@@ -20,6 +26,7 @@ await main();
 async function main() {
     await loadEnv();
     await syncMovies();
+    await syncSeries();
 }
 
 async function syncMovies() {
@@ -63,10 +70,18 @@ async function syncMovies() {
                     continue;
                 }
 
-                const poster = await resolvePoster(omdb, file.name);
+                const normalizedFile = await normalizeMovieFileName({
+                    fileName: file.name,
+                    title: omdb.Title,
+                    year: omdb.Year,
+                    imdbId: omdb.imdbID
+                });
+
+                const poster = await resolvePoster(omdb, normalizedFile);
                 const movie = buildMovie({
                     id: nextId++,
-                    fileName: file.name,
+                    fileName: normalizedFile,
+                    addedAt: file.mtime?.toISOString?.() || new Date().toISOString(),
                     omdb,
                     parsed,
                     override,
@@ -82,6 +97,13 @@ async function syncMovies() {
 
         if (!newFiles.length) {
             console.log("BRasa: nenhum filme novo encontrado.");
+        }
+
+        const renamedMovies = await normalizeIndexedMovieFiles(movies);
+
+        if (renamedMovies > 0) {
+            changed = true;
+            console.log(`BRasa: ${renamedMovies} arquivo(s) renomeado(s) para o padrao da biblioteca.`);
         }
 
         const downloadedSubtitles = await syncSubtitlesForMovies({
@@ -117,6 +139,77 @@ async function syncMovies() {
         console.error("BRasa: erro ao sincronizar filmes.");
         console.error(error.message);
     }
+}
+
+async function normalizeIndexedMovieFiles(movies) {
+    let renamed = 0;
+
+    for (const movie of movies) {
+        if (!movie.video || !movie.imdbId || !movie.title || !movie.year) continue;
+
+        const currentPath = path.join(rootDir, movie.video);
+        if (!(await fileExists(currentPath))) continue;
+
+        const nextFileName = await normalizeMovieFileName({
+            fileName: path.basename(movie.video),
+            title: movie.originalTitle || movie.title,
+            year: movie.year,
+            imdbId: movie.imdbId
+        });
+
+        const nextVideoPath = toAssetPath(path.join(moviesDir, nextFileName));
+
+        if (normalizePath(movie.video) !== normalizePath(nextVideoPath)) {
+            movie.video = nextVideoPath;
+            renamed++;
+        }
+    }
+
+    return renamed;
+}
+
+async function normalizeMovieFileName({ fileName, title, year, imdbId }) {
+    if (!title || !year || !imdbId) return fileName;
+
+    const extension = path.extname(fileName);
+    const targetName = `${sanitizeFileName(title)} (${String(year).match(/\d{4}/)?.[0] || year}) [${imdbId}]${extension}`;
+
+    if (fileName === targetName) return fileName;
+
+    const sourcePath = path.join(moviesDir, fileName);
+    if (!(await fileExists(sourcePath))) return fileName;
+
+    const targetNameAvailable = await getAvailableMovieFileName(targetName, fileName);
+
+    if (targetNameAvailable === fileName) return fileName;
+    if (isDryRun) return targetNameAvailable;
+
+    await fs.rename(sourcePath, path.join(moviesDir, targetNameAvailable));
+    console.log(`BRasa: renomeado "${fileName}" -> "${targetNameAvailable}".`);
+
+    return targetNameAvailable;
+}
+
+async function getAvailableMovieFileName(targetName, currentName) {
+    const targetPath = path.join(moviesDir, targetName);
+
+    if (targetName === currentName || !(await fileExists(targetPath))) {
+        return targetName;
+    }
+
+    const extension = path.extname(targetName);
+    const base = path.basename(targetName, extension);
+
+    for (let index = 2; index < 100; index++) {
+        const candidate = `${base} (${index})${extension}`;
+        const candidatePath = path.join(moviesDir, candidate);
+
+        if (candidate === currentName || !(await fileExists(candidatePath))) {
+            return candidate;
+        }
+    }
+
+    return currentName;
 }
 
 async function syncSubtitlesForMovies({ movies, apiKey, languages }) {
@@ -304,9 +397,19 @@ async function loadOverrides() {
 
 async function listVideoFiles() {
     const entries = await fs.readdir(moviesDir, { withFileTypes: true });
-    return entries
+    const files = entries
         .filter((entry) => entry.isFile() && videoExtensions.has(path.extname(entry.name).toLowerCase()))
-        .map((entry) => ({ name: entry.name }))
+        .map((entry) => entry.name);
+
+    const withStats = await Promise.all(files.map(async (name) => {
+        const stats = await fs.stat(path.join(moviesDir, name));
+        return {
+            name,
+            mtime: stats.mtime
+        };
+    }));
+
+    return withStats
         .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
@@ -430,7 +533,7 @@ async function resolvePoster(omdb, fileName) {
     return relativePath;
 }
 
-function buildMovie({ id, fileName, omdb, parsed, override, poster }) {
+function buildMovie({ id, fileName, addedAt, omdb, parsed, override, poster }) {
     return {
         id,
         title: override.displayTitle || omdb.Title || parsed.title,
@@ -445,6 +548,7 @@ function buildMovie({ id, fileName, omdb, parsed, override, poster }) {
         poster,
         backdrop: "",
         video: toAssetPath(path.join(moviesDir, fileName)),
+        addedAt,
         progress: 0,
         favorite: false,
         featured: false,
@@ -525,6 +629,19 @@ export function getFeaturedMovie(){
 
 }
 
+export function getRecentlyAddedMovies(limit = 4){
+
+    return [...movies]
+        .sort((a, b) => {
+            const dateA = a.addedAt ? new Date(a.addedAt).getTime() : 0;
+            const dateB = b.addedAt ? new Date(b.addedAt).getTime() : 0;
+
+            return (dateB - dateA) || (Number(b.id || 0) - Number(a.id || 0));
+        })
+        .slice(0, limit);
+
+}
+
 export function getFavorites(){
 
     return movies.filter(
@@ -567,6 +684,362 @@ export function getMovieById(id){
 `;
 
     await fs.writeFile(dataFile, content, "utf8");
+}
+
+async function syncSeries() {
+    try {
+        const omdbApiKey = getArgValue("--api-key") || process.env.OMDB_API_KEY;
+        const series = await buildSeriesLibrary();
+        const enriched = await hydrateSeriesMetadata(series, omdbApiKey);
+
+        if (isDryRun) {
+            console.log(`BRasa: dry-run ativo; ${enriched.length} serie(s) detectada(s).`);
+            return;
+        }
+
+        await writeSeries(enriched);
+        const episodeCount = enriched.reduce((total, item) => total + item.episodeCount, 0);
+        console.log(`BRasa: data/series.js atualizado com ${enriched.length} serie(s) e ${episodeCount} episodio(s).`);
+    } catch (error) {
+        console.error("BRasa: erro ao indexar series.");
+        console.error(error.message);
+    }
+}
+
+async function hydrateSeriesMetadata(series, apiKey) {
+    if (!series.length) return series;
+
+    if (!apiKey) {
+        console.log("BRasa: OMDB_API_KEY ausente; capas e dados de series nao foram baixados.");
+        return series;
+    }
+
+    for (const item of series) {
+        try {
+            const omdb = await findSeriesOnOmdb({ apiKey, title: item.title });
+
+            if (!omdb) {
+                console.log(`BRasa: nao encontrei dados de serie na OMDb para "${item.title}".`);
+                continue;
+            }
+
+            const poster = await resolveSeriesPoster(omdb, item);
+            applySeriesMetadata(item, omdb, poster);
+            console.log(`BRasa: dados de serie atualizados para "${item.title}".`);
+        } catch (error) {
+            console.log(`BRasa: nao consegui baixar dados de serie para "${item.title}". ${error.message}`);
+        }
+    }
+
+    return series;
+}
+
+async function findSeriesOnOmdb({ apiKey, title }) {
+    const direct = await fetchOmdb(apiKey, {
+        t: title,
+        type: "series",
+        plot: "full"
+    });
+
+    if (direct) return direct;
+
+    const search = await fetchOmdb(apiKey, {
+        s: title,
+        type: "series"
+    });
+
+    const best = chooseSearchResult(search?.Search || []);
+    if (!best?.imdbID) return null;
+
+    return fetchOmdb(apiKey, {
+        i: best.imdbID,
+        plot: "full"
+    });
+}
+
+function applySeriesMetadata(item, omdb, poster) {
+    item.title = omdb.Title && omdb.Title !== "N/A" ? omdb.Title : item.title;
+    item.originalTitle = omdb.Title && omdb.Title !== "N/A" ? omdb.Title : item.title;
+    item.year = omdb.Year && omdb.Year !== "N/A" ? omdb.Year : "";
+    item.rating = Number.parseFloat(omdb.imdbRating) || "";
+    item.contentRating = omdb.Rated && omdb.Rated !== "N/A" ? omdb.Rated : item.contentRating;
+    item.genres = translateGenres(omdb.Genre);
+    item.overview = omdb.Plot && omdb.Plot !== "N/A" ? omdb.Plot : item.overview;
+    item.poster = poster || item.poster;
+    item.imdbId = omdb.imdbID || "";
+}
+
+async function resolveSeriesPoster(omdb, item) {
+    if (!omdb.Poster || omdb.Poster === "N/A") return "";
+
+    const slug = slugify(`${omdb.Title || item.title}-${omdb.Year || "series"}`);
+    const extension = path.extname(new URL(omdb.Poster).pathname) || ".jpg";
+    const relativePath = `assets/series-posters/${slug}${extension}`;
+    const absolutePath = path.join(rootDir, relativePath);
+
+    if (await fileExists(absolutePath)) return relativePath;
+    if (isDryRun) return relativePath;
+
+    const response = await fetch(omdb.Poster);
+    if (!response.ok) {
+        console.log(`BRasa: nao consegui baixar poster de serie "${item.title}".`);
+        return "";
+    }
+
+    const bytes = Buffer.from(await response.arrayBuffer());
+    await fs.mkdir(seriesPostersDir, { recursive: true });
+    await fs.writeFile(absolutePath, bytes);
+    return relativePath;
+}
+
+async function buildSeriesLibrary() {
+    const groups = new Map();
+
+    for (const source of seriesDirs) {
+        const files = await listSeriesVideoFiles(source.dir);
+
+        for (const file of files) {
+            const parsed = parseSeriesFile(file, source);
+            const key = `${source.kids ? "kids" : "series"}:${slugify(parsed.seriesTitle)}`;
+
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    id: slugify(parsed.seriesTitle),
+                    title: parsed.seriesTitle,
+                    type: "series",
+                    kids: source.kids,
+                    genres: [],
+                    contentRating: source.kids ? "Livre" : "",
+                    poster: "",
+                    backdrop: "",
+                    overview: "Serie local adicionada a biblioteca do BRasa.",
+                    addedAt: parsed.addedAt,
+                    seasons: []
+                });
+            }
+
+            const series = groups.get(key);
+            if (new Date(parsed.addedAt) > new Date(series.addedAt)) {
+                series.addedAt = parsed.addedAt;
+            }
+
+            let season = series.seasons.find((item) => item.seasonNumber === parsed.seasonNumber);
+            if (!season) {
+                season = {
+                    seasonNumber: parsed.seasonNumber,
+                    episodes: []
+                };
+                series.seasons.push(season);
+            }
+
+            season.episodes.push(parsed.episode);
+        }
+    }
+
+    const series = Array.from(groups.values())
+        .map((item) => {
+            item.seasons.sort((a, b) => a.seasonNumber - b.seasonNumber);
+
+            item.seasons.forEach((season) => {
+                season.episodes.sort((a, b) => a.episodeNumber - b.episodeNumber || a.title.localeCompare(b.title, "pt-BR"));
+            });
+
+            const flatEpisodes = item.seasons.flatMap((season) => season.episodes);
+            flatEpisodes.forEach((episode, index) => {
+                episode.nextEpisodeId = flatEpisodes[index + 1]?.id || "";
+            });
+
+            item.seasonCount = item.seasons.length;
+            item.episodeCount = flatEpisodes.length;
+            return item;
+        })
+        .filter((item) => item.episodeCount > 0)
+        .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt) || a.title.localeCompare(b.title, "pt-BR"));
+
+    return series;
+}
+
+async function listSeriesVideoFiles(baseDir) {
+    if (!(await fileExists(baseDir))) return [];
+
+    const found = [];
+
+    async function walk(currentDir) {
+        const entries = await fs.readdir(currentDir, { withFileTypes: true });
+
+        for (const entry of entries) {
+            const fullPath = path.join(currentDir, entry.name);
+
+            if (entry.isDirectory()) {
+                await walk(fullPath);
+                continue;
+            }
+
+            if (!entry.isFile() || !videoExtensions.has(path.extname(entry.name).toLowerCase())) continue;
+
+            const stats = await fs.stat(fullPath);
+            found.push({
+                absolutePath: fullPath,
+                relativePath: path.relative(baseDir, fullPath),
+                name: entry.name,
+                mtime: stats.mtime
+            });
+        }
+    }
+
+    await walk(baseDir);
+    return found.sort((a, b) => a.relativePath.localeCompare(b.relativePath, "pt-BR"));
+}
+
+function parseSeriesFile(file, source) {
+    const parts = file.relativePath.split(path.sep);
+    const fileName = parts.at(-1);
+    const baseName = path.basename(fileName, path.extname(fileName));
+    const folderTitle = parts.length > 1 ? parts[0] : baseName;
+    const seasonNumber = parseSeasonNumber(file.relativePath) || 1;
+    const episodeNumber = parseEpisodeNumber(file.relativePath) || 1;
+    const seriesTitle = cleanSeriesTitle(folderTitle || baseName);
+    const episodeTitle = cleanEpisodeTitle(baseName, episodeNumber);
+    const episodeId = slugify(`${source.kids ? "kids" : "series"}-${seriesTitle}-s${seasonNumber}-e${episodeNumber}-${baseName}`);
+
+    return {
+        seriesTitle,
+        seasonNumber,
+        addedAt: file.mtime.toISOString(),
+        episode: {
+            id: episodeId,
+            seriesId: slugify(seriesTitle),
+            seasonNumber,
+            episodeNumber,
+            title: episodeTitle,
+            video: toAssetPath(file.absolutePath),
+            quality: inferQuality(fileName),
+            addedAt: file.mtime.toISOString(),
+            progress: 0,
+            subtitles: []
+        }
+    };
+}
+
+function parseSeasonNumber(value) {
+    const normalized = value.replace(/\\/g, "/");
+    const patterns = [
+        /s(\d{1,2})\s*e\d{1,3}/i,
+        /t(\d{1,2})\s*e\d{1,3}/i,
+        /(\d{1,2})x\d{1,3}/i,
+        /(?:season|temporada)\s*(\d{1,2})/i,
+        /(\d{1,2})\s*(?:ª|a|º|o)?\s*temporada/i
+    ];
+
+    for (const pattern of patterns) {
+        const match = normalized.match(pattern);
+        if (match) return Number(match[1]);
+    }
+
+    return 0;
+}
+
+function parseEpisodeNumber(value) {
+    const normalized = value.replace(/\\/g, "/");
+    const patterns = [
+        /s\d{1,2}\s*e(\d{1,3})/i,
+        /t\d{1,2}\s*e(\d{1,3})/i,
+        /\d{1,2}x(\d{1,3})/i,
+        /(?:episode|episodio|episodio|ep)\s*(\d{1,3})/i,
+        /(?:^|[^\d])e(\d{1,3})(?:[^\d]|$)/i
+    ];
+
+    for (const pattern of patterns) {
+        const match = normalized.match(pattern);
+        if (match) return Number(match[1]);
+    }
+
+    return 0;
+}
+
+function cleanSeriesTitle(value) {
+    const cleaned = String(value)
+        .replace(/[._]+/g, " ")
+        .replace(/\s*[-–—]?\s*(?:season|temporada)\s*\d{1,2}\b.*$/i, "")
+        .replace(/\s*[-–—]?\s*\d{1,2}\s*(?:ª|a|º|o)?\s*temporada\b.*$/i, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return cleaned || "Serie";
+}
+
+function cleanEpisodeTitle(value, episodeNumber) {
+    const cleaned = String(value)
+        .replace(/[._]+/g, " ")
+        .replace(/\bs\d{1,2}\s*e\d{1,3}\b/gi, " ")
+        .replace(/\bt\d{1,2}\s*e\d{1,3}\b/gi, " ")
+        .replace(/\b\d{1,2}x\d{1,3}\b/gi, " ")
+        .replace(/\b(?:episode|episodio|ep)\s*\d{1,3}\b/gi, " ")
+        .replace(/\b(4k|2160p|1080p|720p|bluray|brrip|webrip|web-dl|x264|x265|h264|h265|dublado|legendado|dual|audio)\b/gi, " ")
+        .replace(/\[[^\]]*]|\([^)]*\)/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    return cleaned || `Episodio ${episodeNumber}`;
+}
+
+async function writeSeries(series) {
+    const content = `// ==========================================================
+// BRasa
+// Series Repository
+// Generated by scripts/sync-movies.mjs
+// ==========================================================
+
+const seriesData = ${JSON.stringify(series, null, 4)};
+
+function toArray(value){
+    if (Array.isArray(value)) return value;
+    return value ? [value] : [];
+}
+
+const series = toArray(seriesData).map((item) => ({
+    ...item,
+    seasons: toArray(item.seasons).map((season) => ({
+        ...season,
+        episodes: toArray(season.episodes)
+    }))
+}));
+
+export function getSeries(){
+    return series;
+}
+
+export function getRecentlyAddedSeries(limit = 12){
+    return [...series]
+        .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+        .slice(0, limit);
+}
+
+export function getSeriesById(id){
+    return series.find((item) => String(item.id) === String(id));
+}
+
+export function getEpisodeById(id){
+    for (const item of series) {
+        for (const season of item.seasons || []) {
+            const episode = (season.episodes || []).find((candidate) => String(candidate.id) === String(id));
+
+            if (episode) {
+                return {
+                    ...episode,
+                    seriesId: item.id,
+                    seriesTitle: item.title,
+                    series
+                };
+            }
+        }
+    }
+
+    return null;
+}
+`;
+
+    await fs.writeFile(seriesDataFile, content, "utf8");
 }
 
 function parseSubtitleLanguages(value) {
@@ -621,6 +1094,17 @@ function slugify(value) {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "");
+}
+
+function sanitizeFileName(value) {
+    const sanitized = String(value)
+        .normalize("NFKC")
+        .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "")
+        .replace(/\s+/g, " ")
+        .replace(/[. ]+$/g, "")
+        .trim();
+
+    return sanitized || "Filme";
 }
 
 async function fileExists(filePath) {

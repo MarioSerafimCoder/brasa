@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRasa - Coleções</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css?v=streaming-20260709a">
+    <link rel="stylesheet" href="../css/style.css?v=streaming-20260709a">
+    <link rel="stylesheet" href="../css/library.css?v=streaming-20260709a">
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="page-sidebar">
+            <div class="page-sidebar__logo">BRasa</div>
+            <nav>
+                <a href="../index.html?intro=skip"><i data-lucide="house"></i>Início</a>
+                <a href="search.html"><i data-lucide="search"></i>Buscar</a>
+                <a href="movies.html"><i data-lucide="film"></i>Filmes</a>
+                <a href="series.html"><i data-lucide="tv"></i>Séries</a>
+                <a class="active" href="collection.html"><i data-lucide="library"></i>Coleções</a>
+                <a href="settings.html"><i data-lucide="settings"></i>Configurações</a>
+            </nav>
+            <button class="page-sidebar__kids" type="button" data-kids-toggle aria-pressed="false">
+                <i data-lucide="smile"></i>
+                <span data-kids-label>Modo Kids</span>
+            </button>
+        </aside>
+
+        <main class="page-main">
+            <section class="library-page collections-page">
+                <header class="library-header">
+                    <div>
+                        <p class="library-kicker">Coleções</p>
+                        <h1 class="library-title">Universos e sagas</h1>
+                        <p class="library-subtitle">Banners organizados por franquias, estúdios e listas especiais. Conforme você adiciona filmes, eles aparecem automaticamente nas coleções correspondentes.</p>
+                    </div>
+                </header>
+
+                <div id="collectionsGrid" class="collections-grid"></div>
+
+                <section class="collection-detail">
+                    <div class="collection-detail__header">
+                        <div>
+                            <p id="collectionKicker">Selecione uma coleção</p>
+                            <h2 id="collectionTitle">Explore por banner</h2>
+                        </div>
+                        <span id="collectionCount"></span>
+                    </div>
+                    <div id="collectionMovies" class="movie-grid"></div>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest" async onload="window.lucide?.createIcons?.()"></script>
+    <script type="module" src="../js/pages/collections.js?v=streaming-20260709a"></script>
+</body>
+</html>
+

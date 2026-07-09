@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Missão Impossível">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#111827"/><stop offset="1" stop-color="#b91c1c"/></linearGradient></defs>
+  <rect width="1200" height="420" fill="url(#g)"/>
+  <path d="M780 65h290l-145 250z" fill="none" stroke="#fca5a5" stroke-width="18" opacity=".36"/>
+  <line x1="925" y1="0" x2="925" y2="315" stroke="#fff" stroke-width="6" opacity=".8"/>
+  <text x="70" y="185" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="74" font-weight="850">Missão: Impossível</text>
+  <text x="74" y="250" fill="#fecaca" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">operações secretas e risco extremo</text>
+</svg>

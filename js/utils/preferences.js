@@ -20,7 +20,10 @@ const defaultPreferences = {
     maxVolume: 100,
     normalizeVolume: false,
     preferSurround: true,
-    libraryView: "grid"
+    libraryView: "grid",
+    kidsMode: false,
+    kidsPin: "",
+    kidsMaxRating: "PG"
 };
 
 export function getPreferences() {
@@ -35,13 +38,17 @@ export function getPreferences() {
 }
 
 export function savePreferences(preferences) {
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({
-            ...getPreferences(),
-            ...preferences
-        })
-    );
+    try {
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+                ...getPreferences(),
+                ...preferences
+            })
+        );
+    } catch {
+        // Preferences persist only when storage is available.
+    }
 
     applyPreferences();
 }
@@ -55,12 +62,34 @@ export function applyPreferences() {
     root.dataset.density = preferences.density;
     root.dataset.posterStyle = preferences.posterStyle;
     root.dataset.libraryView = preferences.libraryView;
+    root.dataset.kidsMode = preferences.kidsMode ? "on" : "off";
+    root.dataset.subtitlePosition = preferences.subtitlePosition;
+    root.dataset.subtitleOutline = preferences.subtitleOutline ? "on" : "off";
 
     root.style.setProperty("--user-subtitle-color", preferences.subtitleColor);
     root.style.setProperty("--user-subtitle-bg", preferences.subtitleBackground);
+    root.style.setProperty("--user-subtitle-bg-rgb", hexToRgb(preferences.subtitleBackground));
     root.style.setProperty("--user-subtitle-opacity", String(Number(preferences.subtitleOpacity) / 100));
 
     return preferences;
 }
 
 export { defaultPreferences };
+
+function hexToRgb(value) {
+    const normalized = String(value || "#000000").replace("#", "");
+    const full = normalized.length === 3
+        ? normalized.split("").map((char) => `${char}${char}`).join("")
+        : normalized.padEnd(6, "0").slice(0, 6);
+    const number = Number.parseInt(full, 16);
+
+    if (!Number.isFinite(number)) {
+        return "0,0,0";
+    }
+
+    return [
+        (number >> 16) & 255,
+        (number >> 8) & 255,
+        number & 255
+    ].join(",");
+}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Universo DC">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#020617"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient></defs>
+  <rect width="1200" height="420" fill="url(#g)"/>
+  <path d="M840 0h360v420H760z" fill="#60a5fa" opacity=".16"/>
+  <circle cx="930" cy="190" r="130" fill="none" stroke="#bfdbfe" stroke-width="22" opacity=".28"/>
+  <text x="70" y="190" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="78" font-weight="800">Universo DC</text>
+  <text x="74" y="255" fill="#bfdbfe" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">lendas, cidades e justiça</text>
+</svg>

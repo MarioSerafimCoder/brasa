@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Clássicos do cinema">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#1f2937"/><stop offset="1" stop-color="#a16207"/></linearGradient></defs>
+  <rect width="1200" height="420" fill="url(#g)"/>
+  <rect x="780" y="95" width="285" height="185" rx="18" fill="#fef3c7" opacity=".24"/>
+  <circle cx="850" cy="160" r="34" fill="#fff7ed" opacity=".44"/><circle cx="950" cy="160" r="34" fill="#fff7ed" opacity=".44"/>
+  <text x="70" y="185" fill="#fff7ed" font-family="Inter,Arial,sans-serif" font-size="76" font-weight="850">Clássicos</text>
+  <text x="74" y="250" fill="#fde68a" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="800">do cinema</text>
+</svg>

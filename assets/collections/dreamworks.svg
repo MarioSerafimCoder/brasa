@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="DreamWorks">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#0891b2"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>
+  <rect width="1200" height="420" fill="url(#g)"/>
+  <circle cx="930" cy="120" r="92" fill="#fff" opacity=".28"/>
+  <path d="M760 290c80-110 230-110 340 0z" fill="#c4b5fd" opacity=".28"/>
+  <text x="70" y="195" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="84" font-weight="850">DreamWorks</text>
+  <text x="74" y="260" fill="#ddd6fe" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="800">amizades, humor e aventura</text>
+</svg>

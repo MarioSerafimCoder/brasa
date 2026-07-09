@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Studio Ghibli">
+  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#0f766e"/><stop offset="1" stop-color="#86efac"/></linearGradient></defs>
+  <rect width="1200" height="420" fill="url(#g)"/>
+  <circle cx="900" cy="175" r="95" fill="#ecfeff" opacity=".52"/>
+  <path d="M770 285c90-70 250-70 360 0v75H770z" fill="#14532d" opacity=".32"/>
+  <text x="70" y="190" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="82" font-weight="850">Studio Ghibli</text>
+  <text x="74" y="255" fill="#ecfccb" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="800">fantasia, natureza e encanto</text>
+</svg>

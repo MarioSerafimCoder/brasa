@@ -1,28 +1,32 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BRasa • Buscar</title>
+    <title>BRasa - Buscar</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/variables.css">
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/library.css">
+    <link rel="stylesheet" href="../css/variables.css?v=streaming-20260709a">
+    <link rel="stylesheet" href="../css/style.css?v=streaming-20260709a">
+    <link rel="stylesheet" href="../css/library.css?v=streaming-20260709a">
 </head>
 <body>
     <div class="page-shell">
         <aside class="page-sidebar">
             <div class="page-sidebar__logo">BRasa</div>
             <nav>
-                <a href="../index.html"><i data-lucide="house"></i>Início</a>
+                <a href="../index.html?intro=skip"><i data-lucide="house"></i>Início</a>
                 <a class="active" href="search.html"><i data-lucide="search"></i>Buscar</a>
                 <a href="movies.html"><i data-lucide="film"></i>Filmes</a>
-                <a href="#"><i data-lucide="tv"></i>Séries</a>
-                <button class="page-sidebar__sync" type="button" data-library-sync><i data-lucide="refresh-cw"></i><span>Atualizar</span></button>
+                <a href="series.html"><i data-lucide="tv"></i>Séries</a>
+                <a href="collection.html"><i data-lucide="library"></i>Coleções</a>
                 <a href="settings.html"><i data-lucide="settings"></i>Configurações</a>
             </nav>
+            <button class="page-sidebar__kids" type="button" data-kids-toggle aria-pressed="false">
+                <i data-lucide="smile"></i>
+                <span data-kids-label>Modo Kids</span>
+            </button>
         </aside>
 
         <main class="page-main">
@@ -39,6 +43,9 @@
                     <label class="search-box">
                         <i data-lucide="search"></i>
                         <input id="searchInput" type="search" placeholder="Buscar no BRasa..." autocomplete="off" autofocus>
+                        <button id="clearSearch" class="search-clear" type="button" aria-label="Limpar busca" hidden>
+                            <i data-lucide="x"></i>
+                        </button>
                     </label>
 
                     <label class="filter-control">
@@ -52,7 +59,7 @@
                         <span>Ordem</span>
                         <span class="select-shell">
                             <select id="sortFilter">
-                                <option value="recent">Últimos adicionados</option>
+                                <option value="recent">Recentes</option>
                                 <option value="alpha">A-Z</option>
                                 <option value="year">Ano</option>
                             </select>
@@ -60,12 +67,15 @@
                     </label>
                 </div>
 
+                <p id="resultSummary" class="result-summary" aria-live="polite"></p>
+
                 <div id="movieGrid" class="movie-grid"></div>
             </section>
         </main>
     </div>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" src="../js/pages/search.js"></script>
+    <script src="https://unpkg.com/lucide@latest" async onload="window.lucide?.createIcons?.()"></script>
+    <script type="module" src="../js/pages/search.js?v=streaming-20260709a"></script>
 </body>
 </html>
+

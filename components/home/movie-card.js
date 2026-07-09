@@ -3,6 +3,9 @@
 // Movie Card
 // ==========================================================
 
+import { escapeAttribute, escapeHtml } from "../../js/utils/html.js";
+import { movieImageUrl, tmdbImageFallbackAttributes } from "../../js/utils/tmdb-images.js";
+
 export default function MovieCard({
 
     id = "",
@@ -24,22 +27,29 @@ export default function MovieCard({
     video = ""
 
 } = {}) {
+    const movie = arguments[0] || {};
+    const posterImage = movieImageUrl(movie, {
+        type: "poster",
+        size: "w780",
+        fallback: poster
+    });
 
     return `
 
         <article
             class="movie-card"
-            data-movie-id="${id}"
+            data-movie-id="${escapeAttribute(id)}"
             role="button"
             tabindex="0"
-            aria-label="Abrir ${title}">
+            aria-label="Abrir ${escapeAttribute(title)}">
 
             <div class="movie-card__poster">
 
                 <img
-                    src="${poster}"
-                    alt="${title}"
+                    src="${escapeAttribute(posterImage)}"
+                    alt="${escapeAttribute(title)}"
                     loading="lazy"
+                    ${tmdbImageFallbackAttributes(poster)}
                 >
 
                 <div class="movie-card__overlay">
@@ -49,35 +59,22 @@ export default function MovieCard({
                         <button
                             class="movie-card__button movie-card__button--play"
                             data-action="play"
-                            data-movie-id="${id}"
-                            aria-label="Assistir ${title}">
+                            data-movie-id="${escapeAttribute(id)}"
+                            aria-label="Assistir ${escapeAttribute(title)}">
 
                             <i data-lucide="play"></i>
 
                         </button>
 
                         <button
-                            class="movie-card__button"
-                            data-action="details"
-                            data-movie-id="${id}"
-                            aria-label="Detalhes de ${title}">
-
-                            <i data-lucide="info"></i>
-
-                        </button>
-
-                        <button
-                            class="movie-card__button"
+                            class="movie-card__button movie-card__button--favorite ${favorite ? "is-active" : ""}"
                             data-action="favorite"
-                            data-movie-id="${id}"
-                            aria-label="Favoritar ${title}">
+                            data-movie-id="${escapeAttribute(id)}"
+                            aria-pressed="${favorite ? "true" : "false"}"
+                            aria-label="${favorite ? "Remover dos favoritos" : "Favoritar"} ${escapeAttribute(title)}">
 
                             <i
-                                data-lucide="${
-                                    favorite
-                                        ? "heart-off"
-                                        : "heart"
-                                }">
+                                data-lucide="heart">
                             </i>
 
                         </button>
@@ -90,7 +87,7 @@ export default function MovieCard({
                     ? `
                         <span class="movie-card__quality">
 
-                            ${quality}
+                            ${escapeHtml(quality)}
 
                         </span>
                     `
@@ -114,7 +111,7 @@ export default function MovieCard({
 
                 <h3 class="movie-card__title">
 
-                    ${title}
+                    ${escapeHtml(title)}
 
                 </h3>
 
@@ -122,7 +119,7 @@ export default function MovieCard({
 
                     <span>
 
-                        ${year}
+                        ${escapeHtml(year)}
 
                     </span>
 
@@ -145,7 +142,7 @@ export default function MovieCard({
 
                             <div
                                 class="movie-card__progress-bar"
-                                style="width:${progress}%">
+                                style="width:${Math.min(100, Math.max(0, Number(progress) || 0))}%">
                             </div>
 
                         </div>

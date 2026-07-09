@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRasa - Series</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/variables.css?v=streaming-20260709a">
+    <link rel="stylesheet" href="../css/style.css?v=streaming-20260709a">
+    <link rel="stylesheet" href="../css/library.css?v=streaming-20260709a">
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="page-sidebar">
+            <div class="page-sidebar__logo">BRasa</div>
+            <nav>
+                <a href="../index.html?intro=skip"><i data-lucide="house"></i>Inicio</a>
+                <a href="search.html"><i data-lucide="search"></i>Buscar</a>
+                <a href="movies.html"><i data-lucide="film"></i>Filmes</a>
+                <a class="active" href="series.html"><i data-lucide="tv"></i>Series</a>
+                <a href="collection.html"><i data-lucide="library"></i>Colecoes</a>
+                <a href="settings.html"><i data-lucide="settings"></i>Configuracoes</a>
+            </nav>
+            <button class="page-sidebar__kids" type="button" data-kids-toggle aria-pressed="false">
+                <i data-lucide="smile"></i>
+                <span data-kids-label>Modo Kids</span>
+            </button>
+        </aside>
+
+        <main class="page-main">
+            <section class="library-page series-page">
+                <header class="library-header">
+                    <div>
+                        <p class="library-kicker">Series</p>
+                        <h1 class="library-title">Temporadas locais</h1>
+                        <p class="library-subtitle">Episodios detectados automaticamente nas pastas de series do BRasa.</p>
+                    </div>
+                </header>
+
+                <div id="seriesGrid" class="series-grid"></div>
+
+                <section id="seriesDetail" class="series-detail"></section>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest" async onload="window.lucide?.createIcons?.()"></script>
+    <script type="module" src="../js/pages/series.js?v=streaming-20260709a"></script>
+</body>
+</html>
+
