@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="brasa-app-ready">
 
 <head>
 
@@ -29,63 +29,6 @@
 </head>
 
 <body>
-
-    <script>
-        const brasaParams = new URLSearchParams(window.location.search);
-        const brasaReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
-        const brasaForceIntro = brasaParams.get("intro") === "force";
-        const brasaLaunchToken = brasaParams.get("opened") || "";
-        let brasaIntroSeen = false;
-
-        try {
-            brasaIntroSeen = brasaLaunchToken
-                ? sessionStorage.getItem("brasa:intro-opened-token") === brasaLaunchToken
-                : sessionStorage.getItem("brasa:intro-seen") === "true";
-        } catch {
-            brasaIntroSeen = false;
-        }
-
-        window.brasaSkipSplash = !brasaForceIntro && (brasaParams.get("intro") === "skip" || brasaIntroSeen || brasaReducedMotion);
-        window.brasaShouldPlayIntro = !window.brasaSkipSplash;
-
-        if (window.brasaShouldPlayIntro) {
-            try {
-                if (brasaLaunchToken) {
-                    sessionStorage.setItem("brasa:intro-opened-token", brasaLaunchToken);
-                } else {
-                    sessionStorage.setItem("brasa:intro-seen", "true");
-                }
-            } catch {}
-        }
-
-        document.documentElement.classList.toggle("brasa-splash-skip", window.brasaSkipSplash);
-        document.documentElement.classList.toggle("brasa-splash-pending", !window.brasaSkipSplash);
-    </script>
-
-    <div id="appSplash" class="app-splash" aria-label="Carregando BRasa" role="status">
-
-        <video
-            class="app-splash__video"
-            autoplay
-            muted
-            playsinline
-            preload="auto"
-            aria-label="Intro BRasa">
-            <source src="Logo/Anima%C3%A7%C3%A3o%20logo.mp4" type="video/mp4">
-        </video>
-
-        <button class="app-splash__skip" type="button" data-splash-skip>Pular</button>
-
-    </div>
-
-    <script>
-        document.addEventListener("click", (event) => {
-            if (!event.target.closest("[data-splash-skip]")) return;
-
-            window.brasaSplashSkipRequested = true;
-            document.dispatchEvent(new Event("brasa:splash-skip"));
-        });
-    </script>
 
     <div id="app">
 

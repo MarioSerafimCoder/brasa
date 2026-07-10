@@ -1,7 +1,7 @@
 ﻿import { collections } from "../../data/collections.js";
 import { getMovies } from "../../data/movies.js";
 import { applyPreferences } from "../utils/preferences.js";
-import { bindKidsModeToggle } from "../utils/kids-mode.js?v=streaming-20260709a";
+import { filterContentByProfile, initializeProfiles } from "../utils/profiles.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
 import { installPageTransitions } from "../utils/navigation.js";
 import { installPageSidebar } from "../utils/page-layout.js?v=streaming-20260709a";
@@ -10,26 +10,29 @@ import { bindMovieGridNavigation, renderMovieGrid } from "./library-utils.js?v=s
 
 applyPreferences();
 
-const movies = getMovies();
+let movies = [];
 const grid = document.getElementById("collectionsGrid");
 const title = document.getElementById("collectionTitle");
 const kicker = document.getElementById("collectionKicker");
 const count = document.getElementById("collectionCount");
 const movieGrid = document.getElementById("collectionMovies");
 
-let visibleCollections = getVisibleCollections();
-let selectedCollection = visibleCollections[0] || null;
+let visibleCollections = [];
+let selectedCollection = null;
 
 init();
 
-function init() {
+async function init() {
     installPageTransitions();
     installTmdbImageFallbacks();
     installPageSidebar("collection");
+    await initializeProfiles();
+    movies = filterContentByProfile(getMovies());
+    visibleCollections = getVisibleCollections();
+    selectedCollection = visibleCollections[0] || null;
     renderCollections();
     renderSelectedCollection();
     bindEvents();
-    bindKidsModeToggle();
     refreshIcons();
 }
 

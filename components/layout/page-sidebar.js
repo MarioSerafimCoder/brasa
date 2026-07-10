@@ -1,7 +1,7 @@
 import { escapeAttribute, escapeHtml } from "../../js/utils/html.js";
 
 const items = [
-    { id: "home", href: "../index.html?intro=skip", label: "Início" },
+    { id: "home", href: "../index.html", label: "Início" },
     { id: "search", href: "search.html", label: "Buscar" },
     { id: "movies", href: "movies.html", label: "Filmes" },
     { id: "series", href: "series.html", label: "Séries" },
@@ -25,12 +25,10 @@ export default function PageSidebar(active = "") {
             <a class="topbar-icon" href="search.html" aria-label="Buscar">
                 <i data-lucide="search"></i>
             </a>
-            <button class="profile-pill profile-pill--kids topbar-kids" type="button" data-kids-toggle aria-pressed="false" aria-label="Perfil Kids">
-                <i data-lucide="smile"></i>
-                <span data-kids-label>Kids</span>
-            </button>
-            <button class="topbar-avatar" type="button" aria-label="Perfil Mário">
-                <i data-lucide="user"></i>
+            <button class="profile-switcher" type="button" data-profile-switcher>
+                <span class="profile-switcher__avatar" data-profile-initials>?</span>
+                <span class="profile-switcher__name" data-profile-name>Perfis</span>
+                <i data-lucide="chevron-down"></i>
             </button>
         </div>
     `;

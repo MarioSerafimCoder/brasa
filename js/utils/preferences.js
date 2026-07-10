@@ -20,10 +20,7 @@ const defaultPreferences = {
     maxVolume: 100,
     normalizeVolume: false,
     preferSurround: true,
-    libraryView: "grid",
-    kidsMode: false,
-    kidsPin: "",
-    kidsMaxRating: "PG"
+    libraryView: "grid"
 };
 
 export function getPreferences() {
@@ -62,7 +59,6 @@ export function applyPreferences() {
     root.dataset.density = preferences.density;
     root.dataset.posterStyle = preferences.posterStyle;
     root.dataset.libraryView = preferences.libraryView;
-    root.dataset.kidsMode = preferences.kidsMode ? "on" : "off";
     root.dataset.subtitlePosition = preferences.subtitlePosition;
     root.dataset.subtitleOutline = preferences.subtitleOutline ? "on" : "off";
 

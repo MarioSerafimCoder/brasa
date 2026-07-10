@@ -1,5 +1,5 @@
 ﻿import { applyPreferences, getPreferences, savePreferences } from "../utils/preferences.js";
-import { bindKidsModeToggle } from "../utils/kids-mode.js?v=streaming-20260709a";
+import { initializeProfiles } from "../utils/profiles.js";
 import { installPageTransitions } from "../utils/navigation.js";
 import { installPageSidebar } from "../utils/page-layout.js?v=streaming-20260709a";
 
@@ -7,14 +7,14 @@ const preferences = applyPreferences();
 
 init();
 
-function init() {
+async function init() {
     installPageTransitions();
     installPageSidebar("settings");
+    await initializeProfiles();
     hideUnsupportedSettings();
     hydrateControls(preferences);
     installColorSwatches();
     bindControls();
-    bindKidsModeToggle();
 
     if (window.lucide) {
         window.lucide.createIcons();
@@ -64,13 +64,6 @@ function bindControls() {
 
         const key = control.dataset.setting;
         const value = readControlValue(control);
-
-        if (key === "kidsPin" && value && !/^\d{4}$/.test(value)) {
-            control.setCustomValidity("Use exatamente 4 números.");
-            control.reportValidity();
-            hydrateControls(getPreferences());
-            return;
-        }
 
         control.setCustomValidity?.("");
         savePreferences({ [key]: value });

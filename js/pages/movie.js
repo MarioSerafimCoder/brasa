@@ -7,7 +7,7 @@ import { getMovieById, getMovies } from "../../data/movies.js";
 import { getEpisodeById, getSeriesById } from "../../data/series.js";
 import { applyPreferences, getPreferences } from "../utils/preferences.js";
 import { isFavorite, toggleFavorite } from "../utils/favorites.js";
-import { filterKidsMovies } from "../utils/kids-mode.js";
+import { filterContentByProfile, initializeProfiles } from "../utils/profiles.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
 import { installPageTransitions, navigateTo } from "../utils/navigation.js";
 import { clearWatchProgress, getWatchProgress, saveWatchProgress } from "../utils/progress.js";
@@ -77,6 +77,8 @@ let preferences = applyPreferences();
 installPageTransitions();
 installTmdbImageFallbacks();
 
+await initializeProfiles();
+
 function loadMovie() {
     if (!movieId && !episodeId) {
         showUnavailableMovie("Filme não encontrado");
@@ -93,8 +95,8 @@ function loadMovie() {
     currentMovie = movie;
     preferences = getPreferences();
 
-    if (preferences.kidsMode && !filterKidsMovies([movie]).length) {
-        showUnavailableMovie("Este conteúdo não está liberado no modo Kids.");
+    if (!filterContentByProfile([movie]).length) {
+        showUnavailableMovie("Este conteúdo não está disponível para o perfil Laura.");
         return;
     }
 
@@ -171,6 +173,7 @@ function buildEpisodeMovie(id) {
         type: "episode",
         isEpisode: true,
         seriesId: episode.seriesId,
+        kids: Boolean(series.kids),
         title: `${seriesTitle} - T${episode.seasonNumber}E${episode.episodeNumber}`,
         year: "",
         duration: "",
@@ -250,7 +253,7 @@ function renderWatchNext(movie) {
     }
 
     const currentGenres = new Set(movie.genres || []);
-    const recommendations = getMovies()
+    const recommendations = filterContentByProfile(getMovies())
         .filter((candidate) => candidate.id !== movie.id)
         .map((candidate) => ({
             ...candidate,
@@ -319,7 +322,7 @@ function closePlayerWindow() {
     window.close();
 
     window.setTimeout(() => {
-        navigateTo("../index.html?intro=skip", { instant: true });
+        navigateTo("../index.html", { instant: true });
     }, 120);
 }
 

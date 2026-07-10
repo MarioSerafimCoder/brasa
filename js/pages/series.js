@@ -1,6 +1,6 @@
 ﻿import { getSeries, getSeriesById } from "../../data/series.js";
-import { applyPreferences, getPreferences } from "../utils/preferences.js";
-import { bindKidsModeToggle } from "../utils/kids-mode.js?v=streaming-20260709a";
+import { applyPreferences } from "../utils/preferences.js";
+import { filterContentByProfile, initializeProfiles } from "../utils/profiles.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
 import { installPageTransitions, navigateTo } from "../utils/navigation.js";
 import { installPageSidebar } from "../utils/page-layout.js?v=streaming-20260709a";
@@ -14,15 +14,13 @@ let selectedSeriesId = params.get("id") || "";
 
 init();
 
-function init() {
+async function init() {
     applyPreferences();
     installPageTransitions();
     installTmdbImageFallbacks();
     installPageSidebar("series");
-    bindKidsModeToggle();
+    await initializeProfiles();
     renderPage();
-
-    document.addEventListener("brasa:kids-mode-change", renderPage);
 
     seriesGrid.addEventListener("click", (event) => {
         const card = event.target.closest("[data-series-id]");
@@ -84,8 +82,7 @@ function renderPage() {
 }
 
 function getVisibleSeries() {
-    const items = getSeries();
-    return getPreferences().kidsMode ? items.filter((item) => item.kids) : items;
+    return filterContentByProfile(getSeries());
 }
 
 function SeriesCard(item) {
@@ -155,10 +152,14 @@ function SeasonBlock(season) {
 }
 
 function EpisodeCard(episode) {
+    const thumbnail = episode.thumbnail || episode.backdrop || "";
+    const fallback = episode.backdrop && episode.backdrop !== thumbnail ? episode.backdrop : "";
+
     return `
         <article class="episode-card" data-episode-id="${escapeAttribute(episode.id)}" role="button" tabindex="0" aria-label="Abrir ${escapeAttribute(episode.title)}">
             <div class="episode-card__thumb">
-                ${episode.thumbnail ? `<img src="../${escapeAttribute(episode.thumbnail)}" alt="${escapeAttribute(episode.title)}" loading="lazy">` : `<span>${escapeHtml(episode.episodeNumber)}</span>`}
+                <span aria-hidden="true">${escapeHtml(episode.episodeNumber)}</span>
+                ${thumbnail ? `<img src="../${escapeAttribute(thumbnail)}" alt="${escapeAttribute(episode.title)}" loading="lazy"${tmdbImageFallbackAttributes(fallback ? `../${fallback}` : "")}>` : ""}
             </div>
             <div>
                 <h4>${escapeHtml(episode.title)}</h4>

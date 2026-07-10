@@ -15,19 +15,20 @@ node_modules/
 # Logs
 *.log
 
-# Filmes (não versionar)
+# Mídias locais - não versionar
 assets/movies/
-
-# Séries (não versionar)
 assets/series/
-
-# Séries infantis (não versionar)
 assets/kids-series/
-
-# Legendas (opcional)
 assets/subtitles/
 
-# Bancos de dados locais (caso existam)
+# Vídeos - não versionar
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.webm
+
+# Bancos de dados locais
 *.db
 *.sqlite
 *.sqlite3
@@ -39,9 +40,3 @@ assets/subtitles/
 # Arquivos temporários
 *.tmp
 *.bak
-assets/series/The Bear - 1ª temporada/
-*.mp4
-*.mkv
-*.avi
-*.mov
-*.webm

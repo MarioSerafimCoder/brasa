@@ -1,7 +1,6 @@
 ﻿import { getMovies } from "../../data/movies.js";
-import { applyPreferences, getPreferences } from "../utils/preferences.js";
-import { bindKidsModeToggle } from "../utils/kids-mode.js?v=streaming-20260709a";
-import { filterKidsMovies } from "../utils/kids-mode.js?v=streaming-20260709a";
+import { applyPreferences } from "../utils/preferences.js";
+import { filterContentByProfile, initializeProfiles } from "../utils/profiles.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
 import { installPageTransitions } from "../utils/navigation.js";
 import { installPageSidebar } from "../utils/page-layout.js?v=streaming-20260709a";
@@ -15,7 +14,7 @@ import {
 
 applyPreferences();
 
-let movies = readMovies();
+let movies = [];
 const searchInput = document.getElementById("searchInput");
 const clearSearch = document.getElementById("clearSearch");
 const genreFilter = document.getElementById("genreFilter");
@@ -25,18 +24,14 @@ const resultSummary = document.getElementById("resultSummary");
 
 init();
 
-function init() {
+async function init() {
     installPageTransitions();
     installTmdbImageFallbacks();
     installPageSidebar("search");
+    await initializeProfiles();
+    movies = readMovies();
     fillGenres();
     bindEvents();
-    bindKidsModeToggle();
-    document.addEventListener("brasa:kids-mode-change", () => {
-        movies = readMovies();
-        fillGenres();
-        render();
-    });
     render();
 
     if (window.lucide) {
@@ -45,8 +40,7 @@ function init() {
 }
 
 function readMovies() {
-    const allMovies = getMovies();
-    return getPreferences().kidsMode ? filterKidsMovies(allMovies) : allMovies;
+    return filterContentByProfile(getMovies());
 }
 
 function fillGenres() {

@@ -1,6 +1,5 @@
 import { installSyncStatus } from "./sync-status.js";
 
-const transitionMs = 90;
 let installed = false;
 let isNavigating = false;
 
@@ -11,14 +10,8 @@ export function installPageTransitions() {
     markAppLoaded();
     installSyncStatus();
 
-    window.addEventListener("pageshow", () => {
-        document.documentElement.classList.remove("brasa-page-leaving");
-        document.documentElement.classList.add("brasa-page-ready", "brasa-page-entering");
-
-        window.setTimeout(() => {
-            document.documentElement.classList.remove("brasa-page-entering");
-        }, transitionMs + 80);
-    });
+    resetNavigationState();
+    window.addEventListener("pageshow", resetNavigationState);
 
     document.addEventListener("click", (event) => {
         const link = event.target.closest("a[href]");
@@ -37,18 +30,14 @@ export function navigateTo(url, options = {}) {
 
     if (target.href === window.location.href) return;
 
-    if (options.instant || prefersReducedMotion()) {
-        window.location.href = target.href;
+    isNavigating = true;
+
+    if (options.replace) {
+        window.location.replace(target.href);
         return;
     }
 
-    isNavigating = true;
-    document.documentElement.classList.remove("brasa-page-entering");
-    document.documentElement.classList.add("brasa-page-leaving");
-
-    window.setTimeout(() => {
-        window.location.href = target.href;
-    }, transitionMs);
+    window.location.assign(target.href);
 }
 
 function shouldTransitionLink(link, event) {
@@ -72,8 +61,13 @@ function shouldTransitionLink(link, event) {
     return !sameDocument;
 }
 
-function prefersReducedMotion() {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function resetNavigationState() {
+    isNavigating = false;
+    document.documentElement.classList.remove(
+        "brasa-page-ready",
+        "brasa-page-entering",
+        "brasa-page-leaving"
+    );
 }
 
 function markAppLoaded() {

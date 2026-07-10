@@ -900,7 +900,9 @@ function parseSeriesFile(file, source) {
     const episodeNumber = parseEpisodeNumber(file.relativePath) || 1;
     const seriesTitle = cleanSeriesTitle(folderTitle || baseName);
     const episodeTitle = cleanEpisodeTitle(baseName, episodeNumber);
+    const seriesId = slugify(seriesTitle);
     const episodeId = slugify(`${source.kids ? "kids" : "series"}-${seriesTitle}-s${seasonNumber}-e${episodeNumber}-${baseName}`);
+    const episodeImageSlug = slugify(`${seriesId}-s${seasonNumber}-e${episodeNumber}`);
 
     return {
         seriesTitle,
@@ -908,7 +910,7 @@ function parseSeriesFile(file, source) {
         addedAt: file.mtime.toISOString(),
         episode: {
             id: episodeId,
-            seriesId: slugify(seriesTitle),
+            seriesId,
             seasonNumber,
             episodeNumber,
             title: episodeTitle,
@@ -916,7 +918,9 @@ function parseSeriesFile(file, source) {
             quality: inferQuality(fileName),
             addedAt: file.mtime.toISOString(),
             progress: 0,
-            subtitles: []
+            subtitles: [],
+            thumbnail: `assets/episode-thumbnails/${episodeImageSlug}.jpg`,
+            backdrop: `assets/episode-backdrops/${episodeImageSlug}.jpg`
         }
     };
 }

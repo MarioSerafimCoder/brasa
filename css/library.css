@@ -817,6 +817,12 @@
 
 .episode-card__thumb img{
 
+    position:relative;
+
+    z-index:1;
+
+    display:block;
+
     width:100%;
 
     height:100%;
@@ -826,6 +832,10 @@
 }
 
 .episode-card__thumb span{
+
+    position:absolute;
+
+    inset:0;
 
     display:grid;
 
@@ -1684,9 +1694,17 @@ html[data-kids-mode="on"] .profile-pill--kids{
 
 .page-shell{
 
-    display:block;
+    display:grid;
 
-    min-height:100vh;
+    grid-template-columns:minmax(0, 1fr);
+
+    grid-template-rows:92px minmax(0, 1fr);
+
+    height:100vh;
+
+    min-height:0;
+
+    overflow:hidden;
 
     background:#02060D;
 
@@ -1694,9 +1712,15 @@ html[data-kids-mode="on"] .profile-pill--kids{
 
 .page-sidebar{
 
-    position:sticky;
+    position:relative;
 
-    top:0;
+    top:14px;
+
+    left:auto;
+
+    right:auto;
+
+    margin:0 clamp(1rem, 3vw, 2.25rem);
 
     z-index:var(--z-header);
 
@@ -1811,6 +1835,14 @@ html[data-kids-mode="on"] .profile-pill--kids{
 
     min-width:0;
 
+    min-height:0;
+
+    padding-top:0;
+
+    overflow-y:auto;
+
+    overscroll-behavior:contain;
+
 }
 
 .library-page,
@@ -1842,7 +1874,21 @@ html[data-kids-mode="on"] .profile-pill--kids{
 
 @media (max-width:760px){
 
+    .page-shell{
+
+        grid-template-rows:64px minmax(0, 1fr);
+
+    }
+
     .page-sidebar{
+
+        top:0;
+
+        left:0;
+
+        right:0;
+
+        margin:0;
 
         height:auto;
 
@@ -1873,6 +1919,12 @@ html[data-kids-mode="on"] .profile-pill--kids{
     .page-sidebar__actions .topbar-kids span{
 
         display:none;
+
+    }
+
+    .page-main{
+
+        padding-top:0;
 
     }
 
