@@ -1,0 +1,9 @@
+import assert from "node:assert/strict";import fs from "node:fs/promises";import os from "node:os";import path from "node:path";import {createAdminAuthService,validatePassword} from "../server/admin-auth.mjs";
+const root=await fs.mkdtemp(path.join(os.tmpdir(),"brasa-admin-auth-"));let time=Date.now();const auth=createAdminAuthService({rootDir:root,now:()=>time});
+assert.equal(await auth.configured(),false);assert.throws(()=>validatePassword("curta1"));await assert.rejects(()=>auth.setup("somentesenha","somentesenha"));
+const setup=await auth.setup("SenhaSegura1","SenhaSegura1");assert.equal(await auth.configured(),true);assert.ok(setup.cookie.includes("HttpOnly"));await assert.rejects(()=>auth.setup("OutraSenha1","OutraSenha1"));
+const request=(cookie,csrf="")=>({headers:{cookie,"x-brasa-csrf":csrf}}),cookie=setup.cookie.split(";")[0];assert.equal(auth.requireSession(request(cookie)).authenticated,true);assert.throws(()=>auth.requireSession(request(cookie,"errado"),{csrf:true}));assert.equal(auth.requireSession(request(cookie,setup.csrf),{csrf:true}).authenticated,true);
+auth.logout(request(cookie));assert.throws(()=>auth.requireSession(request(cookie)));
+for(let i=0;i<5;i++)await assert.rejects(()=>auth.login("Errada123","local"));await assert.rejects(()=>auth.login("SenhaSegura1","local"));time+=31000;const login=await auth.login("SenhaSegura1","local");const loginCookie=login.cookie.split(";")[0];time+=31*60*1000;assert.throws(()=>auth.requireSession(request(loginCookie)));
+time=Date.now();const fresh=await auth.login("SenhaSegura1","ok");await auth.changePassword(request(fresh.cookie.split(";")[0],fresh.csrf),"SenhaSegura1","NovaSenha2","NovaSenha2");assert.equal(auth.sessionCount(),0);await assert.rejects(()=>auth.login("SenhaSegura1","old"));assert.ok(await auth.login("NovaSenha2","new"));
+await fs.rm(root,{recursive:true,force:true});console.log("Admin auth: 14 cenários aprovados.");

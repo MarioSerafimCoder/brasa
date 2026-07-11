@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>BRasa Admin</title><link rel="stylesheet" href="/admin/admin.css"></head>
+<body>
+<div id="auth" class="auth-shell" hidden></div>
+<div id="app" class="admin-shell" hidden>
+  <aside class="sidebar" aria-label="Navegação administrativa"><a class="brand" href="#dashboard"><span>🔥</span><strong>BRasa</strong><small>Admin</small></a><nav id="nav"></nav><button id="logout" class="nav-logout" type="button">Sair</button></aside>
+  <header class="topbar"><button id="menu" class="icon-button" aria-label="Abrir menu" type="button">☰</button><div><p>Central administrativa</p><strong id="pageTitle">Dashboard</strong></div><span id="syncBadge" class="status-pill">Biblioteca pronta</span></header>
+  <main id="content" tabindex="-1"></main>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<div id="modal" class="modal" hidden></div>
+<script type="module" src="/admin/admin.js"></script>
+</body></html>

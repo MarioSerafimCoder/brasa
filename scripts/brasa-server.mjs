@@ -17,6 +17,10 @@ import { absoluteLibraryRoots, isProcessableVideo, resolvePathInsideLibrary } fr
 import { AppError, PayloadTooLargeError, ValidationError } from "../server/app-errors.mjs";
 import { validateLocalWriteRequest } from "../server/local-security.mjs";
 import { normalizeProfileState } from "../server/profile-state.mjs";
+import { createAdminAuthService } from "../server/admin-auth.mjs";
+import { createAdminLogService } from "../server/admin-log.mjs";
+import { createAdminServices } from "../server/admin-services.mjs";
+import { createAdminController } from "../server/admin-controller.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -35,6 +39,7 @@ const pinAttempts = new Map();
 let userStateWriteQueue = Promise.resolve();
 let profileRequestQueue = Promise.resolve();
 let userCollectionsWriteQueue = Promise.resolve();
+let libraryWatcher = null;
 const mediaStore = createMediaStateStore(rootDir);
 const mediaQueue = createMediaQueue({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir), resolveMedia });
 const libraryHealthStore = createLibraryHealthStore(rootDir);
@@ -50,6 +55,11 @@ let syncStatus = {
     output: ""
 };
 const syncCoordinator = createSyncCoordinator({ runSync: (reasons) => syncLibrary(`Biblioteca atualizada (${reasons.join(", ") || "automático"}).`, "A atualização falhou."), afterSync: () => scheduleAutomaticMediaAnalysis(), onStatusChange: (status) => { syncStatus = status; } });
+const adminAuth = createAdminAuthService({ rootDir });
+const adminLogs = createAdminLogService(rootDir);
+const getAdminTools=async()=>{const tools=await getMediaToolsStatus(rootDir);return{...tools,ffmpegPath:tools.ffmpegPath?path.basename(tools.ffmpegPath):"",ffprobePath:tools.ffprobePath?path.basename(tools.ffprobePath):""};};
+const adminServices = createAdminServices({ rootDir, mediaStore, mediaQueue, libraryHealth, libraryHealthStore, syncHistoryStore, syncCoordinator, getTools: getAdminTools, profileAdapter: { list: adminListProfiles, create: adminCreateProfile, update: adminUpdateProfile, remove: adminRemoveProfile, clear: adminClearProfile, relocate: adminRelocate }, collectionAdapter: { list: readUserCollections, create: adminCreateCollection, update: adminUpdateCollection, remove: adminRemoveCollection }, watcherStatus: () => ({ enabled: process.env.BRASA_WATCH_LIBRARY !== "0", active: Boolean(libraryWatcher), observedFiles: libraryWatcher?.getStates?.().length || 0 }) });
+const handleAdminApi = createAdminController({ auth: adminAuth, logs: adminLogs, services: adminServices, readBody: readJsonBody, send: sendJson, syncCoordinator, libraryHealth, mediaQueue, mediaStore });
 
 const contentTypes = {
     ".html": "text/html; charset=utf-8",
@@ -73,6 +83,11 @@ const server = http.createServer(async (request, response) => {
         const url = new URL(request.url, `http://${request.headers.host}`);
         validateLocalWriteRequest(request, { port: activePort });
 
+        if (url.pathname === "/api/admin/status" || url.pathname.startsWith("/api/admin/")) {
+            await handleAdminApi(request, response, url);
+            return;
+        }
+
         if (request.method === "GET" && url.pathname === "/api/sync/status") {
             sendJson(response, 200, syncStatus);
             return;
@@ -94,6 +109,7 @@ const server = http.createServer(async (request, response) => {
         }
 
         if (url.pathname === "/api/profiles" || url.pathname.startsWith("/api/profiles/")) {
+            if (requiresAdminProfileSession(request, url)) adminAuth.requireSession(request, { csrf: true });
             await queueProfileRequest(() => handleProfilesApi(request, response, url));
             return;
         }
@@ -110,6 +126,11 @@ const server = http.createServer(async (request, response) => {
 
         if (request.method !== "GET" && request.method !== "HEAD") {
             sendJson(response, 405, { ok: false, message: "Metodo nao permitido." });
+            return;
+        }
+
+        if (url.pathname.startsWith("/admin/") && !path.extname(url.pathname)) {
+            await serveStatic("/admin/index.html", request, response);
             return;
         }
 
@@ -155,7 +176,7 @@ async function runStartupSync() {
 async function enableLibraryWatcher() {
     if (process.env.BRASA_WATCH_LIBRARY === "0") return;
     const requestSync = debounce((event) => syncCoordinator.requestSync(`watcher:${event.event}`), 1200);
-    await startLibraryWatcher({ rootDir, onStableChange: requestSync, onError: (error, directory) => console.error(`BRasa watcher (${directory}):`, error.message) });
+    libraryWatcher = await startLibraryWatcher({ rootDir, onStableChange: requestSync, onError: (error, directory) => console.error(`BRasa watcher (${directory}):`, error.message) });
     console.log("BRasa: observando alteracoes nas pastas da biblioteca.");
 }
 
@@ -431,6 +452,8 @@ async function handleProfilesApi(request, response, url) {
     sendJson(response,405,{ok:false,message:"Método não permitido."});
 }
 
+function requiresAdminProfileSession(request,url){if(request.method==="POST"&&url.pathname==="/api/profiles")return true;const parts=url.pathname.split("/").filter(Boolean),resource=parts[3]||"";return ((request.method==="PUT"||request.method==="DELETE")&&!resource)||(request.method==="PUT"&&resource==="pin");}
+
 function defaultUserState() { const now=new Date().toISOString(); const profiles=[{id:"mario",name:"Mário",initials:"M",kind:"adult",avatar:{type:"initials",value:"M",color:"blue"},pinHash:"",createdAt:now,updatedAt:now},{id:"isabele",name:"Isabele",initials:"I",kind:"adult",avatar:{type:"initials",value:"I",color:"purple"},pinHash:"",createdAt:now,updatedAt:now},{id:"laura",name:"Laura",initials:"L",kind:"kids",maxContentRating:10,avatar:{type:"initials",value:"L",color:"pink"},pinHash:"",createdAt:now,updatedAt:now}]; return {version:1,profiles,states:Object.fromEntries(profiles.map((p)=>[p.id,emptyProfileState()]))}; }
 function emptyProfileState(){return {favorites:[],progress:{},history:[],completed:[],preferences:{},updatedAt:""};}
 async function readUserState(){
@@ -633,6 +656,16 @@ function getTmdbCredentials() {
 
     return { readToken, apiKey };
 }
+
+async function adminListProfiles(){const state=await readUserState();return publicProfiles(state.profiles);}
+async function adminCreateProfile(input){const state=await readUserState(),profile=validateProfile(input);if(state.profiles.some((item)=>item.id===profile.id))throw new ValidationError("Já existe um perfil com este identificador.");if(input.pin)profile.pinHash=hashPin(input.pin);state.profiles=[...state.profiles,profile];state.states={...state.states,[profile.id]:emptyProfileState()};await queueUserStateWrite(state);return publicProfile(profile);}
+async function adminUpdateProfile(id,input){if(!isValidProfileId(id))throw new ValidationError("Perfil inválido.");const state=await readUserState(),index=state.profiles.findIndex((item)=>item.id===id);if(index<0)throw new ValidationError("Perfil não encontrado.");const current=state.profiles[index],profile=validateProfile({...current,...input,id},id);profile.pinHash=input.pin===undefined?current.pinHash:input.pin?hashPin(input.pin):"";state.profiles=state.profiles.map((item)=>item.id===id?profile:item);await queueUserStateWrite(state);return publicProfile(profile);}
+async function adminRemoveProfile(id){const state=await readUserState(),profile=state.profiles.find((item)=>item.id===id);if(!profile)throw new ValidationError("Perfil não encontrado.");if(profile.kind==="adult"&&state.profiles.filter((item)=>item.kind==="adult").length===1)throw new ValidationError("O último perfil adulto não pode ser removido.");state.profiles=state.profiles.filter((item)=>item.id!==id);const states={...state.states};delete states[id];state.states=states;await queueUserStateWrite(state);return{removed:true};}
+async function adminClearProfile(id,action){const state=await readUserState();if(!state.profiles.some((item)=>item.id===id))throw new ValidationError("Perfil não encontrado.");const current=validateProfileState(state.states[id]||{}),next={...current};if(action==="clear-favorites")next.favorites=[];if(action==="clear-progress"){next.progress={};next.completed=[];}if(action==="clear-history")next.history=[];if(action==="reset-preferences")next.preferences={};next.updatedAt=new Date().toISOString();state.states={...state.states,[id]:next};await queueUserStateWrite(state);return{cleared:true,action};}
+async function adminRelocate(mediaKey,candidateId){const candidates=await findLibraryCandidates(mediaKey),selected=candidates.find((item)=>item.id===candidateId);if(!selected||selected.confidence==="low")throw new ValidationError("Candidato inválido ou com baixa confiança.");resolvePathInsideLibrary(rootDir,selected.relativePath);await mediaStore.update(mediaKey,{mediaKey,originalPath:selected.relativePath,preparedPath:"",status:"pending",probe:null,fingerprint:null,error:""});return selected;}
+async function adminCreateCollection(input){const collections=await readUserCollections(),collection=validateCollection(input);if(systemCollectionIds.has(collection.id)||collections.some((item)=>item.id===collection.id))throw new ValidationError("Já existe uma coleção com este identificador.");await writeUserCollections([...collections,collection]);return collection;}
+async function adminUpdateCollection(id,input){if(systemCollectionIds.has(id))throw new ValidationError("Coleções do sistema são somente leitura.");const collections=await readUserCollections(),index=collections.findIndex((item)=>item.id===id);if(index<0)throw new ValidationError("Coleção não encontrada.");const collection=validateCollection({...input,id},id),next=[...collections];next[index]=collection;await writeUserCollections(next);return collection;}
+async function adminRemoveCollection(id){if(systemCollectionIds.has(id))throw new ValidationError("Coleções do sistema são somente leitura.");const collections=await readUserCollections();if(!collections.some((item)=>item.id===id))throw new ValidationError("Coleção não encontrada.");await writeUserCollections(collections.filter((item)=>item.id!==id));return{removed:true};}
 
 function normalizeTmdbText(value) {
     return String(value || "")

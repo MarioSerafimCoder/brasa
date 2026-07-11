@@ -35,6 +35,8 @@ async function syncMovies() {
         const openSubtitlesApiKey = getArgValue("--opensubtitles-api-key") || process.env.OPENSUBTITLES_API_KEY;
         const subtitleLanguages = parseSubtitleLanguages(process.env.SUBTITLE_LANGUAGES || "pt-br,en");
         const movies = await loadMovies();
+        const adminOverrides = await loadAdminOverrides();
+        let overrideChanged=false;movies.forEach((movie)=>{const fields=adminOverrides[`movie:${movie.id}`]?.fields||{};if(Object.entries(fields).some(([key,value])=>JSON.stringify(movie[key])!==JSON.stringify(value)))overrideChanged=true;Object.assign(movie,fields);});
         movies.forEach((movie)=>{ movie.audience=getMovieAudience(movie); });
         const overrides = await loadOverrides();
         const videoFiles = await listVideoFiles();
@@ -44,7 +46,7 @@ async function syncMovies() {
                 .map((movie) => [normalizePath(movie.video), movie])
         );
 
-        let changed = false;
+        let changed = overrideChanged;
         const added = [];
         const availablePaths = new Set(videoFiles.map((file) => normalizePath(file.assetPath)));
 
@@ -458,6 +460,8 @@ async function loadOverrides() {
     }
 }
 
+async function loadAdminOverrides(){try{return JSON.parse(await fs.readFile(path.join(rootDir,"data","admin-overrides.json"),"utf8"));}catch{return {};}}
+
 async function listVideoFiles() {
     const withStats=[];
     for(const source of movieSources){
@@ -781,6 +785,8 @@ async function syncSeries() {
         const omdbApiKey = getArgValue("--api-key") || process.env.OMDB_API_KEY;
         const series = await buildSeriesLibrary();
         const enriched = await hydrateSeriesMetadata(series, omdbApiKey);
+        const adminOverrides = await loadAdminOverrides();
+        for(const item of enriched){Object.assign(item,adminOverrides[`series:${item.id}`]?.fields||{});for(const season of item.seasons||[])for(const episode of season.episodes||[])Object.assign(episode,adminOverrides[`episode:${episode.id}`]?.fields||{});}
 
         if (isDryRun) {
             console.log(`BRasa: dry-run ativo; ${enriched.length} serie(s) detectada(s).`);

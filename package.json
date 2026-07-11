@@ -13,5 +13,10 @@
     "test:security": "node scripts/test-local-security.mjs",
     "test:library": "node scripts/test-library-health.mjs",
     "test:media": "node scripts/test-media-compatibility.mjs"
+    ,"test:admin-auth": "node scripts/test-admin-auth.mjs"
+    ,"test:admin-api": "node scripts/test-admin-api.mjs"
+    ,"test:admin-library": "node scripts/test-admin-library.mjs"
+    ,"test:admin-profiles": "node scripts/test-admin-profiles.mjs"
+    ,"test:admin-logs": "node scripts/test-admin-logs.mjs"
   }
 }

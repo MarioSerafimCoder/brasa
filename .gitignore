@@ -26,6 +26,18 @@ data/sync-history.json
 data/sync-history.backup.json
 data/library-audit/
 .brasa-server.json
+.brasa-admin.json
+.brasa-admin.json.corrupt-*
+.brasa-admin-sessions.json
+data/admin-logs.json
+data/admin-logs.backup.json
+data/admin-logs.json.corrupt-*
+data/admin-settings.json
+data/admin-settings.json.backup.json
+data/admin-overrides.json
+data/admin-overrides.json.backup.json
+data/series-overrides.json
+data/episode-overrides.json
 
 # Logs
 *.log
