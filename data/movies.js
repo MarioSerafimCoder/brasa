@@ -177,7 +177,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 25119571112,
         "fileModifiedAt": "2026-07-11T16:48:50.177Z",
-        "lastIndexedAt": "2026-07-11T21:29:13.014Z",
+        "lastIndexedAt": "2026-07-11T22:28:24.426Z",
         "subtitles": [
             {
                 "label": "English",
@@ -194,7 +194,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-11T21:29:12.239Z",
+        "lastMetadataAttemptAt": "2026-07-11T22:28:22.125Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -258,7 +258,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1478591394,
         "fileModifiedAt": "2026-07-11T15:54:50.372Z",
-        "lastIndexedAt": "2026-07-11T21:29:14.550Z",
+        "lastIndexedAt": "2026-07-11T22:28:24.898Z",
         "subtitles": [
             {
                 "label": "English",
@@ -275,7 +275,56 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-11T21:29:13.014Z",
+        "lastMetadataAttemptAt": "2026-07-11T22:28:24.429Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 9,
+        "title": "Ad Astra",
+        "originalTitle": "Ad Astra",
+        "year": 2019,
+        "duration": "2h 03min",
+        "rating": 6.5,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Ficção científica",
+            "Drama"
+        ],
+        "overview": "Roy McBride é um engenheiro espacial, portador de um leve grau de autismo, que decide empreender a maior jornada de sua vida: viajar para o espaço, cruzar a galáxia e tentar descobrir o que aconteceu com seu pai, um astronauta que se perdeu há vinte anos atrás no caminho para Netuno.",
+        "poster": "assets/posters/ad-astra-2019-poster.jpg",
+        "backdrop": "assets/backdrops/ad-astra-2019-backdrop.jpg",
+        "video": "assets/movies/Ad Astra (2019) [tt2935510].mkv",
+        "audience": "general",
+        "addedAt": "2026-07-11T16:25:24.769Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt2935510",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 2488901054,
+        "fileModifiedAt": "2026-07-11T16:25:24.769Z",
+        "lastIndexedAt": "2026-07-11T22:28:26.459Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/ad-astra-rumo-as-estrelas-2019-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/ad-astra-rumo-as-estrelas-2019-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-07-11T22:28:24.901Z",
         "lastMetadataAttemptConfigured": true
     }
 ];

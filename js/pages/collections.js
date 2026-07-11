@@ -8,7 +8,7 @@ import { installTmdbImageFallbacks, movieImageUrl, tmdbImageFallbackAttributes }
 import { bindMovieGridNavigation, renderMovieGrid } from "./library-utils.js?v=streaming-20260709a";
 import {
     createCollection, createId, deleteCollection, duplicateCollection, filterCollectionsForProfile,
-    getCollectionMovies, loadCollections, updateCollection
+    getCollectionMovies, loadCollections, saveSystemCollectionMovies, updateCollection
 } from "../services/collections-service.js";
 import { getAllMediaStatus } from "../services/media-service.js";
 
@@ -43,6 +43,7 @@ async function init() {
     movies = filterContentByProfile(getMovies(), profile);
     try { const mediaState = await getAllMediaStatus(); movies = movies.map((movie) => { const item = mediaState.items?.[`movie:${movie.id}`] || {}; return { ...movie, mediaStatus:item.status||"pending", mediaStrategy:item.strategy||"pending", videoCodec:item.probe?.video?.codec||"", audioCodec:item.probe?.audioTracks?.[0]?.codec||"", resolution:item.probe?.video?.height||0, hdr:Boolean(item.probe?.video?.hdr), directPlay:item.strategy==="direct-play", prepared:Boolean(item.preparedPath) }; }); } catch {}
     await reloadCollections();
+    elements.showEmpty.checked = true;
     bindEvents();
     const requestedId = new URLSearchParams(location.search).get("id");
     requestedId ? openCollection(requestedId, false) : renderOverview();
@@ -129,7 +130,7 @@ function collectionCard(collection, items) {
         <div class="collection-card__shade"></div>
         <div class="collection-card__top"><span class="collection-type collection-type--${collection.source === "system" ? "system" : collection.type}">${typeLabel(collection)}</span>
             <div class="collection-card__menu"><button type="button" data-menu="${escapeAttribute(collection.id)}" aria-label="Ações de ${escapeAttribute(collection.title)}" aria-expanded="${openMenuId === collection.id}"><i data-lucide="ellipsis"></i></button>
-            <div class="collection-menu" ${openMenuId === collection.id ? "" : "hidden"} role="menu"><button role="menuitem" data-action="open" data-id="${escapeAttribute(collection.id)}">Abrir</button>${collection.source === "user" ? `<button role="menuitem" data-action="edit" data-id="${escapeAttribute(collection.id)}">Editar</button>` : ""}<button role="menuitem" data-action="duplicate" data-id="${escapeAttribute(collection.id)}">Duplicar</button>${collection.source === "user" ? `<button class="is-danger" role="menuitem" data-action="delete" data-id="${escapeAttribute(collection.id)}">Excluir</button>` : ""}</div></div>
+            <div class="collection-menu" ${openMenuId === collection.id ? "" : "hidden"} role="menu"><button role="menuitem" data-action="open" data-id="${escapeAttribute(collection.id)}">Abrir</button>${collection.source === "system" ? `<button role="menuitem" data-action="add-movies" data-id="${escapeAttribute(collection.id)}">Adicionar filmes</button>` : `<button role="menuitem" data-action="edit" data-id="${escapeAttribute(collection.id)}">Editar</button>`}<button role="menuitem" data-action="duplicate" data-id="${escapeAttribute(collection.id)}">Duplicar</button>${collection.source === "user" ? `<button class="is-danger" role="menuitem" data-action="delete" data-id="${escapeAttribute(collection.id)}">Excluir</button>` : ""}</div></div>
         </div>
         <div class="collection-card__content"><h2>${escapeHtml(collection.title)}</h2><p>${escapeHtml(collection.description)}</p><div class="collection-card__meta"><span>${items.length} ${items.length === 1 ? "filme" : "filmes"}</span><span class="collection-card__action">Abrir <i data-lucide="arrow-up-right"></i></span></div></div>
     </article>`;
@@ -171,6 +172,7 @@ async function runAction(action, id) {
     const collection = collections.find((item) => item.id === id);
     if (!collection) return;
     if (action === "open") return openCollection(id);
+    if (action === "add-movies") return openSystemMoviePicker(collection);
     if (action === "edit") return openEditor(collection);
     if (action === "duplicate") {
         try {
@@ -198,7 +200,7 @@ function openCollection(id, updateUrl = true) {
     elements.kicker.innerHTML = `<span class="collection-type collection-type--${collection.source === "system" ? "system" : collection.type}">${typeLabel(collection)}</span>`;
     elements.count.textContent = `${items.length} ${items.length === 1 ? "item" : "itens"}`;
     elements.updated.textContent = `Atualizada em ${formatDate(collection.updatedAt)}`;
-    elements.actions.innerHTML = `${collection.source === "user" ? `<button type="button" data-action="edit" data-id="${escapeAttribute(id)}"><i data-lucide="pencil"></i>Editar</button>` : ""}${collection.type === "manual" && collection.source === "user" ? `<button class="is-primary" type="button" data-action="edit" data-id="${escapeAttribute(id)}"><i data-lucide="plus"></i>Adicionar filmes</button>` : ""}<button type="button" data-action="duplicate" data-id="${escapeAttribute(id)}"><i data-lucide="copy"></i>Duplicar</button>`;
+    elements.actions.innerHTML = `${collection.source === "system" ? `<button class="is-primary" type="button" data-action="add-movies" data-id="${escapeAttribute(id)}"><i data-lucide="plus"></i>Adicionar filmes</button>` : `<button type="button" data-action="edit" data-id="${escapeAttribute(id)}"><i data-lucide="pencil"></i>Editar</button>${collection.type === "manual" ? `<button class="is-primary" type="button" data-action="edit" data-id="${escapeAttribute(id)}"><i data-lucide="plus"></i>Adicionar filmes</button>` : ""}`}<button type="button" data-action="duplicate" data-id="${escapeAttribute(id)}"><i data-lucide="copy"></i>Duplicar</button>`;
     elements.movieSort.value = collection.type === "manual" ? `${collection.sort?.field || "manual"}-${collection.sort?.direction || "asc"}` : `${collection.sort?.field || "title"}-${collection.sort?.direction || "asc"}`;
     if (!elements.movieSort.value) elements.movieSort.value = collection.type === "manual" ? "manual-asc" : "title-asc";
     renderDetailMovies(); refreshIcons(); window.scrollTo({ top: 0, behavior: "smooth" });
@@ -222,6 +224,39 @@ function showOverview(updateUrl = true) {
     elements.overview.hidden = false;
     if (updateUrl) history.pushState({}, "", "collection.html");
     renderOverview(); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function openSystemMoviePicker(collection) {
+    const draft = { movieIds: [...(collection.manualMovieIds || [])] };
+    const overlay = document.createElement("div");
+    overlay.className = "collection-editor";
+    overlay.innerHTML = `<section class="collection-editor__dialog collection-editor__dialog--picker" role="dialog" aria-modal="true" aria-labelledby="systemPickerTitle">
+        <header><div><p>Coleção do sistema</p><h2 id="systemPickerTitle">Adicionar a ${escapeHtml(collection.title)}</h2></div><button type="button" data-close-editor aria-label="Fechar"><i data-lucide="x"></i></button></header>
+        <div class="collection-editor__body"><section class="collection-builder"><div class="collection-builder__heading"><div><h3>Escolha os filmes</h3><p>Os filmes selecionados serão somados aos identificados automaticamente.</p></div></div><label>Pesquisar filmes<input data-movie-search type="search" placeholder="Digite um título"></label><div data-selected-movies class="selected-movies"></div><div data-movie-picker class="movie-picker"></div></section></div>
+        <footer><button type="button" data-close-editor>Cancelar</button><button class="is-primary" type="button" data-save-system-movies>Salvar seleção</button></footer>
+    </section>`;
+    document.body.appendChild(overlay);
+    const dialog = overlay.querySelector("[role=dialog]");
+    const close = () => overlay.remove();
+    const render = () => renderManualPicker(overlay, draft);
+    overlay.addEventListener("click", async (event) => {
+        if (event.target === overlay || event.target.closest("[data-close-editor]")) return close();
+        const toggle = event.target.closest("[data-toggle-movie]");
+        if (toggle) { toggleDraftMovie(draft, toggle.dataset.toggleMovie); return render(); }
+        const move = event.target.closest("[data-move-movie]");
+        if (move) { moveDraftMovie(draft, move.dataset.moveMovie, Number(move.dataset.direction)); return render(); }
+        if (event.target.closest("[data-save-system-movies]")) {
+            saveSystemCollectionMovies(collection.id, draft.movieIds);
+            await reloadCollections();
+            activeCollection = collections.find((item) => item.id === collection.id) || null;
+            close();
+            activeCollection ? openCollection(collection.id, false) : renderOverview();
+            showToast("Filmes adicionados à coleção.");
+        }
+    });
+    overlay.addEventListener("input", (event) => { if (event.target.matches("[data-movie-search]")) render(); });
+    overlay.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); if (event.key === "Tab") trapFocus(event, dialog); });
+    render(); refreshIcons(); overlay.querySelector("[data-movie-search]")?.focus();
 }
 
 function openEditor(collection = null) {

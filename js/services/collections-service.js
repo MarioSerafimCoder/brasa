@@ -1,13 +1,15 @@
 import { collections as legacyCollections } from "../../data/collections.js";
 import { isFavorite } from "../utils/favorites.js";
 import { withProgressState } from "../utils/progress.js";
-import { isCompletedForActive, wasRecentlyWatchedForActive } from "./profile-service.js";
+import { getActiveProfileRecord, isCompletedForActive, wasRecentlyWatchedForActive } from "./profile-service.js";
 
 const API_URL = "/api/collections";
 const FALLBACK_KEY = "brasa:user-collections";
+const SYSTEM_MEMBERSHIP_KEY = "brasa:system-collection-memberships";
 
 export function getSystemCollections() {
-    return legacyCollections.map((collection) => ({
+    const memberships = loadSystemMemberships();
+    return legacyCollections.filter((collection) => collection.banner).map((collection) => ({
         id: collection.id,
         title: collection.title,
         description: collection.subtitle || "",
@@ -20,6 +22,7 @@ export function getSystemCollections() {
         titlePatterns: collection.titlePatterns || [],
         keywords: collection.keywords || [],
         movieIds: [],
+        manualMovieIds: memberships[collection.id] || [],
         rules: {
             match: "any",
             items: (collection.keywords || []).map((value) => ({ field: "search", operator: "contains", value }))
@@ -70,8 +73,28 @@ export function getCollectionMovies(collection, movies) {
         ? collection.movieIds.map((id) => enriched.find((movie) => String(movie.id) === String(id))).filter(Boolean)
         : enriched.filter((movie) => collection.source === "system" ? matchesSystemCollection(movie, collection) : evaluateRules(movie, collection.rules));
 
+    if (collection.source === "system") {
+        const automaticIds = new Set(result.map((movie) => String(movie.id)));
+        const manual = (collection.manualMovieIds || []).map((id) => enriched.find((movie) => String(movie.id) === String(id))).filter(Boolean);
+        result = [...result, ...manual.filter((movie) => !automaticIds.has(String(movie.id)))];
+    }
+
     return sortCollectionMovies(result, collection.sort);
 }
+
+export function saveSystemCollectionMovies(id, movieIds) {
+    const memberships = loadSystemMemberships();
+    memberships[id] = [...new Set((movieIds || []).map(String))];
+    localStorage.setItem(systemMembershipStorageKey(), JSON.stringify(memberships));
+    return memberships[id];
+}
+
+function loadSystemMemberships() {
+    try { const value = JSON.parse(localStorage.getItem(systemMembershipStorageKey()) || "{}"); return value && typeof value === "object" ? value : {}; }
+    catch { return {}; }
+}
+
+function systemMembershipStorageKey() { return `${SYSTEM_MEMBERSHIP_KEY}:${getActiveProfileRecord()?.id || "mario"}`; }
 
 export function matchesSystemCollection(movie, collection) {
     if ((collection.imdbIds || []).includes(movie.imdbId)) return true;

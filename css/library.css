@@ -2220,6 +2220,67 @@ html[data-profile-kind="kids"] .kids-profile-control{
 .collection-card.is-active:hover{transform:translateY(-7px)}
 .collection-detail{scroll-margin-top:1.5rem}
 
+/* Shared cinematic hover for every internal thumbnail card. */
+.movie-card-lite,
+.series-card,
+.episode-card,
+.collection-card{
+    transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease,background-color .28s ease;
+    transform-origin:center bottom;
+}
+.movie-card-lite:hover,
+.movie-card-lite:focus-visible,
+.series-card:hover,
+.series-card:focus-visible,
+.episode-card:hover,
+.episode-card:focus-visible{
+    z-index:3;
+    transform:translateY(-8px);
+}
+.movie-card-lite__poster,
+.series-card__art,
+.episode-card__thumb{
+    box-shadow:0 12px 30px rgba(0,0,0,.28);
+    transition:box-shadow .28s ease,border-color .28s ease;
+}
+.movie-card-lite:hover .movie-card-lite__poster,
+.movie-card-lite:focus-visible .movie-card-lite__poster,
+.series-card:hover .series-card__art,
+.series-card:focus-visible .series-card__art,
+.episode-card:hover .episode-card__thumb,
+.episode-card:focus-visible .episode-card__thumb{
+    border-color:rgba(249,115,22,.58);
+    box-shadow:0 20px 48px rgba(0,0,0,.46),0 0 0 1px rgba(249,115,22,.24);
+}
+.movie-card-lite__poster img,
+.series-card__art img,
+.episode-card__thumb img{
+    transition:transform .45s ease,filter .3s ease;
+}
+.movie-card-lite:hover .movie-card-lite__poster img,
+.movie-card-lite:focus-visible .movie-card-lite__poster img,
+.series-card:hover .series-card__art img,
+.series-card:focus-visible .series-card__art img,
+.episode-card:hover .episode-card__thumb img,
+.episode-card:focus-visible .episode-card__thumb img{
+    transform:scale(1.06);
+    filter:brightness(1.04) saturate(1.06);
+}
+.movie-card-lite:focus-visible,
+.series-card:focus-visible,
+.episode-card:focus-visible,
+.collection-card:focus-visible{
+    outline:2px solid var(--color-primary);
+    outline-offset:4px;
+}
+.collection-editor__dialog--picker{max-width:920px}
+
+@media (prefers-reduced-motion:reduce){
+    .movie-card-lite,.series-card,.episode-card,.collection-card,
+    .movie-card-lite__poster img,.series-card__art img,.episode-card__thumb img{transition:none!important}
+    .movie-card-lite:hover,.series-card:hover,.episode-card:hover,.collection-card:hover{transform:none!important}
+}
+
 /* Collections manager */
 .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 .collections-overview[hidden],.collection-detail-view[hidden]{display:none!important}
@@ -2305,4 +2366,8 @@ html[data-profile-kind="kids"] .kids-profile-control{
 @media(max-width:700px){.collections-toolbar__actions,.collections-controls,.collection-detail-heading,.collection-detail-bar{align-items:stretch;flex-direction:column}.collections-toolbar__actions{display:flex}.collections-search{width:100%}.collections-tabs{width:100%;overflow:auto}.collections-tabs button{flex:1}.collections-sort{justify-content:space-between}.collections-overview .collections-grid{grid-template-columns:1fr}.collections-overview .collection-card{min-height:220px}.collection-detail-content{margin-top:-55px;padding-inline:.5rem}.collection-detail-heading{display:flex;align-items:flex-start}.collection-detail-actions{justify-content:flex-start}.collection-detail-bar label{margin-left:0;justify-content:space-between}.collection-choice{grid-template-columns:1fr}.movie-picker{grid-template-columns:repeat(3,minmax(0,1fr))}.rule-row{grid-template-columns:1fr 1fr 36px}.rule-row [data-rule-value]{grid-column:1/3}.collection-editor__dialog{max-height:100%;border-radius:14px}}
 @media(prefers-reduced-motion:reduce){.collections-overview .collection-card,.collection-toast{transition:none}.collection-card__art img{transition:none}}
 .movie-card-lite__poster{position:relative}.library-media-badge{position:absolute;z-index:2;left:.45rem;bottom:.45rem;padding:.28rem .48rem;border-radius:999px;background:rgba(8,8,8,.76);color:#fff;font-size:.65rem;font-weight:800;backdrop-filter:blur(8px)}.library-media-badge.is-ready{color:#86efac}.library-media-badge.is-failed,.library-media-badge.is-corrupted{color:#fca5a5}.library-media-badge.is-processing,.library-media-badge.is-analyzing{color:#93c5fd}.library-media-badge.is-pending{color:#fcd34d}
+
+/* Final interaction overrides: match the lift used by home thumbnails. */
+.collections-overview .collection-card:hover,
+.collections-overview .collection-card:focus-visible{transform:translateY(-8px);box-shadow:0 20px 48px rgba(0,0,0,.42)}
 
