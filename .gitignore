@@ -36,6 +36,9 @@ data/admin-settings.json
 data/admin-settings.json.backup.json
 data/admin-overrides.json
 data/admin-overrides.json.backup.json
+data/provider-health.json
+data/metadata-retry.json
+data/metadata-retry.backup.json
 data/series-overrides.json
 data/episode-overrides.json
 

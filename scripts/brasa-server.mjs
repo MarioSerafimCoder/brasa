@@ -21,9 +21,12 @@ import { createAdminAuthService } from "../server/admin-auth.mjs";
 import { createAdminLogService } from "../server/admin-log.mjs";
 import { createAdminServices } from "../server/admin-services.mjs";
 import { createAdminController } from "../server/admin-controller.mjs";
+import { createMetadataRetryStore } from "../server/metadata-retry-store.mjs";
+import { ensureEnvFile } from "./setup-env.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
+await ensureEnvFile({ rootDir });
 await loadEnvFile();
 
 const host = "127.0.0.1";
@@ -40,7 +43,10 @@ let userStateWriteQueue = Promise.resolve();
 let profileRequestQueue = Promise.resolve();
 let userCollectionsWriteQueue = Promise.resolve();
 let libraryWatcher = null;
+let dailyRecoveryTimer = null;
+let pendingRecoveryTimer = null;
 const mediaStore = createMediaStateStore(rootDir);
+const metadataRetryStore = createMetadataRetryStore(rootDir);
 const mediaQueue = createMediaQueue({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir), resolveMedia });
 const libraryHealthStore = createLibraryHealthStore(rootDir);
 const syncHistoryStore = createSyncHistory(rootDir);
@@ -180,6 +186,19 @@ async function enableLibraryWatcher() {
     console.log("BRasa: observando alteracoes nas pastas da biblioteca.");
 }
 
+function enableDailyMetadataRecovery() {
+    if (dailyRecoveryTimer || process.env.BRASA_DAILY_RECOVERY === "0") return;
+    pendingRecoveryTimer = setInterval(async () => {
+        const recovery = await metadataRetryStore.summary().catch(() => ({ pendingItems: 0 }));
+        if (recovery.pendingItems > 0) syncCoordinator.requestSync("scheduled-metadata-recovery").catch((error) => console.error("BRasa recuperação programada:", error.message));
+    }, 5 * 60 * 1000);
+    pendingRecoveryTimer.unref?.();
+    dailyRecoveryTimer = setInterval(() => {
+        syncCoordinator.requestSync("daily-metadata-recovery").catch((error) => console.error("BRasa recuperação diária:", error.message));
+    }, 24 * 60 * 60 * 1000);
+    dailyRecoveryTimer.unref?.();
+}
+
 function debounce(callback, delay) {
     let timer;
     return (...values) => {
@@ -203,6 +222,7 @@ function listen(port) {
         writeServerState(port);
         console.log(`BRasa rodando em http://${host}:${port}/`);
         await enableLibraryWatcher().catch((error) => console.log(`BRasa: watcher indisponivel (${error.message}).`));
+        enableDailyMetadataRecovery();
         if (process.env.BRASA_SKIP_STARTUP_SYNC !== "1") runStartupSync().catch((error) => console.error("BRasa startup sync:", error));
     });
 }
@@ -724,18 +744,14 @@ function runSync() {
     return new Promise((resolve) => {
         let output = "";
         let child = null;
+        let lineBuffer = "";
 
         try {
-            const scriptPath = path.join(rootDir, "scripts", "sync-movies.ps1");
-            child = spawn("powershell.exe", [
-                "-NoProfile",
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                scriptPath
-            ], {
+            const scriptPath = path.join(rootDir, "scripts", "sync-movies.mjs");
+            child = spawn(process.execPath, [scriptPath], {
                 cwd: rootDir,
-                windowsHide: true
+                windowsHide: true,
+                shell: false
             });
         } catch (error) {
             resolve({
@@ -746,11 +762,14 @@ function runSync() {
         }
 
         child.stdout.on("data", (chunk) => {
-            output += chunk.toString();
+            const text = chunk.toString(); output += text; lineBuffer += text;
+            const lines = lineBuffer.split(/\r?\n/); lineBuffer = lines.pop() || "";
+            lines.filter(Boolean).forEach(updateSyncProgress);
         });
 
         child.stderr.on("data", (chunk) => {
-            output += chunk.toString();
+            const text = chunk.toString(); output += text;
+            text.split(/\r?\n/).filter(Boolean).forEach(updateSyncProgress);
         });
 
         child.on("error", (error) => {
@@ -768,6 +787,8 @@ function runSync() {
         });
     });
 }
+
+function updateSyncProgress(line){const value=String(line||"").trim();if(!value)return;const stages=[[/verificando biblioteca|nenhum filme novo/i,12,"Verificando biblioteca..."],[/encontrei|detectad|filme novo/i,22,value.replace(/^BRasa:\s*/i,"")],[/identific|OMDb/i,38,value.replace(/^BRasa:\s*/i,"")],[/TMDb|poster|backdrop/i,55,value.replace(/^BRasa:\s*/i,"")],[/legenda|OpenSubtitles/i,70,value.replace(/^BRasa:\s*/i,"")],[/renomeado/i,82,value.replace(/^BRasa:\s*/i,"")],[/data\/movies|data\/series|catálogo|catalogo/i,92,"Atualizando catálogo..."],[/nada para atualizar|atualizado com/i,98,"Finalizando biblioteca..."]];const match=stages.find(([pattern])=>pattern.test(value));if(!match)return;syncStatus={...syncStatus,state:"syncing",progress:Math.max(Number(syncStatus.progress||0),match[1]),message:match[2],currentItem:value.slice(0,240)};}
 
 async function serveStatic(pathname, request, response) {
     const safePath = decodeURIComponent(pathname).replace(/^\/+/, "") || "index.html";

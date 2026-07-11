@@ -1,15 +1,20 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { absoluteLibraryRoots, isProcessableVideo, VIDEO_EXTENSIONS } from "../server/library-config.mjs";
+import { ensureEnvFile } from "./setup-env.mjs";
+import { checkProviderHealth, saveProviderHealth } from "../server/provider-health.mjs";
+import { createMetadataRetryStore } from "../server/metadata-retry-store.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
+await ensureEnvFile({ rootDir, quiet: true });
 const libraryRoots = absoluteLibraryRoots(rootDir);
 const movieSources = libraryRoots.filter((item) => item.type === "movie").map((item) => ({ dir: item.absolutePath, audience: item.audience }));
 const seriesDirs = libraryRoots.filter((item) => item.type === "series").map((item) => ({ dir: item.absolutePath, kids: item.audience === "kids" }));
 const moviesDir = movieSources.find((item) => item.audience === "general").dir;
 const postersDir = path.join(rootDir, "assets", "posters");
+const backdropsDir = path.join(rootDir, "assets", "backdrops");
 const seriesPostersDir = path.join(rootDir, "assets", "series-posters");
 const subtitlesDir = path.join(rootDir, "assets", "subtitles");
 const dataFile = path.join(rootDir, "data", "movies.js");
@@ -20,19 +25,28 @@ const envFile = path.join(rootDir, ".env");
 const videoExtensions = new Set(VIDEO_EXTENSIONS);
 const args = new Set(process.argv.slice(2));
 const isDryRun = args.has("--dry-run");
+const forceMetadataRefresh = args.has("--refresh-metadata");
 
-await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();
 
 async function main() {
     await loadEnv();
-    await syncMovies();
+    const providerHealth = await saveProviderHealth(rootDir, await checkProviderHealth({
+        omdbKey: getArgValue("--api-key") || process.env.OMDB_API_KEY,
+        tmdbKey: process.env.TMDB_API_KEY,
+        tmdbToken: process.env.TMDB_READ_TOKEN,
+        openSubtitlesKey: getArgValue("--opensubtitles-api-key") || process.env.OPENSUBTITLES_API_KEY
+    }));
+    reportProviderHealth(providerHealth);
+    await syncMovies({ providerHealth, retryStore: createMetadataRetryStore(rootDir) });
     await syncSeries();
 }
 
-async function syncMovies() {
+async function syncMovies({ providerHealth, retryStore }) {
     try {
-        const omdbApiKey = getArgValue("--api-key") || process.env.OMDB_API_KEY;
-        const openSubtitlesApiKey = getArgValue("--opensubtitles-api-key") || process.env.OPENSUBTITLES_API_KEY;
+        const omdbApiKey = providerHealth.providers.omdb.available ? getArgValue("--api-key") || process.env.OMDB_API_KEY : "";
+        const tmdbCredentials = providerHealth.providers.tmdb.available ? { apiKey: process.env.TMDB_API_KEY || "", readToken: process.env.TMDB_READ_TOKEN || "" } : { apiKey: "", readToken: "" };
+        const openSubtitlesApiKey = providerHealth.providers.openSubtitles.available ? getArgValue("--opensubtitles-api-key") || process.env.OPENSUBTITLES_API_KEY : "";
         const subtitleLanguages = parseSubtitleLanguages(process.env.SUBTITLE_LANGUAGES || "pt-br,en");
         const movies = await loadMovies();
         const adminOverrides = await loadAdminOverrides();
@@ -66,6 +80,10 @@ async function syncMovies() {
             return !knownVideos.has(videoPath);
         });
 
+        const recoveredMetadataProvider = providerHealth.recovered.some((name) => name === "omdb" || name === "tmdb");
+        const refreshed = await refreshIncompleteMovies({ movies, videoFiles, overrides, adminOverrides, omdbApiKey, tmdbCredentials, retryStore, force: forceMetadataRefresh || recoveredMetadataProvider });
+        if (refreshed > 0) changed = true;
+
         for (const file of videoFiles) {
             const movie = knownVideos.get(normalizePath(file.assetPath));
             if (!movie) continue;
@@ -84,36 +102,48 @@ async function syncMovies() {
             for (const file of newFiles) {
                 try {
                     const parsed = parseMovieFileName(file.name);
+                    console.log(`BRasa: filme novo encontrado: "${file.name}".`);
+                    console.log(`BRasa: identificando "${parsed.title}"...`);
                     const fileImdbId = extractImdbId(file.name);
                     const override = { ...(overrides[file.name] || {}) };
                     if (!override.imdbId && fileImdbId) override.imdbId = fileImdbId;
                     let omdb = null;
                     if (omdbApiKey) {
                         try {
+                            console.log(`BRasa: consultando OMDb para "${parsed.title}"...`);
                             omdb = await findMovieOnOmdb({ apiKey: omdbApiKey, parsed, override });
                         } catch (error) {
                             console.log(`BRasa: OMDb indisponivel para "${file.name}" (${error.message}).`);
                         }
                     }
 
+                    let tmdb = null;
+                    if (tmdbCredentials.apiKey || tmdbCredentials.readToken) {
+                        try { console.log(`BRasa: consultando TMDb para "${parsed.title}"...`); tmdb = await findMovieOnTmdb({ credentials: tmdbCredentials, title: omdb?.Title || parsed.title, year: omdb?.Year || parsed.year, imdbId: omdb?.imdbID || fileImdbId }); }
+                        catch (error) { console.log(`BRasa: TMDb indisponivel para "${file.name}" (${error.message}).`); }
+                    }
+
                     const identification = assessMovieIdentification({ omdb, parsed, override, fileImdbId });
-                    const metadata = omdb || createLocalMovieMetadata(parsed, override, fileImdbId);
-                    const canNormalize = Boolean(omdb?.imdbID && identification.confidence !== "low");
+                    const metadata = mergeMovieMetadata(omdb || createLocalMovieMetadata(parsed, override, fileImdbId), tmdb, parsed);
+                    const canNormalize = Boolean(metadata.Title && metadata.Year && identification.confidence !== "unidentified");
                     const normalizedFile = file.audience === "kids" || !canNormalize ? file.name : await normalizeMovieFileName({
                         fileName: file.name,
                         title: metadata.Title,
                         year: metadata.Year,
                         imdbId: metadata.imdbID
                     });
-                    const poster = omdb ? await resolvePoster(omdb, normalizedFile) : "";
+                    const artwork = await resolveMovieArtwork({ omdb: metadata, tmdb, fileName: normalizedFile });
                     const movie = buildMovie({
                         id: nextId++, fileName: normalizedFile,
                         filePath: file.audience === "kids" || !canNormalize ? file.assetPath : toAssetPath(path.join(moviesDir, normalizedFile)),
                         audience: file.audience, addedAt: file.mtime?.toISOString?.() || new Date().toISOString(),
-                        omdb: metadata, parsed, override, poster, identification, file
+                        omdb: metadata, parsed, override: { ...override, backdrop: override.backdrop || artwork.backdrop }, poster: artwork.poster, identification, file
                     });
                     movies.push(movie);
                     added.push(movie);
+                    const mediaKey = getRetryMediaKey(movie);
+                    if (needsMetadataRefresh(movie)) await retryStore.fail(mediaKey, "metadata", "Metadados ou imagens ainda incompletos.");
+                    else await retryStore.success(mediaKey, "metadata");
                     changed = true;
                     console.log(`BRasa: adicionado "${movie.title}" (${identification.confidence}; ${identification.reason}).`);
                 } catch (error) {
@@ -136,7 +166,9 @@ async function syncMovies() {
         const downloadedSubtitles = await syncSubtitlesForMovies({
             movies,
             apiKey: openSubtitlesApiKey,
-            languages: subtitleLanguages
+            languages: subtitleLanguages,
+            retryStore,
+            force: providerHealth.recovered.includes("openSubtitles")
         });
 
         if (downloadedSubtitles > 0) {
@@ -172,7 +204,7 @@ async function normalizeIndexedMovieFiles(movies) {
     let renamed = 0;
 
     for (const movie of movies) {
-        if (!movie.video || !movie.imdbId || !movie.title || !movie.year || getMovieAudience(movie)==="kids") continue;
+        if (!movie.video || !movie.title || !movie.year || getMovieAudience(movie)==="kids") continue;
 
         const currentPath = path.join(rootDir, movie.video);
         if (!(await fileExists(currentPath))) continue;
@@ -196,10 +228,11 @@ async function normalizeIndexedMovieFiles(movies) {
 }
 
 async function normalizeMovieFileName({ fileName, title, year, imdbId }) {
-    if (!title || !year || !imdbId) return fileName;
+    if (!title || !year) return fileName;
 
     const extension = path.extname(fileName);
-    const targetName = `${sanitizeFileName(title)} (${String(year).match(/\d{4}/)?.[0] || year}) [${imdbId}]${extension}`;
+    const identity = imdbId ? ` [${imdbId}]` : "";
+    const targetName = `${sanitizeFileName(title)} (${String(year).match(/\d{4}/)?.[0] || year})${identity}${extension}`;
 
     if (fileName === targetName) return fileName;
 
@@ -211,11 +244,15 @@ async function normalizeMovieFileName({ fileName, title, year, imdbId }) {
     if (targetNameAvailable === fileName) return fileName;
     if (isDryRun) return targetNameAvailable;
 
-    await fs.rename(sourcePath, path.join(moviesDir, targetNameAvailable));
+    const targetPath = path.join(moviesDir, targetNameAvailable);
+    await fs.rename(sourcePath, targetPath);
+    await renameMovieSidecars(sourcePath, targetPath);
     console.log(`BRasa: renomeado "${fileName}" -> "${targetNameAvailable}".`);
 
     return targetNameAvailable;
 }
+
+async function renameMovieSidecars(sourceVideo, targetVideo){const directory=path.dirname(sourceVideo),oldBase=path.basename(sourceVideo,path.extname(sourceVideo)),newBase=path.basename(targetVideo,path.extname(targetVideo)),entries=await fs.readdir(directory).catch(()=>[]);for(const entry of entries){const extension=path.extname(entry).toLowerCase();if(![".srt",".vtt"].includes(extension))continue;const stem=path.basename(entry,extension);if(stem!==oldBase&&!stem.startsWith(`${oldBase}.`))continue;const suffix=stem.slice(oldBase.length),target=path.join(directory,`${newBase}${suffix}${extension}`);if(await fileExists(target))continue;await fs.rename(path.join(directory,entry),target).catch((error)=>console.log(`BRasa: nao consegui renomear legenda local "${entry}" (${error.message}).`));}}
 
 async function getAvailableMovieFileName(targetName, currentName) {
     const targetPath = path.join(moviesDir, targetName);
@@ -239,7 +276,7 @@ async function getAvailableMovieFileName(targetName, currentName) {
     return currentName;
 }
 
-async function syncSubtitlesForMovies({ movies, apiKey, languages }) {
+async function syncSubtitlesForMovies({ movies, apiKey, languages, retryStore, force = false }) {
     if (isDryRun) {
         console.log("BRasa: dry-run ativo; legendas não serão baixadas.");
         return 0;
@@ -253,16 +290,23 @@ async function syncSubtitlesForMovies({ movies, apiKey, languages }) {
 
     if (!apiKey) {
         console.log("BRasa: OPENSUBTITLES_API_KEY ausente; legendas nao foram baixadas.");
+        for (const movie of playableMovies) {
+            const mediaKey = getRetryMediaKey(movie);
+            if (await retryStore.due(mediaKey, "subtitles", { force })) await retryStore.fail(mediaKey, "subtitles", "OpenSubtitles indisponível ou não configurado.");
+        }
         return downloaded;
     }
 
     for (const movie of playableMovies) {
+        const mediaKey = getRetryMediaKey(movie);
+        if (!(await retryStore.due(mediaKey, "subtitles", { force }))) continue;
         movie.subtitles = Array.isArray(movie.subtitles) ? movie.subtitles : [];
 
         for (const language of languages) {
             if (movie.subtitles.some((subtitle) => subtitle.srclang === language.code)) continue;
 
-            const subtitleCandidates = await findSubtitles({
+            console.log(`BRasa: buscando legendas ${language.label} para "${movie.title}"...`);
+            const subtitleCandidates = await safeFindSubtitles({
                 apiKey,
                 imdbId: movie.imdbId,
                 language: language.searchCode
@@ -276,7 +320,7 @@ async function syncSubtitlesForMovies({ movies, apiKey, languages }) {
             let downloadedSubtitle = null;
 
             for (const subtitle of subtitleCandidates) {
-                downloadedSubtitle = await downloadSubtitle({
+                downloadedSubtitle = await safeDownloadSubtitle({
                     apiKey,
                     fileId: subtitle.fileId,
                     movie,
@@ -302,6 +346,9 @@ async function syncSubtitlesForMovies({ movies, apiKey, languages }) {
             ...subtitle,
             default: subtitle.src === defaultSubtitle?.src
         }));
+        const hasPreferredSubtitle = languages.some((language) => movie.subtitles.some((subtitle) => subtitle.srclang === language.code));
+        if (hasPreferredSubtitle) await retryStore.success(mediaKey, "subtitles");
+        else await retryStore.fail(mediaKey, "subtitles", "Legenda preferida ainda não encontrada.");
     }
 
     return downloaded;
@@ -359,6 +406,9 @@ async function findSubtitles({ apiKey, imdbId, language }) {
         .filter((subtitle) => subtitle.fileId)
         .slice(0, 8);
 }
+
+async function safeFindSubtitles(input){try{return await findSubtitles(input);}catch(error){console.log(`BRasa: OpenSubtitles indisponivel (${error.message}).`);return [];}}
+async function safeDownloadSubtitle(input){try{return await downloadSubtitle(input);}catch(error){console.log(`BRasa: falha ao baixar legenda (${error.message}).`);return null;}}
 
 async function downloadSubtitle({ apiKey, fileId, movie, language }) {
     const response = await fetch("https://api.opensubtitles.com/api/v1/download", {
@@ -478,7 +528,7 @@ async function listVideoFiles() {
         .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
-function parseMovieFileName(fileName) {
+export function parseMovieFileName(fileName) {
     const baseName = path.basename(fileName, path.extname(fileName));
     const yearMatch = baseName.match(/(?:^|[\s[(._-])((?:19|20)\d{2})(?:[\s\])._-]|$)/);
     const year = yearMatch?.[1] || "";
@@ -486,7 +536,7 @@ function parseMovieFileName(fileName) {
     const clean = baseName
         .replace(/[._]+/g, " ")
         .replace(/\[(?:19|20)\d{2}\]|\((?:19|20)\d{2}\)|(?:19|20)\d{2}/g, " ")
-        .replace(/\b(4k|2160p|1080p|720p|bluray|brrip|webrip|web-dl|x264|x265|h264|h265|dublado|legendado|dual|audio|seroes|zoiudo)\b/gi, " ")
+        .replace(/\b(4k|uhd|2160p|1080p|720p|480p|bluray|blu-ray|brrip|webrip|web-rip|web-dl|webdl|remux|x264|x265|h264|h265|hevc|av1|dv|dolby\s*vision|hdr10\+?|hdr|sdr|dublado|dub|legendado|dual|multi|audio|aac|ac3|eac3|ddp?\+?|atmos|truehd|dts(?:-hd)?|5[._ ]1|7[._ ]1|10bit|mp4|mkv|avi|mov|webm|torrent|xbrfilmestorrent|seroes|zoiudo)\b/gi, " ")
         .replace(/\[[^\]]*]|\([^)]*\)/g, " ")
         .replace(/\s+-\s+$/g, " ")
         .replace(/\s+/g, " ")
@@ -594,6 +644,93 @@ function chooseSearchResult(results, year) {
     return results[0];
 }
 
+async function refreshIncompleteMovies({ movies, videoFiles, overrides, adminOverrides, omdbApiKey, tmdbCredentials, retryStore, force = false }) {
+    if (!omdbApiKey && !tmdbCredentials.apiKey && !tmdbCredentials.readToken) return 0;
+    const files = new Map(videoFiles.map((file) => [normalizePath(file.assetPath), file])); let refreshed = 0;
+    for (const movie of movies) {
+        const file = files.get(normalizePath(movie.video || ""));
+        if (!file || (!force && !needsMetadataRefresh(movie))) continue;
+        const mediaKey = getRetryMediaKey(movie);
+        if (!(await retryStore.due(mediaKey, "metadata", { force }))) continue;
+        movie.lastMetadataAttemptAt = new Date().toISOString();
+        movie.lastMetadataAttemptConfigured = true;
+        refreshed++;
+        try {
+            const parsed = parseMovieFileName(file.name), fileOverride = { ...(overrides[file.name] || {}), ...(movie.imdbId ? { imdbId: movie.imdbId } : {}) };
+            console.log(`BRasa: reprocessando metadados de "${movie.title || parsed.title}"...`);
+            let omdb = null, tmdb = null;
+            if (omdbApiKey) { console.log(`BRasa: consultando OMDb para "${parsed.title}"...`); omdb = await findMovieOnOmdb({ apiKey: omdbApiKey, parsed, override: fileOverride }); }
+            if (tmdbCredentials.apiKey || tmdbCredentials.readToken) { console.log(`BRasa: consultando TMDb para "${omdb?.Title || parsed.title}"...`); tmdb = await findMovieOnTmdb({ credentials: tmdbCredentials, title: omdb?.Title || parsed.title, year: omdb?.Year || parsed.year || movie.year, imdbId: omdb?.imdbID || movie.imdbId }); }
+            if (!omdb && !tmdb) { await retryStore.fail(mediaKey, "metadata", "Nenhum provedor retornou metadados."); continue; }
+            const metadata = mergeMovieMetadata(omdb || createLocalMovieMetadata(parsed, fileOverride, movie.imdbId), tmdb, parsed), artwork = await resolveMovieArtwork({ omdb: metadata, tmdb, fileName: file.name }), manual = adminOverrides[`movie:${movie.id}`]?.fields || {};
+            const automatic = { title: metadata.Title || movie.title, originalTitle: metadata.Title || movie.originalTitle, year: Number(String(metadata.Year || movie.year).match(/\d{4}/)?.[0] || 0), duration: formatRuntime(metadata.Runtime) || movie.duration, rating: Number.parseFloat(metadata.imdbRating) || movie.rating, contentRating: metadata.Rated && metadata.Rated !== "N/A" ? metadata.Rated : movie.contentRating, genres: translateGenres(metadata.Genre).length ? translateGenres(metadata.Genre) : movie.genres, overview: metadata.Plot && metadata.Plot !== "N/A" ? metadata.Plot : movie.overview, poster: artwork.poster || movie.poster, backdrop: artwork.backdrop || movie.backdrop, imdbId: metadata.imdbID || movie.imdbId, identificationConfidence: omdb ? "high" : "medium", identificationReason: omdb ? "Metadados confirmados pela OMDb." : "Metadados complementados pelo TMDb." };
+            Object.assign(movie, automatic, manual);
+            movie.metadataStatus = movie.title && movie.year && movie.overview && movie.poster ? "complete" : "incomplete";
+            const nextName = file.audience === "kids" ? file.name : await normalizeMovieFileName({ fileName: file.name, title: movie.title, year: movie.year, imdbId: movie.imdbId });
+            movie.video = file.audience === "kids" ? file.assetPath : toAssetPath(path.join(moviesDir, nextName));
+            movie.lastIndexedAt = new Date().toISOString();
+            if (needsMetadataRefresh(movie)) await retryStore.fail(mediaKey, "metadata", "Metadados ou imagens ainda incompletos.");
+            else await retryStore.success(mediaKey, "metadata");
+            console.log(`BRasa: metadados atualizados para "${movie.title}".`);
+        } catch (error) { await retryStore.fail(mediaKey, "metadata", error.message); console.log(`BRasa: reprocessamento parcial de "${movie.title}" (${error.message}).`); }
+    }
+    return refreshed;
+}
+
+function getRetryMediaKey(movie) { return movie.imdbId ? `movie:imdb:${movie.imdbId}` : `movie:file:${normalizePath(movie.video || movie.title || movie.id)}`; }
+
+function reportProviderHealth(state) {
+    const labels = { omdb: "OMDb", tmdb: "TMDb", openSubtitles: "OpenSubtitles" };
+    for (const [name, provider] of Object.entries(state.providers)) {
+        if (provider.available) continue;
+        console.log(`BRasa: ${labels[name]} ${provider.configured ? "temporariamente indisponível" : "não configurado"}; a recuperação automática continuará em segundo plano.`);
+    }
+    if (state.recovered.length) console.log(`BRasa: serviço(s) recuperado(s): ${state.recovered.map((name) => labels[name]).join(", ")}. Reprocessando itens pendentes.`);
+}
+
+export function needsMetadataRefresh(movie) {
+    const raw = /\b(?:web[- .]?dl|2160p|1080p|720p|x26[45]|hevc|hdr|\bdv\b|dual|5[._ ]1)\b/i.test(String(movie.title || ""));
+    return raw || ["low", "unidentified"].includes(movie.identificationConfidence) || movie.metadataStatus === "incomplete" || !movie.imdbId || !movie.poster || !movie.backdrop || !movie.overview;
+}
+
+async function findMovieOnTmdb({ credentials, title, year, imdbId }) {
+    let result = null;
+    if (imdbId) { const found = await fetchTmdb(`/find/${encodeURIComponent(imdbId)}`, { external_source: "imdb_id", language: "pt-BR" }, credentials); result = found.movie_results?.[0] || null; }
+    if (!result && title) { const found = await fetchTmdb("/search/movie", { query: title, year: String(year || "").match(/\d{4}/)?.[0] || "", language: "pt-BR", include_adult: "false" }, credentials); result = found.results?.[0] || null; }
+    if (!result?.id) return null;
+    const details = await fetchTmdb(`/movie/${result.id}`, { language: "pt-BR", append_to_response: "external_ids" }, credentials);
+    return { ...result, ...details };
+}
+
+async function fetchTmdb(endpoint, params, credentials) {
+    const url = new URL(`https://api.themoviedb.org/3${endpoint}`); Object.entries(params || {}).forEach(([key, value]) => value && url.searchParams.set(key, value));
+    if (credentials.apiKey) url.searchParams.set("api_key", credentials.apiKey);
+    const headers = credentials.readToken ? { Authorization: `Bearer ${credentials.readToken}`, Accept: "application/json" } : { Accept: "application/json" };
+    const response = await fetch(url, { headers }); if (!response.ok) throw new Error(`TMDb retornou HTTP ${response.status}.`); return response.json();
+}
+
+function mergeMovieMetadata(omdb, tmdb, parsed) {
+    if (!tmdb) return omdb;
+    const genres = (tmdb.genres || []).map((item) => item.name).filter(Boolean).join(", ");
+    return { ...omdb, Title: omdb.Title || tmdb.title || parsed.title, Year: omdb.Year || String(tmdb.release_date || "").slice(0, 4) || parsed.year, Runtime: omdb.Runtime || (tmdb.runtime ? `${tmdb.runtime} min` : ""), imdbRating: omdb.imdbRating || (tmdb.vote_average ? String(tmdb.vote_average) : ""), Genre: genres || omdb.Genre, Plot: tmdb.overview || (omdb.Plot && omdb.Plot !== "N/A" ? omdb.Plot : ""), imdbID: omdb.imdbID || tmdb.imdb_id || tmdb.external_ids?.imdb_id || "", Poster: omdb.Poster || "" };
+}
+
+async function resolveMovieArtwork({ omdb, tmdb, fileName }) {
+    let poster = "", backdrop = "";
+    if (tmdb?.poster_path) { console.log(`BRasa: baixando poster de "${fileName}"...`); poster = await downloadTmdbImage(tmdb.poster_path, "poster", omdb.Title, omdb.Year); }
+    if (!poster) poster = await resolvePoster(omdb, fileName);
+    if (tmdb?.backdrop_path) { console.log(`BRasa: baixando backdrop de "${fileName}"...`); backdrop = await downloadTmdbImage(tmdb.backdrop_path, "backdrop", omdb.Title, omdb.Year); }
+    return { poster, backdrop };
+}
+
+async function downloadTmdbImage(imagePath, type, title, year) {
+    const relativePath = `assets/${type === "poster" ? "posters" : "backdrops"}/${slugify(`${title}-${year || ""}-${type}`)}.jpg`, absolutePath = path.join(rootDir, relativePath);
+    if (await fileExists(absolutePath) || isDryRun) return relativePath;
+    const response = await fetch(`https://image.tmdb.org/t/p/${type === "poster" ? "w780" : "w1280"}${imagePath}`), mime = response.headers.get("content-type") || "";
+    if (!response.ok || !mime.startsWith("image/")) return "";
+    await fs.mkdir(type === "poster" ? postersDir : backdropsDir, { recursive: true }); await fs.writeFile(absolutePath, Buffer.from(await response.arrayBuffer())); return relativePath;
+}
+
 async function resolvePoster(omdb, fileName) {
     if (!omdb.Poster || omdb.Poster === "N/A") return "";
 
@@ -606,7 +743,8 @@ async function resolvePoster(omdb, fileName) {
     if (isDryRun) return relativePath;
 
     const response = await fetch(omdb.Poster);
-    if (!response.ok) {
+    const mime = response.headers.get("content-type") || "";
+    if (!response.ok || !mime.startsWith("image/")) {
         console.log(`BRasa: nao consegui baixar poster de "${fileName}".`);
         return "";
     }

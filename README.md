@@ -4,7 +4,9 @@ Servidor local de biblioteca de mídia com sincronização automática, perfis i
 
 ## Comandos
 
-- `npm start`: inicia o servidor.
+- `Abrir BRasa.vbs`: entrada normal no Windows; inicia ou reutiliza o servidor com terminal oculto, acompanha a sincronização e abre a aplicação quando a biblioteca estiver pronta.
+- `Abrir BRasa.vbs /debug`: inicia com console visível para diagnóstico.
+- `npm start`: alternativa para desenvolvimento; não é necessária no uso normal.
 - `npm run sync`: sincroniza filmes e séries manualmente.
 - `npm test`: executa todas as suítes de estabilização.
 
@@ -18,7 +20,36 @@ Servidor local de biblioteca de mídia com sincronização automática, perfis i
 - `BRASA_WATCH_TIMEOUT`: espera máxima por arquivo; padrão `600000` ms.
 - `BRASA_DEBUG=1`: inclui detalhes controlados nos erros locais.
 
+### Chaves das APIs
+
+Execute `npm run setup:env`. O comando cria `.env` a partir de `.env.example` quando necessário, preserva valores existentes e informa somente os nomes das chaves que continuam vazias. Os valores nunca são exibidos.
+
+Preencha no arquivo local `.env`:
+
+```dotenv
+OMDB_API_KEY=
+OPENSUBTITLES_API_KEY=
+TMDB_API_KEY=
+TMDB_READ_TOKEN=
+SUBTITLE_LANGUAGES=pt-br,en
+```
+
+- `OMDB_API_KEY`: metadados, IMDb e classificação.
+- `OPENSUBTITLES_API_KEY`: pesquisa e download de legendas.
+- `TMDB_API_KEY` ou `TMDB_READ_TOKEN`: pôsteres e backdrops.
+- `SUBTITLE_LANGUAGES`: idiomas separados por vírgula.
+
+As chaves são opcionais para iniciar. Sem elas, arquivos locais continuam sendo indexados, mas metadados, imagens ou legendas podem ficar incompletos. `npm start` cria o `.env` automaticamente quando faltar. O `.env` está no `.gitignore`; nunca coloque chaves reais em `.env.example`, JavaScript público ou commits.
+
 O watcher inicia antes da sincronização inicial. Eventos recebidos durante uma passagem são consolidados pelo coordenador e geram uma única passagem adicional.
+
+### Recuperação automática de metadados
+
+No início de cada sincronização, o BRasa verifica OMDb, TMDb e OpenSubtitles uma única vez. Filmes que ainda estiverem sem identificação, descrição, pôster, backdrop ou legenda entram numa fila local de recuperação. As novas tentativas ocorrem automaticamente após 5 minutos, 30 minutos e 6 horas; também há uma revisão diária e reprocessamento imediato quando um serviço volta a responder.
+
+O estado dessa fila e a saúde dos serviços aparecem no resumo da API do painel administrativo. Os arquivos de estado ficam em `data/metadata-retry.json` e `data/provider-health.json`, são ignorados pelo Git e nunca armazenam chaves de API.
+
+FFmpeg e FFprobe são opcionais. Quando não estiverem instalados, o BRasa mantém a reprodução do arquivo original e simplesmente não executa análise de codecs, preparação ou geração automática de thumbnails. A ausência dessas ferramentas não gera um aviso repetido em cada filme.
 
 ## Painel administrativo
 

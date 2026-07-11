@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node scripts/brasa-server.mjs",
     "sync": "node scripts/sync-movies.mjs",
+    "setup:env": "node scripts/setup-env.mjs",
     "test": "node scripts/run-tests.mjs",
     "test:watcher": "node scripts/test-library-watcher.mjs",
     "test:sync": "node scripts/test-sync-coordinator.mjs",

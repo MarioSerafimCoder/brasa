@@ -58,12 +58,12 @@
 
         .loader__bar span{
             display:block;
-            width:42%;
+            width:8%;
             height:100%;
             border-radius:inherit;
             background:linear-gradient(90deg, #ff3d13, #ff8a1c);
             transform-origin:left center;
-            animation:progress 1.25s cubic-bezier(.22, 1, .36, 1) infinite alternate;
+            transition:width .35s ease;
         }
 
         p{
@@ -78,21 +78,13 @@
             to{ opacity:1; transform:translateY(0) scale(1); filter:drop-shadow(0 28px 80px rgba(249, 81, 22, .22)); }
         }
 
-        @keyframes progress{
-            from{ transform:translateX(-70%) scaleX(.68); }
-            to{ transform:translateX(150%) scaleX(1); }
-        }
-
         @media (prefers-reduced-motion:reduce){
             .loader__logo,
             .loader__bar span{
                 animation:none;
             }
 
-            .loader__bar span{
-                width:100%;
-                transform:none;
-            }
+            .loader__bar span{ transform:none; }
         }
     </style>
 </head>
@@ -100,34 +92,45 @@
 <body>
     <main class="loader" aria-label="Abrindo BRasa">
         <img class="loader__logo" src="Logo/Logo%20colorida.png" alt="BRasa">
-        <div class="loader__bar" aria-hidden="true"><span></span></div>
-        <p id="status">Preparando biblioteca...</p>
+        <div class="loader__bar" role="progressbar" aria-label="Preparação da biblioteca" aria-valuemin="0" aria-valuemax="100" aria-valuenow="8"><span></span></div>
+        <p id="status" aria-live="polite">Iniciando BRasa...</p>
     </main>
 
     <script>
-        const target = "http://127.0.0.1:4173/?opened=" + Date.now();
-        const startedAt = Date.now();
-        const minVisibleMs = 900;
+        const defaultOrigin = "http://127.0.0.1:4173";
         const status = document.getElementById("status");
+        const progress = document.querySelector(".loader__bar");
+        const bar = progress.querySelector("span");
+        let failures = 0;
 
-        async function tryOpen() {
+        async function connectHostedLoading() {
             try {
-                await fetch(target, {
-                    cache: "no-store",
-                    mode: "no-cors"
-                });
-
-                const elapsed = Date.now() - startedAt;
-                window.setTimeout(() => {
-                    window.location.href = target;
-                }, Math.max(0, minVisibleMs - elapsed));
+                await fetch(defaultOrigin, { cache: "no-store", mode: "no-cors" });
+                location.replace(`${defaultOrigin}/loading.html`);
             } catch {
                 status.textContent = "Iniciando BRasa...";
-                window.setTimeout(tryOpen, 450);
+                window.setTimeout(connectHostedLoading, 350);
             }
         }
 
-        window.setTimeout(tryOpen, 300);
+        async function pollStatus() {
+            try {
+                const response = await fetch("/api/sync/status", { cache: "no-store" });
+                if (!response.ok) throw new Error();
+                const sync = await response.json(); failures = 0;
+                const percentage = sync.state === "complete" ? 100 : Math.max(8, Number(sync.progress || (sync.state === "syncing" ? 16 : 10)));
+                bar.style.width = `${percentage}%`; progress.setAttribute("aria-valuenow", String(percentage));
+                status.textContent = sync.message || (sync.state === "syncing" ? "Verificando biblioteca..." : "Iniciando BRasa...");
+                if (sync.state === "complete") { status.textContent = "Biblioteca pronta."; return setTimeout(() => location.replace(`/?opened=${Date.now()}`), 350); }
+                if (sync.state === "error") { status.textContent = "Biblioteca pronta em modo parcial."; return setTimeout(() => location.replace(`/?opened=${Date.now()}&library=partial`), 1200); }
+                setTimeout(pollStatus, 300);
+            } catch {
+                failures++; status.textContent = failures > 20 ? "Ainda estamos preparando o BRasa..." : "Iniciando BRasa...";
+                setTimeout(pollStatus, Math.min(1200, 250 + failures * 50));
+            }
+        }
+
+        if (location.protocol === "file:") connectHostedLoading(); else pollStatus();
     </script>
 </body>
 
