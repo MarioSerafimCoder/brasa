@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Star Wars">
-  <rect width="1200" height="420" fill="#030712"/>
-  <g fill="#fff" opacity=".75"><circle cx="950" cy="70" r="3"/><circle cx="1060" cy="180" r="2"/><circle cx="740" cy="120" r="2"/><circle cx="1120" cy="310" r="3"/><circle cx="640" cy="300" r="2"/></g>
-  <path d="M780 95l330 70-330 70 115-70z" fill="#fde047" opacity=".9"/>
-  <path d="M0 330C210 250 430 370 610 275s320-70 590-35v180H0z" fill="#1f2937"/>
-  <text x="70" y="190" fill="#fde047" font-family="Inter,Arial,sans-serif" font-size="88" font-weight="900">Star Wars</text>
-  <text x="74" y="255" fill="#e5e7eb" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">a galáxia, a Força e a aventura</text>
-</svg>

@@ -30,12 +30,34 @@
             <section class="settings-page">
                 <header class="settings-header">
                     <h1>Configurações</h1>
-                    <p>Preferências salvas neste navegador para deixar o BRasa com o seu jeito.</p>
+                    <p>Preferências do dispositivo e dados independentes para cada perfil.</p>
                 </header>
 
                 <div class="settings-grid">
+                    <section id="profiles" class="settings-section settings-section--wide">
+                        <div class="settings-section__heading"><div><h2>Perfis e segurança</h2><p>Gerencie quem usa o BRasa e proteja perfis infantis.</p></div><button id="addProfileButton" class="settings-action" type="button"><i data-lucide="user-plus"></i>Novo perfil</button></div>
+                        <div id="profilesManager" class="profiles-manager" aria-live="polite"></div>
+                    </section>
+                    <section class="settings-section settings-section--wide media-center">
+                        <div class="settings-section__heading"><div><h2>Preparação de mídia</h2><p>Compatibilidade do navegador, fila e conversões em segundo plano.</p></div><span id="mediaToolsBadge" class="media-tools-badge">Verificando ferramentas…</span></div>
+                        <div id="mediaToolsSummary" class="media-tools-summary"></div>
+                        <div class="media-settings-grid">
+                            <label class="toggle-row"><input type="checkbox" data-media-setting="autoAnalyze">Analisar arquivos automaticamente</label>
+                            <label class="toggle-row"><input type="checkbox" data-media-setting="autoPrepare">Preparar incompatíveis automaticamente</label>
+                            <label class="toggle-row"><input type="checkbox" data-media-setting="generateThumbnails">Gerar thumbnails</label>
+                            <label class="toggle-row"><input type="checkbox" data-media-setting="extractSubtitles">Extrair legendas internas</label>
+                            <label class="toggle-row"><input type="checkbox" data-media-setting="cpuFallback">Usar CPU se a GPU falhar</label>
+                            <label class="setting-field"><span>Aceleração</span><select data-media-setting="acceleration"><option value="auto">Automática</option><option value="cpu">CPU</option><option value="nvidia">NVIDIA</option><option value="intel">Intel</option><option value="amd">AMD</option></select></label>
+                            <label class="setting-field"><span>Qualidade</span><select data-media-setting="quality"><option value="economy">Econômica</option><option value="balanced">Equilibrada</option><option value="high">Alta</option></select></label>
+                            <label class="setting-field"><span>Espaço mínimo livre (GB)</span><input type="number" min="1" max="500" data-media-setting="minimumFreeGb"></label>
+                        </div>
+                        <div class="media-queue-summary"><strong id="mediaQueueStatus">Fila vazia</strong><span id="mediaQueueDetails"></span><button id="toggleMediaQueue" type="button">Pausar fila</button></div>
+                    </section>
+                    <section class="settings-section settings-section--wide library-health-entry">
+                        <div><h2>Biblioteca</h2><p>Verifique arquivos, metadados, armazenamento e problemas de reprodução.</p></div><a class="settings-action" href="library-health.html"><i data-lucide="activity"></i>Diagnóstico avançado</a>
+                    </section>
                     <section class="settings-section">
-                        <h2>Aparência</h2>
+                        <h2>Configurações deste dispositivo</h2>
                         <div class="settings-options">
                             <div class="setting-field" data-setting="theme" data-type="radio">
                                 <span>Tema</span>
@@ -79,7 +101,7 @@
                     </section>
 
                     <section class="settings-section">
-                        <h2>Reprodução</h2>
+                        <h2>Preferências de <span id="settingsProfileName">perfil atual</span></h2>
                         <div class="settings-options">
                             <label class="toggle-row">
                                 <input type="checkbox" data-setting="skipIntro">
@@ -200,4 +222,3 @@
     <script type="module" src="../js/pages/settings.js?v=streaming-20260709a"></script>
 </body>
 </html>
-

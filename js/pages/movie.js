@@ -10,7 +10,9 @@ import { isFavorite, toggleFavorite } from "../utils/favorites.js";
 import { filterContentByProfile, initializeProfiles } from "../utils/profiles.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
 import { installPageTransitions, navigateTo } from "../utils/navigation.js";
-import { clearWatchProgress, getWatchProgress, saveWatchProgress } from "../utils/progress.js";
+import { getWatchProgress, saveWatchProgress } from "../utils/progress.js";
+import { recordHistory } from "../services/profile-service.js";
+import { analyzeMedia, cancelMedia, getMediaStatus, getMediaToolsStatus, prepareMedia, retryMedia, watchMedia } from "../services/media-service.js";
 import { installTmdbImageFallbacks, movieImageUrl, seriesImageUrl, tmdbImageFallbackAttributes } from "../utils/tmdb-images.js";
 
 const playerShell = document.getElementById("playerShell");
@@ -29,6 +31,7 @@ const landingFavoriteButton = document.getElementById("landingFavoriteButton");
 const watchNextGrid = document.getElementById("watchNextGrid");
 const playerBackButton = document.getElementById("playerBackButton");
 const playerCloseButton = document.getElementById("playerCloseButton");
+const mediaPreparation = document.getElementById("mediaPreparation");
 
 const year = document.getElementById("movieYear");
 const duration = document.getElementById("movieDuration");
@@ -78,6 +81,7 @@ installPageTransitions();
 installTmdbImageFallbacks();
 
 await initializeProfiles();
+preferences = applyPreferences();
 
 function loadMovie() {
     if (!movieId && !episodeId) {
@@ -142,12 +146,16 @@ function loadMovie() {
     source.src = resolveAssetUrl(movie.video);
     source.type = getVideoMimeType(movie.video);
     player.load();
+    configureMediaPreparation(movie);
 
     showPlayerStatus("");
     configureSubtitleControls();
     updatePlayPauseState();
     refreshIcons();
 }
+
+async function configureMediaPreparation(movie){const key=`${movie.isEpisode?"episode":"movie"}:${movie.id}`;let tools;try{tools=await getMediaToolsStatus();}catch{return;}if(!tools.ffprobeAvailable){mediaPreparation.hidden=false;mediaPreparation.innerHTML=`<span class="media-status-badge is-warning">Análise indisponível</span><p>FFprobe não foi encontrado. O BRasa tentará usar o arquivo original.</p>`;return;}try{const result=await getMediaStatus(key);applyMediaState(result.item||result,movie,key);}catch{mediaPreparation.hidden=false;mediaPreparation.innerHTML=`<span class="media-status-badge">Não analisada</span><p>Analise codecs e contêiner antes de reproduzir.</p><button type="button" data-media-action="analyze">Analisar mídia</button>`;landingPlayButton.disabled=true;}mediaPreparation.onclick=async(event)=>{const action=event.target.closest("[data-media-action]")?.dataset.mediaAction;if(!action)return;event.target.disabled=true;try{if(action==="analyze")await analyzeMedia(key);if(action==="prepare")await prepareMedia(key);if(action==="retry")await retryMedia(key);if(action==="cancel")await cancelMedia(key);watchMedia(key,(item)=>applyMediaState(item,movie,key));}catch(error){showPlayerStatus(error.message);}finally{event.target.disabled=false;}};}
+function applyMediaState(item,movie,key){mediaPreparation.hidden=false;const labels={ready:"Pronto",pending:"Preparação necessária",queued:"Na fila",analyzing:"Analisando",processing:"Preparando",failed:"Falhou",corrupted:"Corrompido",cancelled:"Cancelado",unsupported:"Incompatível"};const busy=["queued","analyzing","processing","finalizing"].includes(item.status),canPlay=item.status==="ready";if(canPlay){const video=item.preparedPath||item.originalPath||movie.video;source.src=resolveAssetUrl(video);source.type=item.preparedPath?"video/mp4":getVideoMimeType(video);if(item.subtitles?.length&&!player.querySelector('track[data-prepared="true"]'))item.subtitles.forEach((subtitle)=>{const track=document.createElement("track");track.kind="subtitles";track.label=subtitle.label;track.srclang=subtitle.srclang;track.src=resolveAssetUrl(subtitle.src);track.dataset.prepared="true";player.appendChild(track);});player.load();landingPlayButton.disabled=false;}else landingPlayButton.disabled=true;mediaPreparation.innerHTML=`<div><span class="media-status-badge is-${item.status}">${labels[item.status]||item.status}</span><strong>${item.strategy||""}</strong></div><p>${item.reason||item.error||"Verificando compatibilidade."}</p>${busy?`<div class="media-preparation__progress"><span style="width:${Number(item.progress||0)}%"></span></div><button type="button" data-media-action="cancel">Cancelar</button>`:""}${item.status==="pending"?`<button type="button" data-media-action="prepare">Preparar mídia</button>`:""}${["failed","cancelled"].includes(item.status)?`<button type="button" data-media-action="retry">Tentar novamente</button>`:""}`;if(busy)watchMedia(key,(next)=>applyMediaState(next,movie,key));}
 
 function renderGenres(movieGenres) {
     genres.innerHTML = "";
@@ -816,6 +824,7 @@ player.addEventListener("loadedmetadata", () => {
 
 player.addEventListener("timeupdate", updateProgress);
 player.addEventListener("play", () => {
+    if (currentMovie) recordHistory({ mediaKey: `${currentMovie.isEpisode ? "episode" : "movie"}:${currentMovie.id}`, mediaId: String(currentMovie.id), title: currentMovie.title });
     maybeSkipIntro();
     updatePlayPauseState();
     setHeaderPlayingState(true);
@@ -828,7 +837,7 @@ player.addEventListener("pause", () => {
 });
 player.addEventListener("ended", () => {
     setHeaderPlayingState(false);
-    clearWatchProgress(currentMovie);
+    saveWatchProgress(currentMovie, player.duration, player.duration);
     startNextEpisodeCountdown();
 });
 

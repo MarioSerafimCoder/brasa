@@ -29,6 +29,7 @@ async function init() {
     renderLayout();
 
     await initializeProfiles();
+    applyPreferences();
 
     HomePage();
 }
@@ -54,4 +55,3 @@ function renderLayout() {
     });
 
 }
-

@@ -3,6 +3,7 @@ import { navigateTo } from "../utils/navigation.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
 import { withProgressState } from "../utils/progress.js";
 import { movieImageUrl, tmdbImageFallbackAttributes } from "../utils/tmdb-images.js";
+import { getAllMediaStatus } from "../services/media-service.js";
 
 export function getGenres(movies) {
     return [...new Set(movies.flatMap((movie) => movie.genres || []))]
@@ -67,7 +68,10 @@ export function renderMovieGrid(container, movies, options = {}) {
     }
 
     container.innerHTML = moviesWithProgress.map((movie) => movieCard(movie)).join("");
+    decorateMediaStatus(container);
 }
+
+async function decorateMediaStatus(container){try{const state=await getAllMediaStatus();container.querySelectorAll("[data-movie-id]").forEach((card)=>{const item=state.items?.[`movie:${card.dataset.movieId}`];if(!item)return;const label={ready:"Pronto",queued:"Na fila",analyzing:"Analisando",processing:"Preparando",pending:"Preparar",failed:"Falhou",corrupted:"Corrompido",cancelled:"Cancelado"}[item.status];if(!label)return;const badge=document.createElement("span");badge.className=`library-media-badge is-${item.status}`;badge.textContent=label;card.querySelector(".movie-card-lite__poster")?.appendChild(badge);});}catch{}}
 
 export function bindMovieGridNavigation(container) {
     container.addEventListener("click", (event) => {

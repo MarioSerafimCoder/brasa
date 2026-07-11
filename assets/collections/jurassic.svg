@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Jurassic Park Jurassic World">
-  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#064e3b"/><stop offset="1" stop-color="#84cc16"/></linearGradient></defs>
-  <rect width="1200" height="420" fill="url(#g)"/>
-  <path d="M760 305c75-130 210-180 345-100-130-10-190 60-220 130z" fill="#052e16" opacity=".55"/>
-  <circle cx="975" cy="185" r="115" fill="#facc15" opacity=".22"/>
-  <text x="70" y="180" fill="#ecfccb" font-family="Inter,Arial,sans-serif" font-size="74" font-weight="850">Jurassic Park</text>
-  <text x="74" y="245" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="34" font-weight="800">Jurassic World</text>
-</svg>

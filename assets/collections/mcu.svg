@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Universo Marvel MCU">
-  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#7f1d1d"/><stop offset="1" stop-color="#dc2626"/></linearGradient></defs>
-  <rect width="1200" height="420" fill="url(#g)"/>
-  <circle cx="990" cy="110" r="170" fill="#fbbf24" opacity=".22"/>
-  <path d="M0 350C210 260 340 390 560 300s360-30 640-150v270H0z" fill="#111827" opacity=".32"/>
-  <text x="70" y="190" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="72" font-weight="800">Universo Marvel</text>
-  <text x="74" y="255" fill="#fee2e2" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">MCU • heróis conectados</text>
-</svg>

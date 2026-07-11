@@ -10,6 +10,21 @@ Thumbs.db
 # Node
 node_modules/
 .env
+data/user-state.json
+data/user-state.backup.json
+data/user-state.json.corrupt-*
+data/media-state.json
+data/media-state.backup.json
+data/media-state.json.corrupt-*
+data/prepared-media/
+tools/ffmpeg/
+*.part
+data/library-health.json
+data/library-health.backup.json
+data/library-health.json.corrupt-*
+data/sync-history.json
+data/sync-history.backup.json
+data/library-audit/
 .brasa-server.json
 
 # Logs

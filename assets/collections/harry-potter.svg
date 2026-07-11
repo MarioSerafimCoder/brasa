@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Harry Potter">
-  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#312e81"/><stop offset="1" stop-color="#7c2d12"/></linearGradient></defs>
-  <rect width="1200" height="420" fill="url(#g)"/>
-  <path d="M930 65l28 86 92 2-73 54 26 88-73-52-76 52 28-88-74-54 92-2z" fill="#fde68a" opacity=".86"/>
-  <path d="M770 300c95-150 210-150 320 0" fill="none" stroke="#fef3c7" stroke-width="18" opacity=".34"/>
-  <text x="70" y="190" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="82" font-weight="850">Harry Potter</text>
-  <text x="74" y="255" fill="#fde68a" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="700">magia, escola e mundo bruxo</text>
-</svg>

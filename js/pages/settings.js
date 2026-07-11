@@ -1,9 +1,11 @@
 ﻿import { applyPreferences, getPreferences, savePreferences } from "../utils/preferences.js";
-import { initializeProfiles } from "../utils/profiles.js";
+import { getActiveProfile, initializeProfiles } from "../utils/profiles.js";
+import { createProfile, listProfiles, removeProfile, setProfilePin, updateProfile } from "../services/profile-service.js";
+import { getMediaQueue, getMediaSettings, getMediaToolsStatus, pauseMediaQueue, resumeMediaQueue, saveMediaSettings } from "../services/media-service.js";
 import { installPageTransitions } from "../utils/navigation.js";
 import { installPageSidebar } from "../utils/page-layout.js?v=streaming-20260709a";
 
-const preferences = applyPreferences();
+let preferences = applyPreferences();
 
 init();
 
@@ -11,15 +13,30 @@ async function init() {
     installPageTransitions();
     installPageSidebar("settings");
     await initializeProfiles();
+    if (getActiveProfile()?.kind === "kids") {
+        location.replace("../index.html");
+        return;
+    }
+    preferences = applyPreferences();
+    const profileName = document.getElementById("settingsProfileName");
+    if (profileName) profileName.textContent = getActiveProfile()?.name || "perfil atual";
     hideUnsupportedSettings();
     hydrateControls(preferences);
     installColorSwatches();
     bindControls();
+    installProfileManager();
+    await installMediaCenter();
 
     if (window.lucide) {
         window.lucide.createIcons();
     }
 }
+
+async function installMediaCenter(){const badge=document.getElementById("mediaToolsBadge"),summary=document.getElementById("mediaToolsSummary"),queueText=document.getElementById("mediaQueueStatus"),queueDetails=document.getElementById("mediaQueueDetails"),toggle=document.getElementById("toggleMediaQueue");if(!badge)return;try{const [tools,settings,queue]=await Promise.all([getMediaToolsStatus(),getMediaSettings(),getMediaQueue()]);badge.textContent=tools.ffmpegAvailable&&tools.ffprobeAvailable?"Ferramentas disponíveis":"Configuração necessária";badge.classList.toggle("is-ready",tools.ffmpegAvailable&&tools.ffprobeAvailable);summary.innerHTML=`<span>FFmpeg: <strong>${tools.ffmpegAvailable?"disponível":"não encontrado"}</strong></span><span>FFprobe: <strong>${tools.ffprobeAvailable?"disponível":"não encontrado"}</strong></span><span>GPU: <strong>${[tools.hardwareAcceleration.nvenc&&"NVIDIA",tools.hardwareAcceleration.qsv&&"Intel",tools.hardwareAcceleration.amf&&"AMD"].filter(Boolean).join(", ")||"CPU"}</strong></span><small>${tools.version||"Defina FFMPEG_PATH e FFPROBE_PATH no arquivo .env."}</small>`;document.querySelectorAll("[data-media-setting]").forEach((control)=>{const value=settings[control.dataset.mediaSetting];control.type==="checkbox"?control.checked=Boolean(value):control.value=value;control.addEventListener("change",async()=>{const next=control.type==="checkbox"?control.checked:control.type==="number"?Number(control.value):control.value;await saveMediaSettings({[control.dataset.mediaSetting]:next});});});queueText.textContent=queue.active.length?"Processando mídia":queue.queued.length?`${queue.queued.length} na fila`:"Fila vazia";queueDetails.textContent=queue.active[0]||"";toggle.textContent=queue.paused?"Retomar fila":"Pausar fila";toggle.onclick=async()=>{queue.paused?await resumeMediaQueue():await pauseMediaQueue();location.reload();};}catch(error){badge.textContent="Central indisponível";summary.textContent=error.message;}}
+
+function installProfileManager(){const root=document.getElementById("profilesManager"),add=document.getElementById("addProfileButton");if(!root||!add)return;const render=()=>{const active=getActiveProfile();root.innerHTML=listProfiles().map((p)=>`<article class="profile-manager-card"><span class="profile-manager-avatar is-${p.avatar?.color||"blue"}">${p.initials}</span><div><strong>${p.name}</strong><small>${p.kind==="kids"?"Infantil":"Adulto"}${p.hasPin?" • PIN configurado":""}</small></div><span><button type="button" data-edit-profile="${p.id}">Editar</button><button type="button" data-pin-profile="${p.id}">${p.hasPin?"Trocar PIN":"Definir PIN"}</button><button type="button" data-delete-profile="${p.id}" ${p.id===active?.id?"disabled title=\"Troque de perfil antes de excluir\"":""}>Excluir</button></span></article>`).join("");};add.addEventListener("click",()=>openProfileEditor(null,render));root.addEventListener("click",async(event)=>{const edit=event.target.closest("[data-edit-profile]");if(edit)openProfileEditor(listProfiles().find((p)=>p.id===edit.dataset.editProfile),render);const pin=event.target.closest("[data-pin-profile]");if(pin){const value=await requestNewPin();if(value!==null){try{await setProfilePin(pin.dataset.pinProfile,value);render();alert("PIN atualizado.");}catch(error){alert(error.message);}}}const del=event.target.closest("[data-delete-profile]");if(del&&confirm("Excluir este perfil? Favoritos, progresso e histórico serão removidos permanentemente.")){try{await removeProfile(del.dataset.deleteProfile);render();}catch(error){alert(error.message);}}});render();}
+function requestNewPin(){return new Promise((resolve)=>{const overlay=document.createElement("div");overlay.className="profile-manager-modal";overlay.innerHTML=`<form role="dialog" aria-modal="true" aria-label="Configurar PIN"><h2>Configurar PIN</h2><label>PIN de 4 a 6 dígitos<input name="pin" type="password" inputmode="numeric" pattern="\\d{4,6}" maxlength="6" autocomplete="new-password"></label><p class="settings-note">Deixe vazio para remover o PIN atual.</p><div><button type="button" data-cancel>Cancelar</button><button class="settings-action" type="submit">Salvar PIN</button></div></form>`;const close=(value)=>{overlay.remove();resolve(value)};overlay.querySelector("[data-cancel]").addEventListener("click",()=>close(null));overlay.addEventListener("keydown",(e)=>{if(e.key==="Escape")close(null)});overlay.querySelector("form").addEventListener("submit",(e)=>{e.preventDefault();close(e.currentTarget.elements.pin.value)});document.body.appendChild(overlay);overlay.querySelector("input").focus();});}
+function openProfileEditor(profile,onSaved){const overlay=document.createElement("div");overlay.className="profile-manager-modal";overlay.innerHTML=`<form role="dialog" aria-modal="true" aria-label="${profile?"Editar":"Criar"} perfil"><h2>${profile?"Editar perfil":"Novo perfil"}</h2><label>Nome<input name="name" maxlength="40" required value="${profile?.name||""}"></label><label>Iniciais<input name="initials" maxlength="2" required value="${profile?.initials||""}"></label><label>Tipo<select name="kind"><option value="adult">Adulto</option><option value="kids" ${profile?.kind==="kids"?"selected":""}>Infantil</option></select></label><label>Cor<select name="color"><option value="blue">Azul</option><option value="purple">Roxo</option><option value="pink">Rosa</option><option value="orange">Laranja</option><option value="green">Verde</option></select></label><div><button type="button" data-cancel>Cancelar</button><button class="settings-action" type="submit">Salvar</button></div></form>`;const close=()=>overlay.remove();overlay.querySelector("[data-cancel]").addEventListener("click",close);overlay.addEventListener("keydown",(e)=>{if(e.key==="Escape")close();});overlay.querySelector("form").addEventListener("submit",async(event)=>{event.preventDefault();const e=event.currentTarget.elements;const input={name:e.name.value,initials:e.initials.value,kind:e.kind.value,avatar:{color:e.color.value}};try{profile?await updateProfile(profile.id,input):await createProfile(input);close();onSaved();}catch(error){alert(error.message);}});document.body.appendChild(overlay);overlay.querySelector('[name="color"]').value=profile?.avatar?.color||"blue";overlay.querySelector("input").focus();}
 
 function hydrateControls(values) {
     document.querySelectorAll("[data-setting]").forEach((control) => {
@@ -129,4 +146,3 @@ function readControlValue(control) {
 
     return control.value;
 }
-

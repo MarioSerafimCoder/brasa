@@ -1,0 +1,17 @@
+import assert from "node:assert/strict";import {buildLibraryIssues,mergeIssueHistory} from "../server/library-audit.mjs";
+const base={mediaKey:"movie:1",mediaType:"movie",mediaId:"1",title:"Filme",year:2020,poster:"poster.jpg",overview:"Sinopse",contentRating:"12",video:"assets/movies/filme.mp4",fileExists:true,subtitles:[]};
+assert.equal(buildLibraryIssues({items:[base],mediaItems:{"movie:1":{status:"ready"}}}).filter((i)=>i.severity==="error").length,0);
+const missing=buildLibraryIssues({items:[{...base,fileExists:false}],mediaItems:{}});assert(missing.some((i)=>i.type==="missing-file"));
+assert(buildLibraryIssues({items:[base],files:[{name:"outro.mkv",relativePath:"assets/movies/outro.mkv",mediaType:"movie"}],mediaItems:{"movie:1":{}},full:true}).some((i)=>i.type==="orphan-file"));
+const duplicateItems=[base,{...base,mediaKey:"movie:2",mediaId:"2",video:"assets/movies/b.mp4",imdbId:"tt1"}].map((i)=>({...i,imdbId:"tt1"}));assert(buildLibraryIssues({items:duplicateItems,mediaItems:{"movie:1":{},"movie:2":{}},full:true}).some((i)=>i.type==="duplicate"));
+assert(buildLibraryIssues({items:[base,{...base,mediaKey:"movie:2",mediaId:"2",video:"b.mp4"}],mediaItems:{"movie:1":{},"movie:2":{}},full:true}).some((i)=>i.type==="possible-duplicate"));
+assert(buildLibraryIssues({items:[{...base,poster:""}],mediaItems:{"movie:1":{}}}).some((i)=>i.type==="missing-poster"));
+assert(buildLibraryIssues({items:[{...base,mediaKey:"episode:e1",mediaType:"episode",episodeNumber:""}],mediaItems:{"episode:e1":{}}}).some((i)=>i.type==="missing-episode-number"));
+assert(buildLibraryIssues({items:[base],mediaItems:{"movie:1":{preparedPath:"x",preparedExists:false}}}).some((i)=>i.type==="prepared-file-missing"));
+assert(buildLibraryIssues({items:[base],mediaItems:{"movie:1":{preparedPath:"x",preparedExists:true,preparedOutdated:true}}}).some((i)=>i.type==="prepared-file-outdated"));
+assert(buildLibraryIssues({items:[],mediaItems:{},tempFiles:[{name:"x.part",relativePath:"data/x.part"}],full:true}).some((i)=>i.type==="abandoned-temp-file"));
+assert(buildLibraryIssues({items:[{...base,subtitles:[{src:"x.vtt",fileExists:false}]}],mediaItems:{"movie:1":{}}}).some((i)=>i.type==="missing-subtitle-file"));
+assert(buildLibraryIssues({items:[],mediaItems:{"movie:9":{}}}).some((i)=>i.type==="orphan-media-state"));
+assert(buildLibraryIssues({items:[base],mediaItems:{}}).some((i)=>i.type==="media-not-analyzed"));
+const first=buildLibraryIssues({items:[{...base,fileExists:false}],mediaItems:{}}),second=buildLibraryIssues({items:[{...base,fileExists:false}],mediaItems:{}});assert.equal(first[0].id,second[0].id);const merged=mergeIssueHistory(first,[]);assert(merged.some((i)=>i.status==="resolved"&&i.resolvedAt));const ignored=mergeIssueHistory([{...first[0],status:"ignored",ignoredAt:"2026-01-01"}],first);assert.equal(ignored.find((i)=>i.id===first[0].id).status,"ignored");
+console.log("Auditoria da biblioteca: 16 cenários aprovados.");

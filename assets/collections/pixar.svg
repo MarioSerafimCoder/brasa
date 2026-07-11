@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" role="img" aria-label="Pixar">
-  <defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#0ea5e9"/><stop offset="1" stop-color="#facc15"/></linearGradient></defs>
-  <rect width="1200" height="420" fill="url(#g)"/>
-  <circle cx="900" cy="155" r="72" fill="#fff" opacity=".75"/>
-  <circle cx="1010" cy="245" r="95" fill="#ef4444" opacity=".62"/>
-  <rect x="760" y="275" width="330" height="24" rx="12" fill="#fff" opacity=".7"/>
-  <text x="70" y="200" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="96" font-weight="900">Pixar</text>
-  <text x="74" y="265" fill="#eff6ff" font-family="Inter,Arial,sans-serif" font-size="30" font-weight="800">histórias para rir e se emocionar</text>
-</svg>

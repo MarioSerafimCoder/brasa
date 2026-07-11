@@ -46,7 +46,15 @@ O arquivo `.env` na raiz deve conter:
 OMDB_API_KEY=sua-chave-da-omdb
 OPENSUBTITLES_API_KEY=sua-chave-da-opensubtitles
 SUBTITLE_LANGUAGES=pt-br,en
+FFMPEG_PATH=C:\\ffmpeg\\bin\\ffmpeg.exe
+FFPROBE_PATH=C:\\ffmpeg\\bin\\ffprobe.exe
 ```
+
+FFmpeg e FFprobe são opcionais. Sem eles, o BRasa continua abrindo e tenta reproduzir os arquivos originais. No Windows, instale o FFmpeg pelo gerenciador de sua preferência e informe os caminhos acima, coloque os executáveis em `tools/ffmpeg/` (pasta ignorada pelo Git) ou adicione-os ao PATH do sistema. A Central de Preparação de mídia em Configurações mostra o diagnóstico.
+
+## Diagnóstico da biblioteca
+
+Perfis adultos podem abrir `Configurações → Biblioteca → Diagnóstico avançado` para verificar arquivos ausentes, metadados, duplicatas, arquivos não identificados, preparação de mídia e armazenamento. A verificação rápida é executada após sincronizações; a verificação completa é manual e ocorre em segundo plano. Nenhuma ação automática remove arquivos originais, favoritos, progresso ou histórico.
 
 Se a OMDb retornar o filme errado, ajuste `data/movie-overrides.json` usando o nome exato do arquivo e o `imdbId` correto.
 

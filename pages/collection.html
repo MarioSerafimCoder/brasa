@@ -27,25 +27,54 @@
 
         <main class="page-main">
             <section class="library-page collections-page">
-                <header class="library-header">
-                    <div>
-                        <p class="library-kicker">Coleções</p>
-                        <h1 class="library-title">Universos e sagas</h1>
-                        <p class="library-subtitle">Banners organizados por franquias, estúdios e listas especiais. Conforme você adiciona filmes, eles aparecem automaticamente nas coleções correspondentes.</p>
-                    </div>
-                </header>
-
-                <div id="collectionsGrid" class="collections-grid"></div>
-
-                <section class="collection-detail">
-                    <div class="collection-detail__header">
-                        <div>
-                            <p id="collectionKicker">Selecione uma coleção</p>
-                            <h2 id="collectionTitle">Explore por banner</h2>
+                <section id="collectionsOverview" class="collections-overview" aria-labelledby="collectionsTitle">
+                    <header class="collections-toolbar">
+                        <div class="collections-toolbar__intro">
+                            <p class="library-kicker">Sua biblioteca</p>
+                            <h1 id="collectionsTitle">Coleções</h1>
+                            <p>Organize seus filmes em listas manuais ou deixe o BRasa atualizar tudo automaticamente.</p>
                         </div>
-                        <span id="collectionCount"></span>
+                        <div class="collections-toolbar__actions">
+                            <label class="collections-search">
+                                <span class="sr-only">Buscar coleções</span>
+                                <i data-lucide="search"></i>
+                                <input id="collectionSearch" type="search" placeholder="Buscar coleções" autocomplete="off">
+                            </label>
+                            <button id="newCollectionButton" class="collections-primary" type="button"><i data-lucide="plus"></i>Nova coleção</button>
+                        </div>
+                        <div class="collections-toolbar__meta">
+                            <strong id="collectionsTotal">0 coleções</strong>
+                            <label class="collections-toggle"><input id="showEmptyCollections" type="checkbox"><span>Mostrar coleções vazias</span></label>
+                        </div>
+                    </header>
+
+                    <div class="collections-controls">
+                        <div id="collectionTabs" class="collections-tabs" role="tablist" aria-label="Filtrar coleções">
+                            <button class="is-active" type="button" role="tab" aria-selected="true" data-filter="all">Todas</button>
+                            <button type="button" role="tab" aria-selected="false" data-filter="smart">Inteligentes</button>
+                            <button type="button" role="tab" aria-selected="false" data-filter="manual">Manuais</button>
+                            <button type="button" role="tab" aria-selected="false" data-filter="system">Sistema</button>
+                        </div>
+                        <label class="collections-sort">Ordenar por<select id="collectionsSort"><option value="updated">Atualizadas recentemente</option><option value="alpha">Ordem alfabética</option><option value="count-desc">Mais itens</option><option value="count-asc">Menos itens</option></select></label>
                     </div>
-                    <div id="collectionMovies" class="movie-grid"></div>
+
+                    <div id="collectionsGrid" class="collections-grid" aria-live="polite"></div>
+                </section>
+
+                <section id="collectionDetail" class="collection-detail-view" hidden aria-labelledby="collectionTitle">
+                    <button id="backToCollections" class="collection-back" type="button"><i data-lucide="arrow-left"></i>Voltar para coleções</button>
+                    <div id="collectionDetailHero" class="collection-detail-hero"></div>
+                    <div class="collection-detail-content">
+                        <div class="collection-detail-heading">
+                            <div><p id="collectionKicker">Coleção</p><h2 id="collectionTitle"></h2><p id="collectionDescription"></p></div>
+                            <div id="collectionDetailActions" class="collection-detail-actions"></div>
+                        </div>
+                        <div class="collection-detail-bar">
+                            <span id="collectionCount"></span><span id="collectionUpdated"></span>
+                            <label>Ordenar filmes<select id="collectionMovieSort"><option value="manual-asc">Ordem da coleção</option><option value="title-asc">Título (A–Z)</option><option value="title-desc">Título (Z–A)</option><option value="year-desc">Mais recentes</option><option value="rating-desc">Maior nota</option></select></label>
+                        </div>
+                        <div id="collectionMovies" class="movie-grid"></div>
+                    </div>
                 </section>
             </section>
         </main>
@@ -55,4 +84,3 @@
     <script type="module" src="../js/pages/collections.js?v=streaming-20260709a"></script>
 </body>
 </html>
-
