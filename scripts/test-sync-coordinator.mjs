@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { createSyncCoordinator } from "../server/sync-coordinator.mjs";
+const wait = (ms = 5) => new Promise((resolve) => setTimeout(resolve, ms));
+let runs = [], active = 0, maximum = 0, after = 0;
+const coordinator = createSyncCoordinator({ runSync: async (reasons) => { active++; maximum = Math.max(maximum, active); runs.push(reasons); await wait(10); active--; return { code: 0, output: "ok" }; }, afterSync: async () => { after++; } });
+const first = coordinator.requestSync("startup"); await wait(2); coordinator.requestSync("watcher:a"); coordinator.requestSync("watcher:b"); await first;
+assert.equal(runs.length, 2, "eventos durante sync devem gerar uma passagem consolidada");
+assert.deepEqual(new Set(runs[1]), new Set(["watcher:a", "watcher:b"]));
+assert.equal(maximum, 1, "não pode haver concorrência"); assert.equal(after, 2); assert.equal(coordinator.isRunning(), false); assert.equal(coordinator.hasPendingSync(), false);
+let attempts = 0; const retry = createSyncCoordinator({ runSync: async () => { attempts++; if (attempts === 1) throw new Error("falha"); return { code: 0 }; } });
+await retry.requestSync("manual"); assert.equal(retry.getStatus().state, "error"); await retry.requestSync("retry"); assert.equal(retry.getStatus().state, "complete");
+console.log("Sync coordinator: 8 cenários aprovados.");

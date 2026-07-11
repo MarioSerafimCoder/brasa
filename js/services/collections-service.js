@@ -151,7 +151,7 @@ function sortCollectionMovies(movies, sort = {}) {
 async function request(url, options = {}) {
     const response = await fetch(url, {
         method: options.method || "GET",
-        headers: options.body ? { "Content-Type": "application/json" } : undefined,
+        headers: { "X-BRasa-Request": "1", ...(options.body ? { "Content-Type": "application/json" } : {}) },
         body: options.body ? JSON.stringify(options.body) : undefined
     });
     const payload = await response.json().catch(() => ({}));

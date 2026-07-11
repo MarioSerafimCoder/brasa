@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import path from "node:path";
+import { startLibraryWatcher } from "../server/library-watcher.mjs";
+const waits = (ms) => new Promise((resolve) => setTimeout(resolve, ms)); let callback, errorCallback;
+const fakeWatch = (_dir, _options, cb) => { callback = cb; return { on: (name, fn) => { if (name === "error") errorCallback = fn; }, close() {} }; };
+let sequence = [], index = 0; const fakeFs = { access: async () => {}, stat: async () => { const value = sequence[Math.min(index++, sequence.length - 1)]; if (value === null) { const error = new Error("missing"); error.code = "ENOENT"; throw error; } return value; } };
+const events = [], errors = []; const watcher = await startLibraryWatcher({ rootDir: path.resolve("fixture"), onStableChange: async (event) => events.push(event), onError: (error) => errors.push(error), stabilityIntervalMs: 2, requiredStableChecks: 3, maxStabilityWaitMs: 1000, reinstallDelayMs: 2, fs: fakeFs, watch: fakeWatch });
+sequence = [{ size: 10, mtimeMs: 1 }, { size: 20, mtimeMs: 2 }, { size: 20, mtimeMs: 2 }, { size: 20, mtimeMs: 2 }, { size: 20, mtimeMs: 2 }]; index = 0; await callback("change", "filme.mkv"); callback("change", "filme.mkv"); await waits(60); assert.equal(events.filter((item) => item.event === "stable").length, 1); assert.equal(events[0].stableChecks, 3);
+sequence = [null]; index = 0; callback("rename", "removido.mkv"); await waits(5); assert.equal(events.at(-1).event, "removed");
+const count = events.length; await callback("change", "download.part"); sequence = [{ size: 0, mtimeMs: 1 }]; index = 0; await callback("change", "zero.mkv"); assert.equal(events.length, count);
+errorCallback(new Error("watcher falhou")); await waits(5); assert.ok(errors.length >= 1); watcher.stop(); assert.equal(watcher.getStates().length, 0);
+console.log("Watcher: 8 cenários aprovados.");

@@ -12,6 +12,11 @@ import { createLibraryHealthStore } from "../server/library-health-store.mjs";
 import { createSyncHistory } from "../server/sync-history.mjs";
 import { createLibraryHealth } from "../server/library-health.mjs";
 import { startLibraryWatcher } from "../server/library-watcher.mjs";
+import { createSyncCoordinator } from "../server/sync-coordinator.mjs";
+import { absoluteLibraryRoots, isProcessableVideo, resolvePathInsideLibrary } from "../server/library-config.mjs";
+import { AppError, PayloadTooLargeError, ValidationError } from "../server/app-errors.mjs";
+import { validateLocalWriteRequest } from "../server/local-security.mjs";
+import { normalizeProfileState } from "../server/profile-state.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -19,6 +24,7 @@ await loadEnvFile();
 
 const host = "127.0.0.1";
 const preferredPort = Number(process.env.BRASA_PORT || 4173);
+let activePort = preferredPort;
 const stateFile = path.join(rootDir, ".brasa-server.json");
 const userCollectionsFile = path.join(rootDir, "data", "user-collections.json");
 const userStateFile = path.join(rootDir, "data", "user-state.json");
@@ -28,6 +34,7 @@ const tmdbImageCache = new Map();
 const pinAttempts = new Map();
 let userStateWriteQueue = Promise.resolve();
 let profileRequestQueue = Promise.resolve();
+let userCollectionsWriteQueue = Promise.resolve();
 const mediaStore = createMediaStateStore(rootDir);
 const mediaQueue = createMediaQueue({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir), resolveMedia });
 const libraryHealthStore = createLibraryHealthStore(rootDir);
@@ -42,6 +49,7 @@ let syncStatus = {
     finishedAt: "",
     output: ""
 };
+const syncCoordinator = createSyncCoordinator({ runSync: (reasons) => syncLibrary(`Biblioteca atualizada (${reasons.join(", ") || "automático"}).`, "A atualização falhou."), afterSync: () => scheduleAutomaticMediaAnalysis(), onStatusChange: (status) => { syncStatus = status; } });
 
 const contentTypes = {
     ".html": "text/html; charset=utf-8",
@@ -63,6 +71,7 @@ const contentTypes = {
 const server = http.createServer(async (request, response) => {
     try {
         const url = new URL(request.url, `http://${request.headers.host}`);
+        validateLocalWriteRequest(request, { port: activePort });
 
         if (request.method === "GET" && url.pathname === "/api/sync/status") {
             sendJson(response, 200, syncStatus);
@@ -106,15 +115,14 @@ const server = http.createServer(async (request, response) => {
 
         await serveStatic(url.pathname, request, response);
     } catch (error) {
-        sendJson(response, 500, { ok: false, message: error.message });
+        const expected = error instanceof AppError;
+        console.error(`[BRasa ${request.method} ${request.url}]`, error.stack || error);
+        sendJson(response, expected ? error.status : 500, { ok: false, code: expected ? error.code : "INTERNAL_ERROR", message: expected ? error.publicMessage : "Não foi possível concluir a operação.", ...(process.env.BRASA_DEBUG === "1" ? { details: error.message } : {}) });
     }
 });
 
 listen(preferredPort);
 mediaQueue.restore().catch((error) => console.log(`BRasa: não foi possível restaurar a fila (${error.message}).`));
-if (process.env.BRASA_SKIP_STARTUP_SYNC !== "1") {
-    runStartupSync();
-}
 
 async function loadEnvFile() {
     const envPath = path.join(rootDir, ".env");
@@ -141,17 +149,13 @@ async function loadEnvFile() {
 
 async function runStartupSync() {
     console.log("BRasa: abrindo com a biblioteca atual e sincronizando em segundo plano...");
-    await syncLibrary("Sincronizacao inicial concluida.", "A sincronizacao inicial falhou; usando a biblioteca atual.");
-    scheduleAutomaticMediaAnalysis().catch((error) => console.log(`BRasa: análise de mídia indisponível (${error.message}).`));
+    await syncCoordinator.requestSync("startup");
 }
 
 async function enableLibraryWatcher() {
     if (process.env.BRASA_WATCH_LIBRARY === "0") return;
-    const requestSync = debounce(async () => {
-        if (isSyncing) return;
-        await syncLibrary("Biblioteca atualizada automaticamente.", "A atualizacao automatica falhou.");
-    }, 1200);
-    await startLibraryWatcher({ rootDir, onStableChange: requestSync });
+    const requestSync = debounce((event) => syncCoordinator.requestSync(`watcher:${event.event}`), 1200);
+    await startLibraryWatcher({ rootDir, onStableChange: requestSync, onError: (error, directory) => console.error(`BRasa watcher (${directory}):`, error.message) });
     console.log("BRasa: observando alteracoes nas pastas da biblioteca.");
 }
 
@@ -173,10 +177,12 @@ function listen(port) {
         throw error;
     });
 
-    server.listen(port, host, () => {
+    server.listen(port, host, async () => {
+        activePort = port;
         writeServerState(port);
         console.log(`BRasa rodando em http://${host}:${port}/`);
-        enableLibraryWatcher().catch((error) => console.log(`BRasa: watcher indisponivel (${error.message}).`));
+        await enableLibraryWatcher().catch((error) => console.log(`BRasa: watcher indisponivel (${error.message}).`));
+        if (process.env.BRASA_SKIP_STARTUP_SYNC !== "1") runStartupSync().catch((error) => console.error("BRasa startup sync:", error));
     });
 }
 
@@ -216,13 +222,9 @@ process.on("SIGTERM", async () => {
 });
 
 async function handleSync(response) {
-    if (isSyncing) {
-        sendJson(response, 409, syncStatus);
-        return;
-    }
-
-    const result = await syncLibrary("Biblioteca atualizada.", "A atualizacao falhou.");
-    sendJson(response, result.code === 0 ? 200 : 500, syncStatus);
+    const wasRunning = syncCoordinator.isRunning();
+    await syncCoordinator.requestSync("manual");
+    sendJson(response, wasRunning ? 202 : syncStatus.state === "complete" ? 200 : 500, syncStatus);
 }
 
 async function handleCollectionsApi(request, response, url) {
@@ -306,18 +308,18 @@ async function handleLibraryHealthApi(request,response,url){const adminProfile=a
     if(request.method==="POST"&&action==="audit"&&["quick","full"].includes(id))return sendJson(response,202,{operation:await libraryHealth.audit(id)});
     if(request.method==="POST"&&p==="/api/library/audit/cancel")return sendJson(response,libraryHealth.cancel()?200:409,{ok:true});
     if(request.method==="POST"&&action==="issues"){const issueAction=parts[4];if(!/^[a-z0-9-]{8,40}$/.test(parts[3]||""))return sendJson(response,400,{ok:false,message:"Identificador inválido."});if(issueAction==="retry")return sendJson(response,202,{result:await libraryHealth.retry(parts[3])});if(["ignore","restore","resolve"].includes(issueAction))return sendJson(response,200,{issue:await libraryHealth.setIssue(parts[3],issueAction)});}
-    if(request.method==="POST"&&action==="items"&&isValidMediaKey(decodeURIComponent(parts[3]||""))&&parts[4]==="locate"){const mediaKey=decodeURIComponent(parts[3]),body=await readJsonBody(request),candidates=await findLibraryCandidates(mediaKey);if(!body.candidateId)return sendJson(response,200,{candidates});const selected=candidates.find((candidate)=>candidate.id===body.candidateId);if(!selected)return sendJson(response,400,{ok:false,message:"Candidato inválido ou fora da biblioteca."});const current=await mediaStore.get(mediaKey);await mediaStore.update(mediaKey,{...(current||{}),mediaKey,originalPath:selected.relativePath,preparedPath:"",status:"pending",probe:null,fingerprint:null,error:""});return sendJson(response,200,{ok:true,relativePath:selected.relativePath});}
+    if(request.method==="POST"&&action==="items"&&isValidMediaKey(decodeURIComponent(parts[3]||""))&&parts[4]==="locate"){const mediaKey=decodeURIComponent(parts[3]),body=await readJsonBody(request),candidates=await findLibraryCandidates(mediaKey);if(!body.candidateId)return sendJson(response,200,{candidates});const selected=candidates.find((candidate)=>candidate.id===body.candidateId);if(!selected||selected.confidence==="low")return sendJson(response,400,{ok:false,message:"Candidato inválido ou com baixa confiança."});resolvePathInsideLibrary(rootDir,selected.relativePath);const current=await mediaStore.get(mediaKey);await mediaStore.update(mediaKey,{...(current||{}),mediaKey,originalPath:selected.relativePath,preparedPath:"",status:"pending",probe:null,fingerprint:null,error:""});return sendJson(response,200,{ok:true,relativePath:selected.relativePath,score:selected.score,confidence:selected.confidence,reasons:selected.reasons});}
     if(request.method==="POST"&&p==="/api/library/sync"){await handleSync(response);return;}
     if(request.method==="DELETE"&&action==="prepared"&&isValidMediaKey(id)){if(adminProfile.pinHash&&!verifyPinHash(adminProfile,String(request.headers["x-brasa-admin-pin"]||"")))return sendJson(response,403,{ok:false,message:"Confirmação administrativa inválida."});return sendJson(response,200,{item:await mediaQueue.removePrepared(id)});}
     sendJson(response,405,{ok:false,message:"Ação de biblioteca não disponível."});
 }
 async function getAdultLibraryProfile(request){const id=String(request.headers["x-brasa-profile-id"]||"");if(!isValidProfileId(id))return null;const state=await readUserState();return state.profiles.find((profile)=>profile.id===id&&profile.kind==="adult")||null;}
 
-async function resolveMedia(mediaKey){const [type,id]=mediaKey.split(":"),stamp=Date.now(),stateItem=await mediaStore.get(mediaKey);if(type==="movie"){const module=await import(`${pathToFileURL(path.join(rootDir,"data","movies.js")).href}?t=${stamp}`);const movie=module.getMovies().find((item)=>String(item.id)===id);return movie?.video?{mediaType:"movie",mediaId:id,originalPath:stateItem?.originalPath||movie.originalVideo||movie.video,title:movie.title}:null;}if(type==="episode"){const module=await import(`${pathToFileURL(path.join(rootDir,"data","series.js")).href}?t=${stamp}`);const episode=module.getEpisodeById(id);return episode?.video?{mediaType:"episode",mediaId:id,originalPath:stateItem?.originalPath||episode.originalVideo||episode.video,title:episode.title}:null;}return null;}
-async function findLibraryCandidates(mediaKey){const media=await resolveMedia(mediaKey),roots=[path.join(rootDir,"assets","movies"),path.join(rootDir,"assets","series"),path.join(rootDir,"assets","kids-series")],files=[];for(const root of roots)for(const entry of await walkLibraryFiles(root)){const ext=path.extname(entry).toLowerCase();if(![".mp4",".mkv",".webm",".mov",".avi"].includes(ext))continue;const relative=path.relative(rootDir,entry).replace(/\\/g,"/"),id=crypto.createHash("sha1").update(relative).digest("hex").slice(0,16),score=similarityScore(media?.title||"",path.basename(entry));files.push({id,name:path.basename(entry),relativePath:relative,score});}return files.sort((a,b)=>b.score-a.score).slice(0,50);}
+async function resolveMedia(mediaKey){const [type,id]=mediaKey.split(":"),stamp=Date.now(),stateItem=await mediaStore.get(mediaKey);if(type==="movie"){const module=await import(`${pathToFileURL(path.join(rootDir,"data","movies.js")).href}?t=${stamp}`);const movie=module.getMovies().find((item)=>String(item.id)===id);return movie?.video?{mediaType:"movie",mediaId:id,originalPath:stateItem?.originalPath||movie.originalVideo||movie.video,title:movie.title,year:movie.year,audience:movie.audience,fileSize:movie.fileSize}:null;}if(type==="episode"){const module=await import(`${pathToFileURL(path.join(rootDir,"data","series.js")).href}?t=${stamp}`);const episode=module.getEpisodeById(id);return episode?.video?{mediaType:"episode",mediaId:id,originalPath:stateItem?.originalPath||episode.originalVideo||episode.video,title:episode.title,audience:episode.audience,seasonNumber:episode.seasonNumber,episodeNumber:episode.episodeNumber,fileSize:episode.fileSize}:null;}return null;}
+async function findLibraryCandidates(mediaKey){const media=await resolveMedia(mediaKey),files=[];for(const root of absoluteLibraryRoots(rootDir))for(const entry of await walkLibraryFiles(root.absolutePath)){const stat=await fs.stat(entry).catch(()=>null);if(!stat||!isProcessableVideo(entry,stat.size))continue;const relative=path.relative(rootDir,entry).replace(/\\/g,"/"),id=crypto.createHash("sha1").update(relative).digest("hex").slice(0,16),match=relocationScore(media,entry,root,stat);files.push({id,name:path.basename(entry),relativePath:relative,size:stat.size,...match});}return files.filter((item)=>item.confidence!=="low").sort((a,b)=>b.score-a.score).slice(0,50);}
 async function walkLibraryFiles(dir){const files=[];for(const entry of await fs.readdir(dir,{withFileTypes:true}).catch(()=>[])){const item=path.join(dir,entry.name);entry.isDirectory()?files.push(...await walkLibraryFiles(item)):files.push(item);}return files;}
-function similarityScore(title,file){const tokens=new Set(String(title).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().split(/[^a-z0-9]+/).filter((t)=>t.length>2)),name=String(file).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();return [...tokens].reduce((score,token)=>score+(name.includes(token)?10:0),0);}
-async function scheduleAutomaticMediaAnalysis(){const tools=await getMediaToolsStatus(rootDir),settings=await mediaStore.settings();if(!settings.autoAnalyze||!tools.ffprobeAvailable)return;const moviesModule=await import(`${pathToFileURL(path.join(rootDir,"data","movies.js")).href}?t=${Date.now()}`),seriesModule=await import(`${pathToFileURL(path.join(rootDir,"data","series.js")).href}?t=${Date.now()}`);const keys=[...moviesModule.getMovies().filter((m)=>m.video).map((m)=>`movie:${m.id}`),...seriesModule.getSeries().flatMap((s)=>(s.seasons||[]).flatMap((season)=>(season.episodes||[]).filter((e)=>e.video).map((e)=>`episode:${e.id}`)))];for(const key of keys){if(await mediaStore.get(key))continue;mediaQueue.analyze(key,{prepare:settings.autoPrepare,priority:0}).catch(()=>{});}}
+function relocationScore(media,file,root,stat){const normalized=(value)=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(),name=normalized(path.basename(file)),title=normalized(media?.title),tokens=title.split(/[^a-z0-9]+/).filter((token)=>token.length>2),reasons=[];let score=0;const matched=tokens.filter((token)=>name.includes(token));if(tokens.length&&matched.length===tokens.length){score+=50;reasons.push("título correspondente");}else if(matched.length){score+=Math.round(30*matched.length/tokens.length);reasons.push("título parcialmente correspondente");}const year=String(media?.year||"").match(/\d{4}/)?.[0];if(year&&name.includes(year)){score+=15;reasons.push("mesmo ano");}const expectedType=String(media?.mediaType||"");if((expectedType==="movie"&&root.type==="movie")||(expectedType==="episode"&&root.type==="series")){score+=15;reasons.push("mesmo tipo de mídia");}if(media?.audience&&media.audience===root.audience){score+=10;reasons.push("mesma audiência");}if(media?.originalPath&&path.extname(media.originalPath).toLowerCase()===path.extname(file).toLowerCase()){score+=5;reasons.push("mesma extensão");}if(media?.fileSize&&Math.abs(Number(media.fileSize)-stat.size)/Math.max(1,Number(media.fileSize))<.02){score+=5;reasons.push("tamanho semelhante");}return{score:Math.min(100,score),confidence:score>=80?"high":score>=55?"medium":"low",reasons};}
+async function scheduleAutomaticMediaAnalysis(){const tools=await getMediaToolsStatus(rootDir),settings=await mediaStore.settings();if(!settings.autoAnalyze||!tools.ffprobeAvailable)return;const moviesModule=await import(`${pathToFileURL(path.join(rootDir,"data","movies.js")).href}?t=${Date.now()}`),seriesModule=await import(`${pathToFileURL(path.join(rootDir,"data","series.js")).href}?t=${Date.now()}`);const keys=[...moviesModule.getMovies().filter((m)=>m.video&&m.playable!==false).map((m)=>`movie:${m.id}`),...seriesModule.getSeries().flatMap((s)=>(s.seasons||[]).flatMap((season)=>(season.episodes||[]).filter((e)=>e.video).map((e)=>`episode:${e.id}`)))];for(const key of keys){const item=await mediaStore.get(key),media=await resolveMedia(key);if(!media)continue;const source=resolvePathInsideLibrary(rootDir,media.originalPath).path,stat=await fs.stat(source).catch(()=>null);if(!stat)continue;if(item?.fingerprint&&item.fingerprint.size===stat.size&&item.fingerprint.mtimeMs===Math.round(stat.mtimeMs))continue;mediaQueue.analyze(key,{prepare:settings.autoPrepare,priority:0}).catch((error)=>console.error(`BRasa mídia ${key} analyze tentativa 1 ${new Date().toISOString()}:`,error.message));}}
 
 async function readUserCollections() {
     await fs.mkdir(path.dirname(userCollectionsFile), { recursive: true });
@@ -326,14 +328,12 @@ async function readUserCollections() {
         await fs.writeFile(userCollectionsFile, "[]\n", "utf8");
         return "[]";
     });
-    const parsed = JSON.parse(content || "[]");
-    return Array.isArray(parsed) ? parsed : [];
+    try{const parsed=JSON.parse(content||"[]");return Array.isArray(parsed)?parsed:[];}catch(error){const corrupt=`${userCollectionsFile}.corrupt-${Date.now()}`;await fs.rename(userCollectionsFile,corrupt).catch(()=>{});const backup=await fs.readFile(`${userCollectionsFile}.backup.json`,"utf8").then(JSON.parse).catch(()=>[]);console.error(`BRasa: coleções corrompidas preservadas em ${corrupt}.`,error.message);const recovered=Array.isArray(backup)?backup:[];await writeUserCollections(recovered);return recovered;}
 }
 
 async function writeUserCollections(collections) {
-    const temporaryFile = `${userCollectionsFile}.${process.pid}.tmp`;
-    await fs.writeFile(temporaryFile, `${JSON.stringify(collections, null, 2)}\n`, "utf8");
-    await fs.rename(temporaryFile, userCollectionsFile);
+    userCollectionsWriteQueue=userCollectionsWriteQueue.then(async()=>{const temporaryFile = `${userCollectionsFile}.${process.pid}.tmp`,backup=`${userCollectionsFile}.backup.json`,previous=await fs.readFile(userCollectionsFile,"utf8").catch(()=>"");if(previous)await fs.writeFile(backup,previous,"utf8");await fs.writeFile(temporaryFile, `${JSON.stringify(collections, null, 2)}\n`, "utf8");await fs.rename(temporaryFile, userCollectionsFile);});
+    return userCollectionsWriteQueue;
 }
 
 async function readJsonBody(request) {
@@ -341,11 +341,11 @@ async function readJsonBody(request) {
     let size = 0;
     for await (const chunk of request) {
         size += chunk.length;
-        if (size > 256 * 1024) throw new Error("O conteúdo enviado excede o limite permitido.");
+        if (size > 256 * 1024) throw new PayloadTooLargeError();
         chunks.push(chunk);
     }
     try { return JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}"); }
-    catch { throw new Error("JSON inválido."); }
+    catch { throw new ValidationError("JSON inválido."); }
 }
 
 function validateCollection(input, forcedId = "") {
@@ -382,7 +382,7 @@ function isValidCollectionId(id) {
 
 function queueProfileRequest(task) {
     const next = profileRequestQueue.then(task, task);
-    profileRequestQueue = next.catch(() => {});
+    profileRequestQueue = next.catch((error) => console.error("BRasa fila de perfil:", error.stack || error));
     return next;
 }
 
@@ -410,14 +410,16 @@ async function handleProfilesApi(request, response, url) {
         state.profiles.splice(profileIndex,1); delete state.states[profileId]; await queueUserStateWrite(state); return sendJson(response,200,{ok:true});
     }
     if (resource === "favorites" && isValidMediaId(resourceId)) {
-        const list = state.states[profileId].favorites;
-        if (request.method === "PUT" && !list.includes(resourceId)) list.push(resourceId);
-        if (request.method === "DELETE") state.states[profileId].favorites = list.filter((id)=>id!==resourceId);
+        const current = state.states[profileId], list = current.favorites;
+        const favorites = request.method === "PUT" ? [...new Set([...list,resourceId])].slice(0,5000) : list.filter((id)=>id!==resourceId);
+        state.states[profileId] = {...current,favorites,updatedAt:new Date().toISOString()};
         await queueUserStateWrite(state); return sendJson(response,200,{ok:true,favorites:state.states[profileId].favorites});
     }
     if (resource === "progress" && isValidMediaKey(resourceId)) {
-        if (request.method === "PUT") state.states[profileId].progress[resourceId] = validateProgress(await readJsonBody(request), resourceId);
-        if (request.method === "DELETE") delete state.states[profileId].progress[resourceId];
+        const current=state.states[profileId],progress={...current.progress};
+        if (request.method === "PUT") progress[resourceId] = validateProgress(await readJsonBody(request), resourceId);
+        if (request.method === "DELETE") delete progress[resourceId];
+        state.states[profileId]={...current,progress,updatedAt:new Date().toISOString()};
         await queueUserStateWrite(state); return sendJson(response,200,{ok:true});
     }
     if (resource === "history") {
@@ -429,20 +431,20 @@ async function handleProfilesApi(request, response, url) {
     sendJson(response,405,{ok:false,message:"Método não permitido."});
 }
 
-function defaultUserState() { const now=new Date().toISOString(); const profiles=[{id:"mario",name:"Mário",initials:"M",kind:"adult",avatar:{type:"initials",value:"M",color:"blue"},pinHash:"",createdAt:now,updatedAt:now},{id:"isabele",name:"Isabele",initials:"I",kind:"adult",avatar:{type:"initials",value:"I",color:"purple"},pinHash:"",createdAt:now,updatedAt:now},{id:"laura",name:"Laura",initials:"L",kind:"kids",avatar:{type:"initials",value:"L",color:"pink"},pinHash:"",createdAt:now,updatedAt:now}]; return {version:1,profiles,states:Object.fromEntries(profiles.map((p)=>[p.id,emptyProfileState()]))}; }
+function defaultUserState() { const now=new Date().toISOString(); const profiles=[{id:"mario",name:"Mário",initials:"M",kind:"adult",avatar:{type:"initials",value:"M",color:"blue"},pinHash:"",createdAt:now,updatedAt:now},{id:"isabele",name:"Isabele",initials:"I",kind:"adult",avatar:{type:"initials",value:"I",color:"purple"},pinHash:"",createdAt:now,updatedAt:now},{id:"laura",name:"Laura",initials:"L",kind:"kids",maxContentRating:10,avatar:{type:"initials",value:"L",color:"pink"},pinHash:"",createdAt:now,updatedAt:now}]; return {version:1,profiles,states:Object.fromEntries(profiles.map((p)=>[p.id,emptyProfileState()]))}; }
 function emptyProfileState(){return {favorites:[],progress:{},history:[],completed:[],preferences:{},updatedAt:""};}
 async function readUserState(){
     const content=await fs.readFile(userStateFile,"utf8").catch((error)=>error.code==="ENOENT"?"":"__ERROR__");
     if (!content){const initial=defaultUserState();await queueUserStateWrite(initial);return initial;}
-    try {const parsed=JSON.parse(content);if(!parsed?.profiles||!parsed?.states)throw new Error();return parsed;} catch {
+    try {const parsed=JSON.parse(content);if(!parsed?.profiles||!parsed?.states)throw new Error();parsed.states=Object.fromEntries(parsed.profiles.map((profile)=>[profile.id,validateProfileState(parsed.states[profile.id]||{})]));return parsed;} catch {
         await fs.copyFile(userStateFile,`${userStateFile}.corrupt-${Date.now()}`).catch(()=>{});
         const backup=await fs.readFile(userStateBackupFile,"utf8").then(JSON.parse).catch(()=>null); const recovered=backup?.profiles?backup:defaultUserState(); await queueUserStateWrite(recovered); return recovered;
     }
 }
 function queueUserStateWrite(state){userStateWriteQueue=userStateWriteQueue.then(async()=>{const temp=`${userStateFile}.${process.pid}.tmp`;const existing=await fs.readFile(userStateFile,"utf8").catch(()=>"");if(existing)await fs.writeFile(userStateBackupFile,existing,"utf8");await fs.writeFile(temp,`${JSON.stringify(state,null,2)}\n`,"utf8");await fs.rename(temp,userStateFile);});return userStateWriteQueue;}
 function publicProfile(profile){const {pinHash,...safe}=profile;return {...safe,hasPin:Boolean(pinHash)};} function publicProfiles(items){return items.map(publicProfile);}
-function validateProfile(input,forcedId=""){const id=forcedId||String(input.id||"");if(!isValidProfileId(id))throw new Error("Identificador de perfil inválido.");const name=String(input.name||"").trim().slice(0,40);if(!name)throw new Error("Informe o nome do perfil.");const now=new Date().toISOString();return {id,name,initials:String(input.initials||name[0]).trim().slice(0,2).toUpperCase(),kind:input.kind==="kids"?"kids":"adult",avatar:{type:"initials",value:String(input.initials||name[0]).slice(0,2).toUpperCase(),color:String(input.avatar?.color||"blue").slice(0,16)},pinHash:String(input.pinHash||""),createdAt:String(input.createdAt||now),updatedAt:now};}
-function validateProfileState(input){const empty=emptyProfileState();const progress=Object.fromEntries(Object.entries(input.progress&&typeof input.progress==="object"?input.progress:{}).filter(([key])=>isValidMediaKey(key)).slice(0,5000).map(([key,value])=>[key,validateProgress(value,key)]));const history=Array.isArray(input.history)?input.history.slice(0,500).filter((item)=>isValidMediaKey(item?.mediaKey)).map(validateHistory):[];return {...empty,favorites:Array.isArray(input.favorites)?[...new Set(input.favorites.map(String).filter(isValidMediaId))].slice(0,5000):[],progress,history,completed:Array.isArray(input.completed)?[...new Set(input.completed.map(String).filter(isValidMediaKey))].slice(0,5000):[],preferences:input.preferences&&typeof input.preferences==="object"?input.preferences:{},updatedAt:new Date().toISOString()};}
+function validateProfile(input,forcedId=""){const id=forcedId||String(input.id||"");if(!isValidProfileId(id))throw new ValidationError("Identificador de perfil inválido.");const name=String(input.name||"").trim().slice(0,40);if(!name)throw new ValidationError("Informe o nome do perfil.");const now=new Date().toISOString(),kind=input.kind==="kids"?"kids":"adult";return {id,name,initials:String(input.initials||name[0]).trim().slice(0,2).toUpperCase(),kind,maxContentRating:kind==="kids"?Math.min(18,Math.max(0,Number(input.maxContentRating??10))):undefined,avatar:{type:"initials",value:String(input.initials||name[0]).slice(0,2).toUpperCase(),color:String(input.avatar?.color||"blue").slice(0,16)},pinHash:String(input.pinHash||""),createdAt:String(input.createdAt||now),updatedAt:now};}
+function validateProfileState(input){return normalizeProfileState(input,{validateMediaKey:isValidMediaKey,validateProgress,validateHistory});}
 function validateProgress(input,key){return {mediaType:key.startsWith("episode:")?"episode":"movie",mediaId:String(input.mediaId||key.split(":").slice(1).join(":")),seriesId:String(input.seriesId||""),currentTime:Number(input.currentTime||0),duration:Number(input.duration||0),percentage:Math.min(100,Math.max(0,Number(input.percentage||0))),completed:Boolean(input.completed),updatedAt:new Date().toISOString()};}
 function validateHistory(input){if(!isValidMediaKey(input.mediaKey))throw new Error("Conteúdo inválido.");return {mediaKey:input.mediaKey,mediaType:input.mediaKey.startsWith("episode:")?"episode":"movie",mediaId:String(input.mediaId||""),title:String(input.title||"").slice(0,160),startedAt:String(input.startedAt||new Date().toISOString()),lastWatchedAt:new Date().toISOString(),completedAt:String(input.completedAt||"")};}
 function isValidProfileId(id){return /^[a-z0-9][a-z0-9-]{1,47}$/.test(id);} function isValidMediaId(id){return /^[a-zA-Z0-9._-]{1,120}$/.test(id);} function isValidMediaKey(key){return /^(movie|episode):[a-zA-Z0-9._-]{1,120}$/.test(key);}
@@ -674,15 +676,16 @@ async function syncLibrary(successMessage, failureMessage) {
         const completedAt = syncStatus.finishedAt;
         const relevantErrors = String(result.output || "").split(/\r?\n/).filter((line) => /erro|falhou|error/i.test(line)).slice(0, 10).map((message) => ({ category: "sync", message: message.slice(0, 240) }));
         await syncHistoryStore.add({ id: `sync-${Date.now().toString(36)}`, startedAt: syncStatus.startedAt, completedAt, durationMs: Math.max(0, Date.parse(completedAt) - Date.parse(syncStatus.startedAt)), status: ok ? "success" : "error", summary: { filesScanned: 0, itemsAdded: countOutput(result.output, /adicionado/gi), itemsUpdated: countOutput(result.output, /atualizado/gi), itemsRemoved: 0, filesRenamed: countOutput(result.output, /renomeado/gi), metadataUpdated: 0, subtitlesAdded: countOutput(result.output, /legenda/gi), errors: relevantErrors.length, warnings: 0 }, errors: relevantErrors });
-        libraryHealth.audit("quick").catch(() => {});
+        libraryHealth.audit("quick").catch((error) => console.error("BRasa auditoria após sync:", error.message));
 
-        return result;
+        return { ...result, summary: structuredSyncSummary(result.output) };
     } finally {
         isSyncing = false;
     }
 }
 
 function countOutput(value, pattern) { return (String(value || "").match(pattern) || []).length; }
+function structuredSyncSummary(output){const lines=String(output||"").split(/\r?\n/).filter(Boolean),pick=(pattern)=>lines.filter((line)=>pattern.test(line));return{added:pick(/adicionado/i),updated:pick(/atualizado|renomeado/i),removed:pick(/missing-file|removido/i),moved:pick(/renomeado/i),failed:pick(/erro|falhou|indisponivel/i),unchanged:pick(/nenhum|nada para atualizar/i)};}
 
 function runSync() {
     return new Promise((resolve) => {

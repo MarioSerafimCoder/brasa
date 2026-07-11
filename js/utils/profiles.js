@@ -5,8 +5,9 @@ export function getActiveProfile(){ return getActiveProfileRecord(); }
 export async function setActiveProfile(profileId){ const profile=await switchActiveProfile(profileId); applyProfileContext(profile); return profile; }
 export function isKidsProfile(profile=getActiveProfile()){ return profile?.kind==="kids"; }
 export function getContentAudience(item={}){ return item.audience || (item.kids===true ? "kids" : "general"); }
-export function isKidsContentRating(value){ const rating=String(value||"").trim().toUpperCase().replace(/\s+/g,""); return ["L","LIVRE","10","10ANOS","G","PG","TV-Y","TV-Y7","TV-G","TV-PG","U","AL"].includes(rating); }
-export function canAccessContent(item,profile=getActiveProfile()){ if(!isKidsProfile(profile))return true;const audience=getContentAudience(item);if(audience==="kids")return true;if(audience==="adult")return false;return isKidsContentRating(item.contentRating); }
+export function contentRatingLevel(value){ const rating=String(value||"").trim().toUpperCase().replace(/\s+/g,"");const levels={L:0,LIVRE:0,G:0,"TV-Y":0,"TV-Y7":7,"TV-G":0,10:10,"10ANOS":10,12:12,14:14,16:16,18:18,PG:12,"PG-13":13,R:17,"TV-PG":12,"TV-14":14,"TV-MA":18};return Object.prototype.hasOwnProperty.call(levels,rating)?levels[rating]:null; }
+export function isKidsContentRating(value,maxRating=10){ const level=contentRatingLevel(value);return level!==null&&level<=Number(maxRating??10); }
+export function canAccessContent(item,profile=getActiveProfile()){ if(!isKidsProfile(profile))return true;const audience=getContentAudience(item);if(audience==="kids")return true;if(audience==="adult")return false;return isKidsContentRating(item.contentRating,profile?.maxContentRating??10); }
 export function filterContentByProfile(content,profile=getActiveProfile()){ return (Array.isArray(content)?content:[]).filter((item)=>canAccessContent(item,profile)); }
 
 export async function initializeProfiles(root=document){ await initializeProfileService(); bindProfileControls(root); const active=getActiveProfile(); applyProfileContext(active); updateProfileControls(root); return active || openProfileSelector({initial:true}); }

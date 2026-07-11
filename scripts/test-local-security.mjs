@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { validateLocalWriteRequest } from "../server/local-security.mjs";
+import { resolvePathInsideLibrary, isProcessableVideo } from "../server/library-config.mjs";
+const request = (method, headers) => ({ method, headers });
+assert.equal(validateLocalWriteRequest(request("GET", {}), { port: 4173 }), true);
+assert.equal(validateLocalWriteRequest(request("POST", { host: "127.0.0.1:4173", origin: "http://127.0.0.1:4173", "x-brasa-request": "1" }), { port: 4173 }), true);
+assert.throws(() => validateLocalWriteRequest(request("POST", { host: "evil.test", "x-brasa-request": "1" }), { port: 4173 }));
+assert.throws(() => validateLocalWriteRequest(request("POST", { host: "127.0.0.1:4173", origin: "https://evil.test", "x-brasa-request": "1" }), { port: 4173 }));
+assert.throws(() => validateLocalWriteRequest(request("POST", { host: "127.0.0.1:4173" }), { port: 4173 }));
+assert.throws(() => resolvePathInsideLibrary(process.cwd(), "../segredo.txt"));
+assert.equal(isProcessableVideo("filme.part", 100), false); assert.equal(isProcessableVideo("filme.mkv", 0), false); assert.equal(isProcessableVideo("filme.mkv", 100), true);
+console.log("Segurança local: 9 cenários aprovados.");

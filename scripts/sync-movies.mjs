@@ -1,16 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { absoluteLibraryRoots, isProcessableVideo, VIDEO_EXTENSIONS } from "../server/library-config.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
-const moviesDir = path.join(rootDir, "assets", "movies");
-const kidsMoviesDir = path.join(rootDir, "assets", "kids-movies");
-const movieSources = [{ dir: moviesDir, audience: "general" }, { dir: kidsMoviesDir, audience: "kids" }];
-const seriesDirs = [
-    { dir: path.join(rootDir, "assets", "series"), kids: false },
-    { dir: path.join(rootDir, "assets", "kids-series"), kids: true }
-];
+const libraryRoots = absoluteLibraryRoots(rootDir);
+const movieSources = libraryRoots.filter((item) => item.type === "movie").map((item) => ({ dir: item.absolutePath, audience: item.audience }));
+const seriesDirs = libraryRoots.filter((item) => item.type === "series").map((item) => ({ dir: item.absolutePath, kids: item.audience === "kids" }));
+const moviesDir = movieSources.find((item) => item.audience === "general").dir;
 const postersDir = path.join(rootDir, "assets", "posters");
 const seriesPostersDir = path.join(rootDir, "assets", "series-posters");
 const subtitlesDir = path.join(rootDir, "assets", "subtitles");
@@ -19,7 +17,7 @@ const seriesDataFile = path.join(rootDir, "data", "series.js");
 const overridesFile = path.join(rootDir, "data", "movie-overrides.json");
 const envFile = path.join(rootDir, ".env");
 
-const videoExtensions = new Set([".mp4", ".mkv", ".webm", ".mov", ".avi"]);
+const videoExtensions = new Set(VIDEO_EXTENSIONS);
 const args = new Set(process.argv.slice(2));
 const isDryRun = args.has("--dry-run");
 
@@ -465,8 +463,9 @@ async function listVideoFiles() {
     for(const source of movieSources){
         const entries=await fs.readdir(source.dir,{withFileTypes:true}).catch(()=>[]);
         for(const entry of entries){
-            if(!entry.isFile()||!videoExtensions.has(path.extname(entry.name).toLowerCase()))continue;
+            if(!entry.isFile())continue;
             const absolutePath=path.join(source.dir,entry.name),stats=await fs.stat(absolutePath);
+            if(!isProcessableVideo(entry.name,stats.size))continue;
             withStats.push({name:entry.name,mtime:stats.mtime,size:stats.size,assetPath:toAssetPath(absolutePath),audience:source.audience});
         }
     }
@@ -974,9 +973,10 @@ async function listSeriesVideoFiles(baseDir) {
                 continue;
             }
 
-            if (!entry.isFile() || !videoExtensions.has(path.extname(entry.name).toLowerCase())) continue;
+            if (!entry.isFile()) continue;
 
             const stats = await fs.stat(fullPath);
+            if (!isProcessableVideo(entry.name, stats.size)) continue;
             found.push({
                 absolutePath: fullPath,
                 relativePath: path.relative(baseDir, fullPath),

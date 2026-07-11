@@ -1,0 +1,17 @@
+{
+  "name": "brasa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/brasa-server.mjs",
+    "sync": "node scripts/sync-movies.mjs",
+    "test": "node scripts/run-tests.mjs",
+    "test:watcher": "node scripts/test-library-watcher.mjs",
+    "test:sync": "node scripts/test-sync-coordinator.mjs",
+    "test:profiles": "node scripts/test-profiles.mjs",
+    "test:migrations": "node scripts/test-migrations.mjs",
+    "test:security": "node scripts/test-local-security.mjs",
+    "test:library": "node scripts/test-library-health.mjs",
+    "test:media": "node scripts/test-media-compatibility.mjs"
+  }
+}
