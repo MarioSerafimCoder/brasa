@@ -7,7 +7,7 @@ export async function switchActiveProfile(id){const profile=profiles.find((p)=>p
 export async function createProfile(input){const profile=await api("/api/profiles",{method:"POST",body:{...input,id:createProfileId(input.name)}});profiles.push(profile);states.set(profile.id,emptyState());return profile;}
 export async function updateProfile(id,input){const profile=await api(`/api/profiles/${id}`,{method:"PUT",body:input});profiles=profiles.map((p)=>p.id===id?profile:p);return profile;}
 export async function removeProfile(id){await api(`/api/profiles/${id}`,{method:"DELETE"});profiles=profiles.filter((p)=>p.id!==id);states.delete(id);}
-export async function setProfilePin(id,pin){return api(`/api/profiles/${id}/pin`,{method:"PUT",body:{pin}});}
+export async function setProfilePin(id,pin,currentPin=""){const result=await api(`/api/profiles/${id}/pin`,{method:"PUT",body:{pin,currentPin}});profiles=profiles.map((profile)=>profile.id===id?{...profile,hasPin:Boolean(pin)}:profile);return result;}
 export async function verifyProfilePin(id,pin){try{await api(`/api/profiles/${id}/verify-pin`,{method:"POST",body:{pin}});return true;}catch{return false;}}
 export function isFavoriteForActive(id){return getCachedProfileState().favorites.includes(String(id));}
 export function setFavoriteForActive(id,value){const profile=getActiveProfileRecord();const state=getCachedProfileState();const key=String(id);state.favorites=value?[...new Set([...state.favorites,key])]:state.favorites.filter((item)=>item!==key);touch(profile.id,state,"brasa:favorites-change");api(`/api/profiles/${profile.id}/favorites/${encodeURIComponent(key)}`,{method:value?"PUT":"DELETE"}).catch(()=>{});return value;}

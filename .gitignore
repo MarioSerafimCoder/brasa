@@ -32,6 +32,7 @@ data/library-audit/
 
 # Mídias locais - não versionar
 assets/movies/
+assets/kids-movies/
 assets/series/
 assets/kids-series/
 assets/subtitles/

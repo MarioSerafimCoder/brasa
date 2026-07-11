@@ -1,4 +1,4 @@
-/* ==========================================================
+﻿/* ==========================================================
    BRasa
    Movie Page
 ========================================================== */
@@ -1264,14 +1264,14 @@ body.is-watch-mode{
 
 }
 
-html[data-kids-mode="on"] body{
+html[data-profile-kind="kids"] body{
 
     background:
         linear-gradient(180deg, #E8F7FF 0%, #F8FFF3 54%, #FFF8E7 100%);
 
 }
 
-html[data-kids-mode="on"] .movie-header{
+html[data-profile-kind="kids"] .movie-header{
 
     min-height:88px;
 
@@ -1279,8 +1279,8 @@ html[data-kids-mode="on"] .movie-header{
 
 }
 
-html[data-kids-mode="on"] .back-button,
-html[data-kids-mode="on"] .movie-header h1{
+html[data-profile-kind="kids"] .back-button,
+html[data-profile-kind="kids"] .movie-header h1{
 
     background:rgba(255,255,255,.72);
 
@@ -1290,7 +1290,7 @@ html[data-kids-mode="on"] .movie-header h1{
 
 }
 
-html[data-kids-mode="on"] .movie-landing__shade{
+html[data-profile-kind="kids"] .movie-landing__shade{
 
     background:
         linear-gradient(90deg, rgba(14,22,36,.72) 0%, rgba(14,22,36,.3) 48%, rgba(14,22,36,.04) 80%),
@@ -1298,7 +1298,7 @@ html[data-kids-mode="on"] .movie-landing__shade{
 
 }
 
-html[data-kids-mode="on"] .movie-landing__meta span{
+html[data-profile-kind="kids"] .movie-landing__meta span{
 
     background:rgba(255,255,255,.78);
 
@@ -1308,7 +1308,7 @@ html[data-kids-mode="on"] .movie-landing__meta span{
 
 }
 
-html[data-kids-mode="on"] .landing-action{
+html[data-profile-kind="kids"] .landing-action{
 
     min-height:66px;
 
@@ -1318,7 +1318,7 @@ html[data-kids-mode="on"] .landing-action{
 
 }
 
-html[data-kids-mode="on"] .landing-action--primary{
+html[data-profile-kind="kids"] .landing-action--primary{
 
     background:#DCFCE7;
 
@@ -1328,7 +1328,7 @@ html[data-kids-mode="on"] .landing-action--primary{
 
 }
 
-html[data-kids-mode="on"] .player-shell{
+html[data-profile-kind="kids"] .player-shell{
 
     border-radius:24px;
 
@@ -1336,7 +1336,7 @@ html[data-kids-mode="on"] .player-shell{
 
 }
 
-html[data-kids-mode="on"] .movie-page.is-watch-mode .player-shell{
+html[data-profile-kind="kids"] .movie-page.is-watch-mode .player-shell{
 
     border:0;
 
@@ -1344,24 +1344,24 @@ html[data-kids-mode="on"] .movie-page.is-watch-mode .player-shell{
 
 }
 
-html[data-kids-mode="on"] .player-info-overlay,
-html[data-kids-mode="on"] #subtitleOption,
-html[data-kids-mode="on"] #subtitleSizeOption,
-html[data-kids-mode="on"] #subtitleSyncOption,
-html[data-kids-mode="on"] #audioOption,
-html[data-kids-mode="on"] .volume-slider{
+html[data-profile-kind="kids"] .player-info-overlay,
+html[data-profile-kind="kids"] #subtitleOption,
+html[data-profile-kind="kids"] #subtitleSizeOption,
+html[data-profile-kind="kids"] #subtitleSyncOption,
+html[data-profile-kind="kids"] #audioOption,
+html[data-profile-kind="kids"] .volume-slider{
 
     display:none !important;
 
 }
 
-html[data-kids-mode="on"] .player-controls{
+html[data-profile-kind="kids"] .player-controls{
 
     padding:1.35rem;
 
 }
 
-html[data-kids-mode="on"] .player-topbar__button{
+html[data-profile-kind="kids"] .player-topbar__button{
 
     min-height:58px;
 
@@ -1373,14 +1373,14 @@ html[data-kids-mode="on"] .player-topbar__button{
 
 }
 
-html[data-kids-mode="on"] .player-topbar__button--icon{
+html[data-profile-kind="kids"] .player-topbar__button--icon{
 
     width:58px;
 
 }
 
-html[data-kids-mode="on"] .player-control-button,
-html[data-kids-mode="on"] .player-mini-button{
+html[data-profile-kind="kids"] .player-control-button,
+html[data-profile-kind="kids"] .player-mini-button{
 
     height:58px;
 
@@ -1392,7 +1392,7 @@ html[data-kids-mode="on"] .player-mini-button{
 
 }
 
-html[data-kids-mode="on"] .player-control-button svg{
+html[data-profile-kind="kids"] .player-control-button svg{
 
     width:26px;
 
@@ -1400,7 +1400,7 @@ html[data-kids-mode="on"] .player-control-button svg{
 
 }
 
-html[data-kids-mode="on"] .time-display{
+html[data-profile-kind="kids"] .time-display{
 
     font-size:1rem;
 
@@ -1410,9 +1410,12 @@ html[data-kids-mode="on"] .time-display{
 
 }
 
-html[data-kids-mode="on"] .movie-info,
-html[data-kids-mode="on"] .watch-next{
+html[data-profile-kind="kids"] .movie-info,
+html[data-profile-kind="kids"] .watch-next{
 
     color:#152033;
 
 }
+
+.player-shell,.movie-page.is-watch-mode{height:100vh;height:100dvh;min-height:100vh;min-height:100dvh}
+

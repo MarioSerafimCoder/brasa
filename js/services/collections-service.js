@@ -16,6 +16,9 @@ export function getSystemCollections() {
         scope: "shared",
         profileId: null,
         banner: collection.banner || "",
+        imdbIds: collection.imdbIds || [],
+        titlePatterns: collection.titlePatterns || [],
+        keywords: collection.keywords || [],
         movieIds: [],
         rules: {
             match: "any",
@@ -65,9 +68,18 @@ export function getCollectionMovies(collection, movies) {
     const enriched = withProgressState(movies).map((movie) => ({ ...movie, favorite: isFavorite(movie), completed: isCompletedForActive(`movie:${movie.id}`), recentlyWatched: wasRecentlyWatchedForActive(`movie:${movie.id}`) }));
     let result = collection.type === "manual"
         ? collection.movieIds.map((id) => enriched.find((movie) => String(movie.id) === String(id))).filter(Boolean)
-        : enriched.filter((movie) => evaluateRules(movie, collection.rules));
+        : enriched.filter((movie) => collection.source === "system" ? matchesSystemCollection(movie, collection) : evaluateRules(movie, collection.rules));
 
     return sortCollectionMovies(result, collection.sort);
+}
+
+export function matchesSystemCollection(movie, collection) {
+    if ((collection.imdbIds || []).includes(movie.imdbId)) return true;
+    const titles = normalize(`${movie.title || ""} ${movie.originalTitle || ""}`);
+    if ((collection.titlePatterns || []).some((pattern) => titles.includes(normalize(pattern)))) return true;
+    const safeKeywords = (collection.keywords || []).filter((keyword) => normalize(keyword).length >= 5 && !["fast", "classic", "oscar", "marvel"].includes(normalize(keyword)));
+    const haystack = normalize(`${movie.title || ""} ${movie.originalTitle || ""} ${movie.overview || ""} ${(movie.genres || []).join(" ")}`);
+    return safeKeywords.some((keyword) => haystack.includes(normalize(keyword)));
 }
 
 export function evaluateRules(movie, rules = {}) {

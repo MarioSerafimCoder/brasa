@@ -11,6 +11,7 @@ import { createMediaQueue } from "../server/media-queue.mjs";
 import { createLibraryHealthStore } from "../server/library-health-store.mjs";
 import { createSyncHistory } from "../server/sync-history.mjs";
 import { createLibraryHealth } from "../server/library-health.mjs";
+import { startLibraryWatcher } from "../server/library-watcher.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
@@ -144,6 +145,24 @@ async function runStartupSync() {
     scheduleAutomaticMediaAnalysis().catch((error) => console.log(`BRasa: análise de mídia indisponível (${error.message}).`));
 }
 
+async function enableLibraryWatcher() {
+    if (process.env.BRASA_WATCH_LIBRARY === "0") return;
+    const requestSync = debounce(async () => {
+        if (isSyncing) return;
+        await syncLibrary("Biblioteca atualizada automaticamente.", "A atualizacao automatica falhou.");
+    }, 1200);
+    await startLibraryWatcher({ rootDir, onStableChange: requestSync });
+    console.log("BRasa: observando alteracoes nas pastas da biblioteca.");
+}
+
+function debounce(callback, delay) {
+    let timer;
+    return (...values) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => callback(...values), delay);
+    };
+}
+
 function listen(port) {
     server.once("error", (error) => {
         if (error.code === "EADDRINUSE" && port < preferredPort + 100) {
@@ -157,6 +176,7 @@ function listen(port) {
     server.listen(port, host, () => {
         writeServerState(port);
         console.log(`BRasa rodando em http://${host}:${port}/`);
+        enableLibraryWatcher().catch((error) => console.log(`BRasa: watcher indisponivel (${error.message}).`));
     });
 }
 
@@ -404,7 +424,7 @@ async function handleProfilesApi(request, response, url) {
         if (request.method === "POST") { const entry=validateHistory(await readJsonBody(request)); state.states[profileId].history=[entry,...state.states[profileId].history.filter((item)=>item.mediaKey!==entry.mediaKey)].slice(0,500); await queueUserStateWrite(state); return sendJson(response,200,{ok:true}); }
         if (request.method === "DELETE") { state.states[profileId].history=[]; await queueUserStateWrite(state); return sendJson(response,200,{ok:true}); }
     }
-    if (resource === "pin" && request.method === "PUT") { const {pin=""}=await readJsonBody(request); state.profiles[profileIndex].pinHash=pin ? hashPin(pin) : ""; await queueUserStateWrite(state); return sendJson(response,200,{ok:true}); }
+    if (resource === "pin" && request.method === "PUT") { const {pin="",currentPin=""}=await readJsonBody(request); const profile=state.profiles[profileIndex]; if(profile.pinHash&&!verifyPinHash(profile,currentPin))return sendJson(response,403,{ok:false,message:"Confirme o PIN atual antes de alterar ou remover."}); profile.pinHash=pin ? hashPin(pin) : ""; await queueUserStateWrite(state); return sendJson(response,200,{ok:true}); }
     if (resource === "verify-pin" && request.method === "POST") return verifyProfilePin(response,state.profiles[profileIndex],await readJsonBody(request));
     sendJson(response,405,{ok:false,message:"Método não permitido."});
 }
@@ -426,9 +446,9 @@ function validateProfileState(input){const empty=emptyProfileState();const progr
 function validateProgress(input,key){return {mediaType:key.startsWith("episode:")?"episode":"movie",mediaId:String(input.mediaId||key.split(":").slice(1).join(":")),seriesId:String(input.seriesId||""),currentTime:Number(input.currentTime||0),duration:Number(input.duration||0),percentage:Math.min(100,Math.max(0,Number(input.percentage||0))),completed:Boolean(input.completed),updatedAt:new Date().toISOString()};}
 function validateHistory(input){if(!isValidMediaKey(input.mediaKey))throw new Error("Conteúdo inválido.");return {mediaKey:input.mediaKey,mediaType:input.mediaKey.startsWith("episode:")?"episode":"movie",mediaId:String(input.mediaId||""),title:String(input.title||"").slice(0,160),startedAt:String(input.startedAt||new Date().toISOString()),lastWatchedAt:new Date().toISOString(),completedAt:String(input.completedAt||"")};}
 function isValidProfileId(id){return /^[a-z0-9][a-z0-9-]{1,47}$/.test(id);} function isValidMediaId(id){return /^[a-zA-Z0-9._-]{1,120}$/.test(id);} function isValidMediaKey(key){return /^(movie|episode):[a-zA-Z0-9._-]{1,120}$/.test(key);}
-function hashPin(pin){if(!/^\d{4,6}$/.test(String(pin)))throw new Error("O PIN deve ter entre quatro e seis dígitos.");const salt=crypto.randomBytes(16).toString("hex");const hash=crypto.scryptSync(String(pin),salt,32).toString("hex");return `scrypt$${salt}$${hash}`;}
-function verifyPinHash(profile,pin){const parts=String(profile.pinHash||"").split("$");if(parts.length!==3||!/^\d{4,6}$/.test(String(pin||"")))return false;try{return crypto.timingSafeEqual(crypto.scryptSync(String(pin),parts[1],32),Buffer.from(parts[2],"hex"));}catch{return false;}}
-function verifyProfilePin(response,profile,input){const record=pinAttempts.get(profile.id)||{count:0,blockedUntil:0};if(Date.now()<record.blockedUntil)return sendJson(response,429,{ok:false,message:"Não foi possível verificar o PIN. Tente novamente mais tarde."});const parts=String(profile.pinHash||"").split("$");let valid=false;if(parts.length===3&&/^\d{4,6}$/.test(String(input.pin||""))){const attempt=crypto.scryptSync(String(input.pin),parts[1],32);valid=crypto.timingSafeEqual(attempt,Buffer.from(parts[2],"hex"));}if(valid){pinAttempts.delete(profile.id);return sendJson(response,200,{ok:true});}record.count++;if(record.count>=5){record.blockedUntil=Date.now()+30000;record.count=0;}pinAttempts.set(profile.id,record);sendJson(response,401,{ok:false,message:"PIN inválido."});}
+function hashPin(pin){if(!/^\d{4}$/.test(String(pin)))throw new Error("O PIN deve ter exatamente quatro dígitos.");const salt=crypto.randomBytes(16).toString("hex");const hash=crypto.scryptSync(String(pin),salt,32).toString("hex");return `scrypt$${salt}$${hash}`;}
+function verifyPinHash(profile,pin){const parts=String(profile.pinHash||"").split("$");if(parts.length!==3||!/^\d{4}$/.test(String(pin||"")))return false;try{return crypto.timingSafeEqual(crypto.scryptSync(String(pin),parts[1],32),Buffer.from(parts[2],"hex"));}catch{return false;}}
+function verifyProfilePin(response,profile,input){const record=pinAttempts.get(profile.id)||{count:0,blockedUntil:0};if(Date.now()<record.blockedUntil)return sendJson(response,429,{ok:false,message:"Não foi possível verificar o PIN. Tente novamente em 30 segundos."});let valid=verifyPinHash(profile,input.pin);if(valid){pinAttempts.delete(profile.id);return sendJson(response,200,{ok:true});}record.count++;if(record.count>=5){record.blockedUntil=Date.now()+30000;record.count=0;}pinAttempts.set(profile.id,record);sendJson(response,401,{ok:false,message:"PIN inválido."});}
 
 async function handleTmdbImage(url, response) {
     try {

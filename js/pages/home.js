@@ -15,6 +15,12 @@ let heroSliderTimer = null;
 
 export default function HomePage() {
     installPageTransitions();
+    if (isKidsProfile(getActiveProfile())) {
+        renderKidsHome();
+        bindKidsSurprise();
+        if (!isBound) { bindMovieNavigation(); isBound = true; }
+        return;
+    }
     renderHero();
     renderCarousels();
 
@@ -22,6 +28,26 @@ export default function HomePage() {
         bindMovieNavigation();
         isBound = true;
     }
+}
+
+function renderKidsHome() {
+    const movies = filterContentByProfile(withFavoriteState(withProgressState(getMovies())));
+    const continueWatching = getProgressContinueWatching(movies);
+    const favorites = getFavoriteMovies(movies);
+    const recentSeries = filterContentByProfile(getRecentlyAddedSeries(12));
+    const surprise = movies[Math.floor(Math.random() * Math.max(1, movies.length))];
+    render("#hero", `<section class="hero kids-home-hero"><div class="hero__content"><p class="profile-selector__eyebrow">Perfil da Laura</p><h1 class="hero__title">Qual aventura vamos viver hoje?</h1><p class="hero__description">Filmes e séries escolhidos para uma experiência divertida e segura.</p>${surprise ? `<button class="button button--primary kids-surprise" type="button" data-kids-surprise="${escapeAttribute(surprise.id)}"><i data-lucide="sparkles"></i>Surpreenda-me</button>` : ""}</div></section>`);
+    renderMany("#content", [
+        Carousel({ title: "Continuar", movies: continueWatching, variant: "wide" }),
+        Carousel({ title: "Favoritos", movies: favorites, id: "favorites", variant: "poster" }),
+        Carousel({ title: "Escolha uma aventura", movies, variant: "poster" }),
+        RecentSeriesSection(recentSeries)
+    ]);
+    window.lucide?.createIcons?.();
+}
+
+function bindKidsSurprise() {
+    document.querySelector("[data-kids-surprise]")?.addEventListener("click", (event) => navigateTo(`pages/movie.html?id=${event.currentTarget.dataset.kidsSurprise}`));
 }
 
 function renderHero() {

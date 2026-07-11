@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import { canAccessContent, getContentAudience, isKidsContentRating } from "../js/utils/profiles.js";
+import { matchesSystemCollection } from "../js/services/collections-service.js";
+
+const adult={id:"mario",kind:"adult"},kids={id:"laura",kind:"kids"};
+assert.equal(canAccessContent({audience:"general"},adult),true);
+assert.equal(canAccessContent({audience:"adult"},adult),true);
+assert.equal(canAccessContent({audience:"kids"},adult),true);
+assert.equal(canAccessContent({audience:"general",contentRating:"L"},kids),true);
+assert.equal(canAccessContent({audience:"general",contentRating:"10"},kids),true);
+assert.equal(canAccessContent({audience:"general",contentRating:"14"},kids),false);
+assert.equal(canAccessContent({audience:"general"},kids),false);
+assert.equal(canAccessContent({audience:"adult",contentRating:"L"},kids),false);
+assert.equal(canAccessContent({audience:"kids"},kids),true);
+assert.equal(getContentAudience({kids:true}),"kids");
+assert.equal(getContentAudience({}),"general");
+assert.equal(isKidsContentRating("TV-Y7"),true);
+assert.equal(isKidsContentRating("PG-13"),false);
+const starWars={source:"system",imdbIds:["tt0076759"],titlePatterns:["Star Wars"],keywords:["Jedi"]};
+assert.equal(matchesSystemCollection({imdbId:"tt0076759",title:"Outro"},starWars),true);
+assert.equal(matchesSystemCollection({title:"Star Wars: Uma Nova Esperança"},starWars),true);
+assert.equal(matchesSystemCollection({title:"Fast Food",overview:"Um restaurante"},{imdbIds:[],titlePatterns:[],keywords:["Fast"]}),false);
+console.log("Perfis e coleções: 16 cenários aprovados.");

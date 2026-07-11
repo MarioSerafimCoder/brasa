@@ -1,4 +1,4 @@
-/* ==========================================================
+﻿/* ==========================================================
    BRasa
    Global Styles
    Version: 1.1
@@ -18,6 +18,13 @@
     box-sizing:border-box;
 
 }
+
+html body #app,html body .page-shell{height:100vh;height:100dvh;min-height:100vh;min-height:100dvh}
+.profile-selector,.profile-pin,.profile-manager-modal,.collection-editor,.health-modal{min-height:100vh;min-height:100dvh}
+html[data-profile-kind="kids"] .kids-home-hero{background:radial-gradient(circle at 78% 25%,rgba(251,191,36,.28),transparent 30%),linear-gradient(135deg,#312e81,#0f766e)}
+html[data-profile-kind="kids"] .kids-surprise{min-height:54px;padding-inline:1.3rem;border-radius:16px;font-size:1rem;font-weight:800}
+html[data-profile-kind="kids"] .movie-card__title{font-size:1rem}
+html[data-profile-kind="kids"] .movie-card__meta{display:none}
 
 
 /* ==========================================================
@@ -234,7 +241,7 @@ select{
 
 }
 
-.kids-pin-modal{
+.profile-pin{
 
     position:fixed;
 
@@ -254,7 +261,7 @@ select{
 
 }
 
-.kids-pin-modal__dialog{
+.profile-pin__dialog{
 
     width:min(360px, 100%);
 
@@ -274,7 +281,7 @@ select{
 
 }
 
-.kids-pin-modal__dialog h2{
+.profile-pin__dialog h2{
 
     margin:0;
 
@@ -282,7 +289,7 @@ select{
 
 }
 
-.kids-pin-modal__dialog label{
+.profile-pin__dialog label{
 
     display:grid;
 
@@ -294,7 +301,7 @@ select{
 
 }
 
-.kids-pin-modal__dialog input{
+.profile-pin__dialog input{
 
     height:52px;
 
@@ -316,7 +323,7 @@ select{
 
 }
 
-.kids-pin-modal__error{
+.profile-pin__error{
 
     margin:0;
 
@@ -326,7 +333,7 @@ select{
 
 }
 
-.kids-pin-modal__dialog div{
+.profile-pin__dialog div{
 
     display:flex;
 
@@ -336,7 +343,7 @@ select{
 
 }
 
-.kids-pin-modal__dialog button{
+.profile-pin__dialog button{
 
     min-height:44px;
 
@@ -352,7 +359,7 @@ select{
 
 }
 
-.kids-pin-modal__dialog button[type="submit"]{
+.profile-pin__dialog button[type="submit"]{
 
     background:var(--gradient-primary);
 
@@ -2132,7 +2139,7 @@ html[data-poster-style="compact-grid"]{
 
 }
 
-html[data-kids-mode="on"]{
+html[data-profile-kind="kids"]{
 
     --movie-width:230px;
     --movie-radius:22px;
@@ -2151,20 +2158,20 @@ html[data-kids-mode="on"]{
 
 }
 
-html[data-kids-mode="on"] body{
+html[data-profile-kind="kids"] body{
 
     background:
         linear-gradient(180deg, #E8F7FF 0%, #F8FFF3 46%, #FFF8E7 100%);
 
 }
 
-html[data-kids-mode="on"] #app{
+html[data-profile-kind="kids"] #app{
 
     grid-template-columns:220px 1fr;
 
 }
 
-html[data-kids-mode="on"] .sidebar{
+html[data-profile-kind="kids"] .sidebar{
 
     background:rgba(255,255,255,.72);
 
@@ -2172,22 +2179,22 @@ html[data-kids-mode="on"] .sidebar{
 
 }
 
-html[data-kids-mode="on"] .sidebar__logo h1{
+html[data-profile-kind="kids"] .sidebar__logo h1{
 
     color:#0F766E;
 
 }
 
-html[data-kids-mode="on"] .sidebar__nav li:nth-child(2),
-html[data-kids-mode="on"] .sidebar__nav li:nth-child(5),
-html[data-kids-mode="on"] .sidebar__nav li:nth-child(6),
-html[data-kids-mode="on"] .sidebar__footer a{
+html[data-profile-kind="kids"] .sidebar__nav li:nth-child(2),
+html[data-profile-kind="kids"] .sidebar__nav li:nth-child(5),
+html[data-profile-kind="kids"] .sidebar__nav li:nth-child(6),
+html[data-profile-kind="kids"] .sidebar__footer a{
 
     display:none;
 
 }
 
-html[data-kids-mode="on"] .sidebar__nav a{
+html[data-profile-kind="kids"] .sidebar__nav a{
 
     min-height:56px;
 
@@ -2201,8 +2208,8 @@ html[data-kids-mode="on"] .sidebar__nav a{
 
 }
 
-html[data-kids-mode="on"] .sidebar__nav li.active a,
-html[data-kids-mode="on"] .sidebar__nav a:hover{
+html[data-profile-kind="kids"] .sidebar__nav li.active a,
+html[data-profile-kind="kids"] .sidebar__nav a:hover{
 
     background:#DFF7E8;
 
@@ -2210,7 +2217,7 @@ html[data-kids-mode="on"] .sidebar__nav a:hover{
 
 }
 
-html[data-kids-mode="on"] .sidebar__kids{
+html[data-profile-kind="kids"] .sidebar__kids{
 
     min-height:56px;
 
@@ -2224,7 +2231,7 @@ html[data-kids-mode="on"] .sidebar__kids{
 
 }
 
-html[data-kids-mode="on"] .header{
+html[data-profile-kind="kids"] .header{
 
     height:92px;
 
@@ -2234,7 +2241,7 @@ html[data-kids-mode="on"] .header{
 
 }
 
-html[data-kids-mode="on"] .header__greeting{
+html[data-profile-kind="kids"] .header__greeting{
 
     color:#0F766E;
 
@@ -2242,15 +2249,15 @@ html[data-kids-mode="on"] .header__greeting{
 
 }
 
-html[data-kids-mode="on"] .header__left h2{
+html[data-profile-kind="kids"] .header__left h2{
 
     color:#152033;
 
 }
 
-html[data-kids-mode="on"] .header__search,
-html[data-kids-mode="on"] .header__notification,
-html[data-kids-mode="on"] .header__profile{
+html[data-profile-kind="kids"] .header__search,
+html[data-profile-kind="kids"] .header__notification,
+html[data-profile-kind="kids"] .header__profile{
 
     display:none;
 
@@ -2266,7 +2273,7 @@ html[data-kids-mode="on"] .header__profile{
 
 }
 
-html[data-kids-mode="on"] .kids-profiles{
+html[data-profile-kind="kids"] .kids-profiles{
 
     display:flex;
 
@@ -2302,7 +2309,7 @@ html[data-kids-mode="on"] .kids-profiles{
 
 }
 
-html[data-kids-mode="on"] #hero{
+html[data-profile-kind="kids"] #hero{
 
     padding:0 var(--content-padding);
 
@@ -2583,22 +2590,22 @@ html[data-kids-mode="on"] #hero{
 
 }
 
-html[data-kids-mode="on"] .movie-card__title,
-html[data-kids-mode="on"] .movie-card-lite h3{
+html[data-profile-kind="kids"] .movie-card__title,
+html[data-profile-kind="kids"] .movie-card-lite h3{
 
     font-size:1.08rem;
 
 }
 
-html[data-kids-mode="on"] .movie-card__poster,
-html[data-kids-mode="on"] .movie-card-lite__poster{
+html[data-profile-kind="kids"] .movie-card__poster,
+html[data-profile-kind="kids"] .movie-card-lite__poster{
 
     box-shadow:0 18px 40px rgba(0,0,0,.38);
 
 }
 
-html[data-kids-mode="on"] .sidebar,
-html[data-kids-mode="on"] .page-sidebar{
+html[data-profile-kind="kids"] .sidebar,
+html[data-profile-kind="kids"] .page-sidebar{
 
     background:rgba(255,255,255,.72);
 
@@ -2664,7 +2671,7 @@ html[data-kids-mode="on"] .page-sidebar{
 
 }
 
-.profile-pill--kids,
+.kids-profile-control,
 .header-profile-chip--kids{
 
     color:#86EFAC;
@@ -2673,8 +2680,8 @@ html[data-kids-mode="on"] .page-sidebar{
 
 }
 
-html[data-kids-mode="on"] .profile-pill--main,
-html[data-kids-mode="on"] .header-profile-chip--main{
+html[data-profile-kind="kids"] .profile-pill--main,
+html[data-profile-kind="kids"] .header-profile-chip--main{
 
     color:#64748B;
 
@@ -2682,8 +2689,8 @@ html[data-kids-mode="on"] .header-profile-chip--main{
 
 }
 
-html[data-kids-mode="on"] .profile-pill--kids,
-html[data-kids-mode="on"] .header-profile-chip--kids{
+html[data-profile-kind="kids"] .kids-profile-control,
+html[data-profile-kind="kids"] .header-profile-chip--kids{
 
     background:#DCFCE7;
 
@@ -2848,7 +2855,7 @@ html[data-kids-mode="on"] .header-profile-chip--kids{
 
 }
 
-html[data-kids-mode="on"] #app{
+html[data-profile-kind="kids"] #app{
 
     grid-template-columns:minmax(0, 1fr);
 
@@ -3062,7 +3069,7 @@ main{
 
 }
 
-.topbar-kids{
+.kids-profile-shortcut{
 
     min-height:40px;
 
@@ -3340,7 +3347,7 @@ main{
 
     }
 
-    .topbar-kids span{
+    .kids-profile-shortcut span{
 
         display:none;
 
@@ -3360,7 +3367,7 @@ main{
 
     }
 
-    .topbar-kids{
+    .kids-profile-shortcut{
 
         min-height:36px;
 
@@ -3700,7 +3707,7 @@ main{
         height:40px;
     }
 
-    body #app .topbar-kids{
+    body #app .kids-profile-shortcut{
         min-height:40px;
         padding:0 .72rem;
     }
@@ -3783,3 +3790,4 @@ main{
         width:32px;
     }
 }
+

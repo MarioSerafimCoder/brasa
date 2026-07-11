@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const moviesDir = path.join(rootDir, "assets", "movies");
+const kidsMoviesDir = path.join(rootDir, "assets", "kids-movies");
+const movieSources = [{ dir: moviesDir, audience: "general" }, { dir: kidsMoviesDir, audience: "kids" }];
 const seriesDirs = [
     { dir: path.join(rootDir, "assets", "series"), kids: false },
     { dir: path.join(rootDir, "assets", "kids-series"), kids: true }
@@ -35,6 +37,7 @@ async function syncMovies() {
         const openSubtitlesApiKey = getArgValue("--opensubtitles-api-key") || process.env.OPENSUBTITLES_API_KEY;
         const subtitleLanguages = parseSubtitleLanguages(process.env.SUBTITLE_LANGUAGES || "pt-br,en");
         const movies = await loadMovies();
+        movies.forEach((movie)=>{ movie.audience=getMovieAudience(movie); });
         const overrides = await loadOverrides();
         const videoFiles = await listVideoFiles();
         const knownVideos = new Map(
@@ -45,53 +48,77 @@ async function syncMovies() {
 
         let changed = false;
         const added = [];
+        const availablePaths = new Set(videoFiles.map((file) => normalizePath(file.assetPath)));
+
+        for (const movie of movies) {
+            if (!movie.video) continue;
+            const available = availablePaths.has(normalizePath(movie.video));
+            const nextStatus = available ? "available" : "missing-file";
+            if (movie.fileStatus !== nextStatus || movie.playable !== available) {
+                movie.fileStatus = nextStatus;
+                movie.playable = available;
+                changed = true;
+            }
+        }
 
         const newFiles = videoFiles.filter((file) => {
-            const videoPath = normalizePath(toAssetPath(path.join(moviesDir, file.name)));
+            const videoPath = normalizePath(file.assetPath);
             return !knownVideos.has(videoPath);
         });
 
-        if (newFiles.length && !omdbApiKey) {
-            console.log("BRasa: encontrei filmes novos, mas falta OMDB_API_KEY no .env.");
-            newFiles.forEach((file) => console.log(`- ${file.name}`));
+        for (const file of videoFiles) {
+            const movie = knownVideos.get(normalizePath(file.assetPath));
+            if (!movie) continue;
+            const modifiedAt = file.mtime?.toISOString?.() || "";
+            if (movie.fileSize !== file.size || movie.fileModifiedAt !== modifiedAt) {
+                movie.fileSize = file.size;
+                movie.fileModifiedAt = modifiedAt;
+                movie.lastIndexedAt = new Date().toISOString();
+                changed = true;
+            }
         }
 
-        if (newFiles.length && omdbApiKey) {
+        if (newFiles.length) {
             let nextId = movies.reduce((max, movie) => Math.max(max, Number(movie.id) || 0), 0) + 1;
 
             for (const file of newFiles) {
-                const override = overrides[file.name] || {};
-                const parsed = parseMovieFileName(file.name);
-                const omdb = await findMovieOnOmdb({ apiKey: omdbApiKey, parsed, override });
+                try {
+                    const parsed = parseMovieFileName(file.name);
+                    const fileImdbId = extractImdbId(file.name);
+                    const override = { ...(overrides[file.name] || {}) };
+                    if (!override.imdbId && fileImdbId) override.imdbId = fileImdbId;
+                    let omdb = null;
+                    if (omdbApiKey) {
+                        try {
+                            omdb = await findMovieOnOmdb({ apiKey: omdbApiKey, parsed, override });
+                        } catch (error) {
+                            console.log(`BRasa: OMDb indisponivel para "${file.name}" (${error.message}).`);
+                        }
+                    }
 
-                if (!omdb) {
-                    console.log(`BRasa: nao encontrei dados na OMDb para "${file.name}".`);
-                    console.log("Adicione uma entrada em data/movie-overrides.json para esse arquivo.");
-                    continue;
+                    const identification = assessMovieIdentification({ omdb, parsed, override, fileImdbId });
+                    const metadata = omdb || createLocalMovieMetadata(parsed, override, fileImdbId);
+                    const canNormalize = Boolean(omdb?.imdbID && identification.confidence !== "low");
+                    const normalizedFile = file.audience === "kids" || !canNormalize ? file.name : await normalizeMovieFileName({
+                        fileName: file.name,
+                        title: metadata.Title,
+                        year: metadata.Year,
+                        imdbId: metadata.imdbID
+                    });
+                    const poster = omdb ? await resolvePoster(omdb, normalizedFile) : "";
+                    const movie = buildMovie({
+                        id: nextId++, fileName: normalizedFile,
+                        filePath: file.audience === "kids" || !canNormalize ? file.assetPath : toAssetPath(path.join(moviesDir, normalizedFile)),
+                        audience: file.audience, addedAt: file.mtime?.toISOString?.() || new Date().toISOString(),
+                        omdb: metadata, parsed, override, poster, identification, file
+                    });
+                    movies.push(movie);
+                    added.push(movie);
+                    changed = true;
+                    console.log(`BRasa: adicionado "${movie.title}" (${identification.confidence}; ${identification.reason}).`);
+                } catch (error) {
+                    console.log(`BRasa: falha isolada ao indexar "${file.name}" (${error.message}).`);
                 }
-
-                const normalizedFile = await normalizeMovieFileName({
-                    fileName: file.name,
-                    title: omdb.Title,
-                    year: omdb.Year,
-                    imdbId: omdb.imdbID
-                });
-
-                const poster = await resolvePoster(omdb, normalizedFile);
-                const movie = buildMovie({
-                    id: nextId++,
-                    fileName: normalizedFile,
-                    addedAt: file.mtime?.toISOString?.() || new Date().toISOString(),
-                    omdb,
-                    parsed,
-                    override,
-                    poster
-                });
-
-                movies.push(movie);
-                added.push(movie);
-                changed = true;
-                console.log(`BRasa: adicionado "${movie.title}" (${movie.year}).`);
             }
         }
 
@@ -145,7 +172,7 @@ async function normalizeIndexedMovieFiles(movies) {
     let renamed = 0;
 
     for (const movie of movies) {
-        if (!movie.video || !movie.imdbId || !movie.title || !movie.year) continue;
+        if (!movie.video || !movie.imdbId || !movie.title || !movie.year || getMovieAudience(movie)==="kids") continue;
 
         const currentPath = path.join(rootDir, movie.video);
         if (!(await fileExists(currentPath))) continue;
@@ -213,16 +240,21 @@ async function getAvailableMovieFileName(targetName, currentName) {
 }
 
 async function syncSubtitlesForMovies({ movies, apiKey, languages }) {
-    const playableMovies = movies.filter((movie) => movie.video && movie.imdbId);
+    if (isDryRun) {
+        console.log("BRasa: dry-run ativo; legendas não serão baixadas.");
+        return 0;
+    }
+    const localMovies = movies.filter((movie) => movie.video && movie.playable !== false);
+    let downloaded = 0;
+    for (const movie of localMovies) downloaded += await importLocalSubtitles(movie, languages);
+    const playableMovies = localMovies.filter((movie) => movie.imdbId);
 
-    if (!playableMovies.length) return 0;
+    if (!playableMovies.length) return downloaded;
 
     if (!apiKey) {
         console.log("BRasa: OPENSUBTITLES_API_KEY ausente; legendas nao foram baixadas.");
-        return 0;
+        return downloaded;
     }
-
-    let downloaded = 0;
 
     for (const movie of playableMovies) {
         movie.subtitles = Array.isArray(movie.subtitles) ? movie.subtitles : [];
@@ -273,6 +305,39 @@ async function syncSubtitlesForMovies({ movies, apiKey, languages }) {
     }
 
     return downloaded;
+}
+
+async function importLocalSubtitles(movie, languages) {
+    if (isDryRun) return 0;
+    const videoPath = path.join(rootDir, movie.video);
+    const directory = path.dirname(videoPath);
+    const base = path.basename(videoPath, path.extname(videoPath));
+    const entries = await fs.readdir(directory).catch(() => []);
+    movie.subtitles = Array.isArray(movie.subtitles) ? movie.subtitles : [];
+    let imported = 0;
+    for (const language of languages) {
+        if (movie.subtitles.some((item) => item.srclang === language.code)) continue;
+        const aliases = language.code === "pt-br" ? ["pt-br", "pt", "por", "pb"] : [language.code, language.searchCode];
+        const localName = entries.find((entry) => {
+            const extension = path.extname(entry).toLowerCase();
+            if (![".srt", ".vtt"].includes(extension)) return false;
+            const candidate = path.basename(entry, extension).toLowerCase();
+            return aliases.some((alias) => candidate === `${base}.${alias}`.toLowerCase());
+        });
+        if (!localName) continue;
+        const raw = await fs.readFile(path.join(directory, localName), "utf8");
+        const vtt = toWebVtt(raw);
+        if (!hasSubtitleCue(vtt)) continue;
+        const relativePath = `assets/subtitles/${slugify(`${movie.id || `${movie.title}-${movie.year}`}-${language.code}`)}.vtt`;
+        await fs.mkdir(subtitlesDir, { recursive: true });
+        await fs.writeFile(path.join(rootDir, relativePath), vtt, "utf8");
+        movie.subtitles.push({ label: language.label, srclang: language.code, src: relativePath, default: false, source: "local" });
+        imported++;
+        console.log(`BRasa: legenda local ${language.label} vinculada a "${movie.title}".`);
+    }
+    const preferred = movie.subtitles.find((item) => item.srclang === "pt-br") || movie.subtitles[0];
+    movie.subtitles = movie.subtitles.map((item) => ({ ...item, default: item.src === preferred?.src }));
+    return imported;
 }
 
 async function findSubtitles({ apiKey, imdbId, language }) {
@@ -396,18 +461,15 @@ async function loadOverrides() {
 }
 
 async function listVideoFiles() {
-    const entries = await fs.readdir(moviesDir, { withFileTypes: true });
-    const files = entries
-        .filter((entry) => entry.isFile() && videoExtensions.has(path.extname(entry.name).toLowerCase()))
-        .map((entry) => entry.name);
-
-    const withStats = await Promise.all(files.map(async (name) => {
-        const stats = await fs.stat(path.join(moviesDir, name));
-        return {
-            name,
-            mtime: stats.mtime
-        };
-    }));
+    const withStats=[];
+    for(const source of movieSources){
+        const entries=await fs.readdir(source.dir,{withFileTypes:true}).catch(()=>[]);
+        for(const entry of entries){
+            if(!entry.isFile()||!videoExtensions.has(path.extname(entry.name).toLowerCase()))continue;
+            const absolutePath=path.join(source.dir,entry.name),stats=await fs.stat(absolutePath);
+            withStats.push({name:entry.name,mtime:stats.mtime,size:stats.size,assetPath:toAssetPath(absolutePath),audience:source.audience});
+        }
+    }
 
     return withStats
         .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
@@ -443,9 +505,27 @@ function parseMovieFileName(fileName) {
     };
 }
 
+function extractImdbId(fileName) {
+    return fileName.match(/\b(tt\d{7,10})\b/i)?.[1]?.toLowerCase() || "";
+}
+
+function createLocalMovieMetadata(parsed, override, imdbId) {
+    return { Title: override.title || parsed.title, Year: override.year || parsed.year || "", Runtime: "", imdbRating: "", Rated: "", Genre: "", Plot: "", imdbID: imdbId || "", Poster: "" };
+}
+
+function assessMovieIdentification({ omdb, parsed, override, fileImdbId }) {
+    if (omdb?.Type && omdb.Type !== "movie") return { confidence: "low", reason: `A API retornou o tipo ${omdb.Type}.`, status: "incomplete" };
+    if (omdb && (override.imdbId || fileImdbId) && omdb.imdbID === (override.imdbId || fileImdbId)) return { confidence: "high", reason: "IMDb ID confirmado.", status: "complete" };
+    if (omdb && parsed.year && String(omdb.Year || "").includes(parsed.year)) return { confidence: "high", reason: "Titulo e ano confirmados pelo provedor.", status: "complete" };
+    if (omdb) return { confidence: "medium", reason: "Titulo confirmado, mas o ano nao estava disponivel para validacao.", status: "complete" };
+    if (parsed.title && parsed.year) return { confidence: "low", reason: "Indexado pelo nome local; metadados externos indisponiveis.", status: "incomplete" };
+    return { confidence: "unidentified", reason: "Nao foi possivel confirmar titulo e ano.", status: "incomplete" };
+}
+
 async function findMovieOnOmdb({ apiKey, parsed, override }) {
     if (override.imdbId) {
-        return fetchOmdb(apiKey, { i: override.imdbId, plot: "full" });
+        const movie = await fetchOmdb(apiKey, { i: override.imdbId, plot: "full" });
+        return movie?.Type === "movie" ? movie : null;
     }
 
     const titleCandidates = [
@@ -462,7 +542,7 @@ async function findMovieOnOmdb({ apiKey, parsed, override }) {
             plot: "full"
         });
 
-        if (movie) return movie;
+        if (movie?.Type === "movie") return movie;
     }
 
     for (const title of [...new Set(titleCandidates)]) {
@@ -474,7 +554,8 @@ async function findMovieOnOmdb({ apiKey, parsed, override }) {
 
         const best = chooseSearchResult(search?.Search || [], override.year || parsed.year);
         if (best?.imdbID) {
-            return fetchOmdb(apiKey, { i: best.imdbID, plot: "full" });
+            const movie = await fetchOmdb(apiKey, { i: best.imdbID, plot: "full" });
+            if (movie?.Type === "movie") return movie;
         }
     }
 
@@ -533,7 +614,7 @@ async function resolvePoster(omdb, fileName) {
     return relativePath;
 }
 
-function buildMovie({ id, fileName, addedAt, omdb, parsed, override, poster }) {
+function buildMovie({ id, fileName, filePath, audience, addedAt, omdb, parsed, override, poster, identification, file }) {
     return {
         id,
         title: override.displayTitle || omdb.Title || parsed.title,
@@ -541,21 +622,31 @@ function buildMovie({ id, fileName, addedAt, omdb, parsed, override, poster }) {
         year: Number(omdb.Year?.match(/\d{4}/)?.[0] || parsed.year || 0),
         duration: formatRuntime(omdb.Runtime),
         rating: Number.parseFloat(omdb.imdbRating) || "",
-        contentRating: omdb.Rated && omdb.Rated !== "N/A" ? omdb.Rated : "",
+        contentRating: override.contentRating || (omdb.Rated && omdb.Rated !== "N/A" ? omdb.Rated : ""),
         quality: inferQuality(fileName),
         genres: translateGenres(omdb.Genre),
-        overview: omdb.Plot && omdb.Plot !== "N/A" ? omdb.Plot : "",
-        poster,
-        backdrop: "",
-        video: toAssetPath(path.join(moviesDir, fileName)),
+        overview: override.overview || (omdb.Plot && omdb.Plot !== "N/A" ? omdb.Plot : ""),
+        poster: override.poster || poster,
+        backdrop: override.backdrop || "",
+        video: filePath,
+        audience: override.audience || audience || "general",
         addedAt,
         progress: 0,
-        favorite: false,
-        featured: false,
+        favorite: Boolean(override.favorite),
+        featured: Boolean(override.featured),
+        themes: Array.isArray(override.themes) ? override.themes : [],
         imdbId: omdb.imdbID || "",
+        identificationConfidence: identification?.confidence || "high",
+        identificationReason: identification?.reason || "Metadados existentes.",
+        metadataStatus: identification?.status || "complete",
+        fileSize: file?.size || 0,
+        fileModifiedAt: file?.mtime?.toISOString?.() || "",
+        lastIndexedAt: new Date().toISOString(),
         subtitles: []
     };
 }
+
+function getMovieAudience(movie){ return movie.audience || (movie.kids===true ? "kids" : "general"); }
 
 function formatRuntime(runtime) {
     const minutes = Number(runtime?.match(/\d+/)?.[0]);
@@ -741,7 +832,7 @@ async function findSeriesOnOmdb({ apiKey, title }) {
         plot: "full"
     });
 
-    if (direct) return direct;
+    if (direct?.Type === "series") return direct;
 
     const search = await fetchOmdb(apiKey, {
         s: title,
@@ -751,10 +842,11 @@ async function findSeriesOnOmdb({ apiKey, title }) {
     const best = chooseSearchResult(search?.Search || []);
     if (!best?.imdbID) return null;
 
-    return fetchOmdb(apiKey, {
+    const resolved = await fetchOmdb(apiKey, {
         i: best.imdbID,
         plot: "full"
     });
+    return resolved?.Type === "series" ? resolved : null;
 }
 
 function applySeriesMetadata(item, omdb, poster) {
@@ -808,6 +900,7 @@ async function buildSeriesLibrary() {
                     title: parsed.seriesTitle,
                     type: "series",
                     kids: source.kids,
+                    audience: source.kids ? "kids" : "general",
                     genres: [],
                     contentRating: source.kids ? "Livre" : "",
                     poster: "",
@@ -856,6 +949,12 @@ async function buildSeriesLibrary() {
         .filter((item) => item.episodeCount > 0)
         .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt) || a.title.localeCompare(b.title, "pt-BR"));
 
+    const languages = parseSubtitleLanguages(process.env.SUBTITLE_LANGUAGES || "pt-br,en");
+    for (const item of series) {
+        for (const episode of item.seasons.flatMap((season) => season.episodes)) {
+            await importLocalSubtitles(episode, languages);
+        }
+    }
     return series;
 }
 
@@ -916,6 +1015,7 @@ function parseSeriesFile(file, source) {
             title: episodeTitle,
             video: toAssetPath(file.absolutePath),
             quality: inferQuality(fileName),
+            audience: source.kids ? "kids" : "general",
             addedAt: file.mtime.toISOString(),
             progress: 0,
             subtitles: [],
