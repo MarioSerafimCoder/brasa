@@ -1,0 +1,3 @@
+package com.brasa.tv.feature.update
+import android.content.pm.PackageInstaller
+object InstallStatusMapper{fun message(result:InstallResult)=when(result.status){PackageInstaller.STATUS_FAILURE_ABORTED->"Instalação cancelada pelo usuário.";PackageInstaller.STATUS_FAILURE_BLOCKED->"Instalação bloqueada pelo Android.";PackageInstaller.STATUS_FAILURE_CONFLICT->"Conflito com a instalação existente.";PackageInstaller.STATUS_FAILURE_INCOMPATIBLE->"Atualização incompatível com esta TV.";PackageInstaller.STATUS_FAILURE_INVALID->"O Android recusou o APK como inválido.";PackageInstaller.STATUS_FAILURE_STORAGE->"Espaço insuficiente para instalar.";else->result.message.ifBlank{"A instalação não foi concluída."}}}

@@ -16,5 +16,5 @@ class AppContainer(val context:Context){
     val json=Json{ignoreUnknownKeys=true;explicitNulls=false;encodeDefaults=true}
     val settings=AppSettingsStore(context);val tokenStore=SecureTokenStore(context,json);val networkAccess=LocalNetworkAccessController(context);val discovery=BrasaNsdDiscovery(context)
     val http=BrasaHttpClient(tokenStore,json);val api=BrasaApi(http,json);val repository=BrasaRepository(api,settings,tokenStore,http)
-    val updatePreferences=UpdatePreferences(context,json);val updateRepository=UpdateRepository(HttpUpdateApi(http,json),updatePreferences,{settings.values.first().serverBaseUrl});val apkValidator=ApkValidator(AndroidApkInspector(context))
+    val updatePreferences=UpdatePreferences(context,json);val updateRepository=UpdateRepository(HttpUpdateApi(http,json),updatePreferences,{settings.values.first().serverBaseUrl});val apkValidator=ApkValidator(AndroidApkInspector(context));val packageInstaller=PackageInstallController(context)
 }
