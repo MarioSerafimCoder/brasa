@@ -77,3 +77,13 @@ assets/subtitles/
 # Arquivos temporários
 *.tmp
 *.bak
+
+# Android / Gradle
+apps/android-tv/.gradle/
+apps/android-tv/local.properties
+apps/android-tv/**/build/
+apps/android-tv/.idea/
+apps/android-tv/captures/
+apps/android-tv/.toolchain/
+*.apk
+*.aab
