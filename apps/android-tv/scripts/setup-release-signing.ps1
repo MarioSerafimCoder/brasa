@@ -16,20 +16,23 @@ $keySecure = Read-Host "Senha da chave (mínimo 12 caracteres)" -AsSecureString
 $keyConfirm = Read-Host "Confirme a senha da chave" -AsSecureString
 function Convert-Secure([Security.SecureString]$value) { $ptr=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($value);try{[Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)}finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)} }
 $storePassword=Convert-Secure $storeSecure;$storeConfirmation=Convert-Secure $storeConfirm;$keyPassword=Convert-Secure $keySecure;$keyConfirmation=Convert-Secure $keyConfirm
+$temporaryCertificate=Join-Path ([IO.Path]::GetTempPath()) ("brasa-tv-release-"+[Guid]::NewGuid().ToString("N")+".der")
 try {
     if ($storePassword.Length -lt 12 -or $keyPassword.Length -lt 12) { throw "Use senhas com pelo menos 12 caracteres." }
     if ($storePassword -cne $storeConfirmation -or $keyPassword -cne $keyConfirmation) { throw "As confirmações de senha não coincidem." }
     $env:BRASA_TV_KEYSTORE_PASSWORD=$storePassword;$env:BRASA_TV_KEY_PASSWORD=$keyPassword
-    & $keytool -genkeypair -keystore $defaultKeyStore -alias $alias -keyalg RSA -keysize 4096 -sigalg SHA256withRSA -validity 10950 -dname "CN=BRasa TV, OU=BRasa, O=BRasa, L=Local, C=BR" -storepass:env BRASA_TV_KEYSTORE_PASSWORD -keypass:env BRASA_TV_KEY_PASSWORD
+    & $keytool -genkeypair -keystore $defaultKeyStore -storetype JKS -alias $alias -keyalg RSA -keysize 4096 -sigalg SHA256withRSA -validity 10950 -dname "CN=BRasa TV, OU=BRasa, O=BRasa, L=Local, C=BR" -storepass:env BRASA_TV_KEYSTORE_PASSWORD -keypass:env BRASA_TV_KEY_PASSWORD
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $defaultKeyStore)) { throw "Não foi possível criar a chave release." }
-    $certificate=& $keytool -list -v -keystore $defaultKeyStore -alias $alias -storepass:env BRASA_TV_KEYSTORE_PASSWORD
-    $fingerprint=($certificate | Select-String -Pattern 'SHA256:\s*([A-Fa-f0-9:]{64,95})').Matches.Groups[1].Value.Replace(':','').ToUpperInvariant()
+    & $keytool -exportcert -keystore $defaultKeyStore -storetype JKS -alias $alias -file $temporaryCertificate -storepass:env BRASA_TV_KEYSTORE_PASSWORD
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $temporaryCertificate)) { throw "Não foi possível exportar o certificado público." }
+    $fingerprint=(Get-FileHash -LiteralPath $temporaryCertificate -Algorithm SHA256).Hash.ToUpperInvariant()
     if ($fingerprint -notmatch '^[A-F0-9]{64}$') { throw "Não foi possível extrair o fingerprint público." }
     [IO.File]::WriteAllText((Join-Path $projectRoot "release-certificate.sha256"),$fingerprint+[Environment]::NewLine,(New-Object Text.UTF8Encoding($false)))
     Write-Host "Chave criada em: $defaultKeyStore"
     Write-Host "Fingerprint público salvo em release-certificate.sha256."
     Write-Warning "Faça backup seguro da chave e das credenciais. Perder a chave impede atualizar instalações existentes."
 } finally {
+    Remove-Item -LiteralPath $temporaryCertificate -Force -ErrorAction SilentlyContinue
     Remove-Item Env:BRASA_TV_KEYSTORE_PASSWORD -ErrorAction SilentlyContinue;Remove-Item Env:BRASA_TV_KEY_PASSWORD -ErrorAction SilentlyContinue
     $storePassword=$storeConfirmation=$keyPassword=$keyConfirmation=$null
 }
