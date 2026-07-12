@@ -1,0 +1,48 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import crypto from "node:crypto";
+import { ConflictError, NotFoundError, ValidationError } from "./app-errors.mjs";
+
+export function createDeviceStore(rootDir, { now = () => Date.now(), randomBytes = crypto.randomBytes, scrypt = crypto.scrypt } = {}) {
+    const file = path.join(rootDir, "data", "devices.json"), backup = path.join(rootDir, "data", "devices.backup.json");
+    let queue = Promise.resolve();
+    const derive = (token, salt) => new Promise((resolve, reject) => scrypt(token, salt, 64, (error, key) => error ? reject(error) : resolve(Buffer.from(key))));
+    async function load() {
+        const text = await fs.readFile(file, "utf8").catch((error) => error.code === "ENOENT" ? "" : Promise.reject(error));
+        if (!text) return { version: 1, devices: [] };
+        try { return normalizeState(JSON.parse(text)); }
+        catch {
+            await fs.rename(file, `${file}.corrupt-${now()}`).catch(() => {});
+            const recovered = await fs.readFile(backup, "utf8").then(JSON.parse).then(normalizeState).catch(() => ({ version: 1, devices: [] }));
+            await save(recovered, { skipBackup: true }); return recovered;
+        }
+    }
+    function save(state, { skipBackup = false } = {}) {
+        const clean = normalizeState(state);
+        queue = queue.then(async () => { await fs.mkdir(path.dirname(file), { recursive: true }); const previous = await fs.readFile(file, "utf8").catch(() => ""); if (previous && !skipBackup) await fs.writeFile(backup, previous, "utf8"); const temp = `${file}.${process.pid}.tmp`; await fs.writeFile(temp, `${JSON.stringify(clean, null, 2)}\n`, { encoding: "utf8", mode: 0o600 }); await fs.rename(temp, file); });
+        return queue.then(() => clean);
+    }
+    async function create({ name, type = "tv", allowedProfileIds = [], maxDevices = 20, ip = "" }) {
+        const state = await load(); if (state.devices.filter((item) => !item.revoked).length >= maxDevices) throw new ConflictError("O limite de dispositivos autorizados foi atingido.");
+        const token = randomBytes(32).toString("base64url"), salt = randomBytes(24).toString("hex"), hash = await derive(token, salt), timestamp = new Date(now()).toISOString();
+        const device = { id: randomBytes(18).toString("base64url"), name: cleanName(name), type: cleanType(type), tokenHash: `scrypt:${salt}:${hash.toString("hex")}`, createdAt: timestamp, lastSeenAt: timestamp, lastIp: cleanIp(ip), revoked: false, allowedProfileIds: cleanProfiles(allowedProfileIds) };
+        state.devices.push(device); await save(state); return { device: publicDevice(device), token };
+    }
+    async function authenticate(token, ip = "") {
+        const value = String(token || ""); if (!value || value.length > 256) return null; const state = await load();
+        for (const device of state.devices) { if (device.revoked) continue; const [, salt, expectedHex] = String(device.tokenHash).split(":"); if (!salt || !expectedHex) continue; const actual = await derive(value, salt), expected = Buffer.from(expectedHex, "hex"); if (actual.length === expected.length && crypto.timingSafeEqual(actual, expected)) { const nextIp = cleanIp(ip), shouldPersist = nextIp !== device.lastIp || now() - (Date.parse(device.lastSeenAt) || 0) >= 60_000; if (shouldPersist) { device.lastSeenAt = new Date(now()).toISOString(); device.lastIp = nextIp; await save(state); } return publicDevice(device); } }
+        return null;
+    }
+    async function list() { return (await load()).devices.map(publicDevice); }
+    async function update(id, input) { const state = await load(), device = state.devices.find((item) => item.id === id); if (!device) throw new NotFoundError("Dispositivo não encontrado."); if (input.name !== undefined) device.name = cleanName(input.name); if (input.allowedProfileIds !== undefined) device.allowedProfileIds = cleanProfiles(input.allowedProfileIds); await save(state); return publicDevice(device); }
+    async function revoke(id) { const state = await load(), device = state.devices.find((item) => item.id === id); if (!device) throw new NotFoundError("Dispositivo não encontrado."); device.revoked = true; await save(state); return publicDevice(device); }
+    async function remove(id) { const state = await load(), index = state.devices.findIndex((item) => item.id === id); if (index < 0) throw new NotFoundError("Dispositivo não encontrado."); state.devices.splice(index, 1); await save(state); return { removed: true }; }
+    return { load, save, create, authenticate, list, update, revoke, remove, file, backup };
+}
+
+export function publicDevice(device) { const { tokenHash, ...safe } = device; return { ...safe, allowedProfileIds: [...(safe.allowedProfileIds || [])] }; }
+function cleanName(value) { const name = String(value || "Dispositivo BRasa").trim().replace(/[\u0000-\u001f]/g, "").slice(0, 80); if (!name) throw new ValidationError("Nome do dispositivo inválido."); return name; }
+function cleanType(value) { const type = String(value || "tv").toLowerCase(); if (!["tv", "tv-box", "browser"].includes(type)) throw new ValidationError("Tipo de dispositivo inválido."); return type; }
+function cleanProfiles(value) { if (!Array.isArray(value) || value.length > 100) throw new ValidationError("Perfis permitidos inválidos."); return [...new Set(value.map(String).filter((id) => /^[a-z0-9-]{1,64}$/.test(id)))]; }
+function cleanIp(value) { return String(value || "").replace(/^::ffff:/, "").slice(0, 64); }
+function normalizeState(input) { if (!input || input.version !== 1 || !Array.isArray(input.devices)) throw new ValidationError("Arquivo de dispositivos inválido."); return { version: 1, devices: input.devices.map((item) => ({ id: String(item.id), name: cleanName(item.name), type: cleanType(item.type), tokenHash: String(item.tokenHash), createdAt: String(item.createdAt), lastSeenAt: String(item.lastSeenAt || ""), lastIp: cleanIp(item.lastIp), revoked: Boolean(item.revoked), allowedProfileIds: cleanProfiles(item.allowedProfileIds || []) })) }; }
