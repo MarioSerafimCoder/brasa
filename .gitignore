@@ -48,6 +48,7 @@ data/devices.json
 data/devices.backup.json
 data/devices.json.corrupt-*
 data/android-tv-updates/
+releases-local/
 
 # Logs
 *.log
