@@ -28,6 +28,7 @@ import { createDeviceStore } from "../server/device-store.mjs";
 import { createPairingService } from "../server/pairing-service.mjs";
 import { createDeviceAuth } from "../server/device-auth.mjs";
 import { createDeviceController } from "../server/device-controller.mjs";
+import { startServiceDiscovery } from "../server/service-discovery.mjs";
 import { canAccessLegacyApi, isLoopbackAddress } from "../server/network-access.mjs";
 import { ensureEnvFile } from "./setup-env.mjs";
 
@@ -54,6 +55,7 @@ let userCollectionsWriteQueue = Promise.resolve();
 let libraryWatcher = null;
 let dailyRecoveryTimer = null;
 let pendingRecoveryTimer = null;
+let serviceDiscovery = null;
 const mediaStore = createMediaStateStore(rootDir);
 const metadataRetryStore = createMetadataRetryStore(rootDir);
 const mediaQueue = createMediaQueue({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir), resolveMedia });
@@ -63,7 +65,7 @@ const libraryHealth = createLibraryHealth({ rootDir, store: libraryHealthStore, 
 const deviceStore = createDeviceStore(rootDir);
 const pairingService = createPairingService({ deviceStore, getSettings: () => networkConfigStore.load() });
 const deviceAuth = createDeviceAuth(deviceStore);
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, tvServices: { profiles: tvProfiles, catalog: tvCatalog, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream }, readBody: readJsonBody, send: sendJson });
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream }, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -100,7 +102,7 @@ const contentTypes = {
 const server = http.createServer(async (request, response) => {
     try {
         const url = new URL(request.url, `http://${request.headers.host}`);
-        const isDeviceRoute = url.pathname.startsWith("/api/device-pairing/") || url.pathname.startsWith("/api/tv/");
+        const isDeviceRoute = url.pathname === "/api/v1/bootstrap" || url.pathname.startsWith("/api/v1/tv/") || url.pathname.startsWith("/api/device-pairing/") || url.pathname.startsWith("/api/tv/");
         if (!isDeviceRoute && !canAccessLegacyApi({ lanAccessEnabled: startupNetworkSettings.lanAccessEnabled, remoteAddress: request.socket?.remoteAddress, pathname: url.pathname })) throw new ForbiddenError("Esta API está disponível somente no computador do BRasa.");
         if (!isDeviceRoute) validateLocalWriteRequest(request, { port: activePort });
 
@@ -241,6 +243,7 @@ function listen(port) {
         activePort = port;
         writeServerState(port);
         console.log(`BRasa rodando em http://${host}:${port}/`);
+        serviceDiscovery = await startServiceDiscovery({ enabled: startupNetworkSettings.lanAccessEnabled, name: startupNetworkSettings.serverName || "BRasa", port });
         await enableLibraryWatcher().catch((error) => console.log(`BRasa: watcher indisponivel (${error.message}).`));
         enableDailyMetadataRecovery();
         if (process.env.BRASA_SKIP_STARTUP_SYNC !== "1") runStartupSync().catch((error) => console.error("BRasa startup sync:", error));
@@ -273,11 +276,13 @@ process.on("exit", () => {
 });
 
 process.on("SIGINT", async () => {
+    await serviceDiscovery?.stop();
     await removeServerState();
     process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
+    await serviceDiscovery?.stop();
     await removeServerState();
     process.exit(0);
 });
@@ -392,6 +397,39 @@ async function tvCatalog(device, profileId) {
     const series = seriesModule.getSeries().filter((item) => canTvAccess(item, profile)).map((item) => tvSeries(item, profileId, profile, profileState));
     const collections = (collectionModule.collections || []).filter((item) => item.banner).map((item) => ({ id: item.id, title: item.title, subtitle: item.subtitle || "", banner: item.banner || "" }));
     return { profile: publicProfile(profile), movies, series, collections, favorites: profileState.favorites, progress: profileState.progress, updatedAt: new Date().toISOString() };
+}
+
+async function tvHome(device, profileId) {
+    const catalog = await tvCatalog(device, profileId);
+    const episodes = catalog.series.flatMap((series) => series.seasons.flatMap((season) => season.episodes));
+    const continueWatching = [...catalog.movies, ...episodes].filter((item) => item.progress && !item.progress.completed && Number(item.progress.percentage) > 0);
+    const favorites = [...catalog.movies, ...episodes].filter((item) => item.favorite || catalog.favorites.includes(item.mediaKey));
+    const recentMovies = [...catalog.movies].sort((a, b) => Number(b.year || 0) - Number(a.year || 0));
+    const rows = [
+        { id: "continue", title: "Continuar assistindo", type: "continue", items: continueWatching },
+        { id: "recent", title: "Adicionados recentemente", type: "catalog", items: recentMovies },
+        { id: "movies", title: "Filmes", type: "catalog", items: catalog.movies },
+        { id: "series", title: "Séries", type: "catalog", items: catalog.series },
+        { id: "favorites", title: "Minha lista", type: "favorites", items: favorites }
+    ].filter((row) => row.items.length);
+    return { profile: catalog.profile, rows };
+}
+
+async function tvPlayback(device, profileId, mediaKey) {
+    const catalog = await tvCatalog(device, profileId);
+    const episodes = catalog.series.flatMap((series) => series.seasons.flatMap((season) => season.episodes));
+    const item = [...catalog.movies, ...episodes].find((candidate) => candidate.mediaKey === mediaKey);
+    if (!item) throw new NotFoundError("Conteúdo não encontrado.");
+    const source = await resolveMedia(mediaKey), extension = path.extname(source?.originalPath || "").toLowerCase();
+    const seriesEpisodes = item.type === "episode" ? episodes.filter((episode) => episode.seriesId === item.seriesId) : [];
+    const nextEpisode = seriesEpisodes.find((episode) => Number(episode.seasonNumber) > Number(item.seasonNumber) || (episode.seasonNumber === item.seasonNumber && Number(episode.episodeNumber) === Number(item.episodeNumber) + 1)) || null;
+    return {
+        mediaId: item.id, mediaKey, playbackUrl: item.streamUrl,
+        mimeType: contentTypes[extension] || "video/*", container: extension.replace(".", ""), supportsRange: true,
+        resumePosition: Math.max(0, Math.round(Number(item.progress?.currentTime || 0) * 1000)),
+        subtitles: (item.subtitles || []).map((track) => ({ ...track, src: String(track.src || "").startsWith("/") ? track.src : `/${track.src}` })),
+        audioTracks: [], nextEpisode, preparationStatus: "ready"
+    };
 }
 
 async function tvProgress(profileId, mediaKey) { const state = await readUserState(); if (!state.profiles.some((item) => item.id === profileId)) throw new NotFoundError("Perfil não encontrado."); return validateProfileState(state.states[profileId] || {}).progress[mediaKey] || null; }

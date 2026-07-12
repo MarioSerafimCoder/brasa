@@ -7,14 +7,22 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (!isPrivateClientAddress(request.socket?.remoteAddress)) throw new ForbiddenError("O modo TV aceita somente dispositivos da rede privada.");
         const currentSettings = await settingsStore.load();
         if (!currentSettings.lanAccessEnabled && !isLoopbackAddress(request.socket?.remoteAddress)) throw new ForbiddenError("O acesso pela rede está desativado.");
+        if (path === "/api/v1/bootstrap" && method === "GET") return success(response, {
+            name: currentSettings.serverName || "BRasa", apiVersion: 1, serverVersion: "1.0.0",
+            lanEnabled: currentSettings.lanAccessEnabled, pairingRequired: true,
+            capabilities: { pairing: true, profiles: true, catalog: true, homeRows: true, search: false, progressivePlayback: true, rangeRequests: true, subtitles: true, audioTracks: false }
+        });
         if (path === "/api/device-pairing/start" && method === "POST") { const body = await readBody(request); return success(response, await pairing.start({ name: body.name, type: body.type, ip: request.socket?.remoteAddress || "" }), 201); }
         const pairingStatus = path.match(/^\/api\/device-pairing\/status\/([A-Za-z0-9_-]{12,80})$/);
         if (pairingStatus && method === "GET") return success(response, pairing.status(pairingStatus[1]));
-        if (!path.startsWith("/api/tv/")) throw new NotFoundError("Rota de dispositivo não encontrada.");
+        if (!path.startsWith("/api/tv/") && !path.startsWith("/api/v1/tv/")) throw new NotFoundError("Rota de dispositivo não encontrada.");
         const device = await auth.requireDevice(request);
         if (path === "/api/tv/session" && method === "POST") { const token = String(request.headers?.["x-brasa-device-token"] || ""); response.setHeader("Set-Cookie", `brasa_device_token=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/api/tv; Max-Age=2592000`); return success(response, { authenticated: true, device }); }
         if (path === "/api/tv/profiles" && method === "GET") return success(response, await tvServices.profiles(device));
         if (path === "/api/tv/catalog" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.catalog(device, profileId)); }
+        if (path === "/api/v1/tv/home" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.home(device, profileId)); }
+        const playback = path.match(/^\/api\/v1\/tv\/playback\/(movie|episode):([^/]+)$/);
+        if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`)); }
         const progress = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/progress\/(movie|episode):([^/]+)$/);
         if (progress) { const profileId = auth.requireProfile(device, progress[1]), mediaKey = `${progress[2]}:${progress[3]}`; if (method === "GET") return success(response, await tvServices.progress(profileId, mediaKey)); if (method === "PUT") return success(response, await tvServices.saveProgress(profileId, mediaKey, await readBody(request))); }
         const favorite = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/favorites\/(movie|episode):([^/]+)$/);
@@ -28,13 +36,8 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
     const admin = {
         async network(port) { const settings = await settingsStore.load(); return { ...settings, enabled: settings.lanAccessEnabled, host: settings.lanAccessEnabled ? "0.0.0.0" : "127.0.0.1", port, addresses: networkInfo(port), restartRequired: false }; },
         async updateNetwork(input, port, currentHost) { const settings = await settingsStore.save(input); return { ...await this.network(port), restartRequired: (settings.lanAccessEnabled ? "0.0.0.0" : "127.0.0.1") !== currentHost }; },
-        pairings: () => pairing.list(),
-        approve: async (id, input) => pairing.approve(id, input.allowedProfileIds || []),
-        reject: (id) => pairing.reject(id),
-        devices: () => deviceStore.list(),
-        updateDevice: (id, input) => deviceStore.update(id, input),
-        revokeDevice: (id) => deviceStore.revoke(id),
-        removeDevice: (id) => deviceStore.remove(id)
+        pairings: () => pairing.list(), approve: async (id, input) => pairing.approve(id, input.allowedProfileIds || []), reject: (id) => pairing.reject(id),
+        devices: () => deviceStore.list(), updateDevice: (id, input) => deviceStore.update(id, input), revokeDevice: (id) => deviceStore.revoke(id), removeDevice: (id) => deviceStore.remove(id)
     };
     return { handle, admin };
     function success(response, data, status = 200) { send(response, status, { ok: true, data }); }
