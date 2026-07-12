@@ -47,6 +47,7 @@ data/network-settings.json.corrupt-*
 data/devices.json
 data/devices.backup.json
 data/devices.json.corrupt-*
+data/android-tv-updates/
 
 # Logs
 *.log

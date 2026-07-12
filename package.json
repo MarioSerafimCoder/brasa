@@ -21,5 +21,8 @@
     ,"test:admin-logs": "node scripts/test-admin-logs.mjs"
     ,"test:network": "node scripts/test-network-tv.mjs"
     ,"test:tv-focus": "node scripts/test-tv-focus.mjs"
+    ,"android:release:build": "powershell -NoProfile -ExecutionPolicy Bypass -File apps/android-tv/scripts/build-release.ps1"
+    ,"android:release:publish": "powershell -NoProfile -ExecutionPolicy Bypass -File apps/android-tv/scripts/publish-release.ps1"
+    ,"android:release:status": "node scripts/publish-android-tv-release.mjs --status"
   }
 }
