@@ -41,6 +41,12 @@ data/metadata-retry.json
 data/metadata-retry.backup.json
 data/series-overrides.json
 data/episode-overrides.json
+data/network-settings.json
+data/network-settings.backup.json
+data/network-settings.json.corrupt-*
+data/devices.json
+data/devices.backup.json
+data/devices.json.corrupt-*
 
 # Logs
 *.log
