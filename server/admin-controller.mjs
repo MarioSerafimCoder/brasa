@@ -25,6 +25,7 @@ export function createAdminController({ auth, logs, services, readBody, send, sy
         if (path === "/api/admin/network" && method === "GET") return success(response, await deviceAdmin.network(getPort()));
         if (path === "/api/admin/network" && method === "PUT") { const value = await deviceAdmin.updateNetwork(await readBody(request), getPort(), getHost()); await logs.add({ category: "network", action: "network-settings-updated", message: `Acesso LAN ${value.lanAccessEnabled ? "ativado" : "desativado"}; reinicialização ${value.restartRequired ? "necessária" : "dispensada"}.` }); return success(response, value); }
         if (path === "/api/admin/devices" && method === "GET") return success(response, { devices: await deviceAdmin.devices(), pairings: await deviceAdmin.pairings() });
+        if(path==="/api/admin/android-tv-update"&&method==="GET")return success(response,await deviceAdmin.updateStatus());
         const pairingMatch = path.match(/^\/api\/admin\/devices\/pairing\/([A-Za-z0-9_-]{12,80})\/(approve|reject)$/);
         if (pairingMatch && method === "POST") { const [, id, action] = pairingMatch, result = action === "approve" ? await deviceAdmin.approve(id, await readBody(request)) : await deviceAdmin.reject(id); await logs.add({ category: "devices", action: `pairing-${action}`, message: `Pareamento de dispositivo ${action === "approve" ? "aprovado" : "recusado"}.` }); return success(response, result); }
         const deviceMatch = path.match(/^\/api\/admin\/devices\/([A-Za-z0-9_-]{12,80})(?:\/(revoke))?$/);

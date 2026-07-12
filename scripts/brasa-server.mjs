@@ -29,6 +29,7 @@ import { createPairingService } from "../server/pairing-service.mjs";
 import { createDeviceAuth } from "../server/device-auth.mjs";
 import { createDeviceController } from "../server/device-controller.mjs";
 import { startServiceDiscovery } from "../server/service-discovery.mjs";
+import { createAndroidTvUpdateService } from "../server/android-tv-update-service.mjs";
 import { canAccessLegacyApi, isLoopbackAddress } from "../server/network-access.mjs";
 import { ensureEnvFile } from "./setup-env.mjs";
 
@@ -46,6 +47,7 @@ const stateFile = path.join(rootDir, ".brasa-server.json");
 const userCollectionsFile = path.join(rootDir, "data", "user-collections.json");
 const userStateFile = path.join(rootDir, "data", "user-state.json");
 const userStateBackupFile = path.join(rootDir, "data", "user-state.backup.json");
+const androidTvUpdatesRoot=path.join(rootDir,"data","android-tv-updates");
 const systemCollectionIds = new Set(["mcu", "dc", "star-wars", "lotr", "harry-potter", "jurassic", "mission-impossible", "classics", "fast-furious", "pirates-caribbean", "rocky", "pixar", "disney-classics", "dreamworks", "ghibli", "best-picture"]);
 const tmdbImageCache = new Map();
 const pinAttempts = new Map();
@@ -65,7 +67,8 @@ const libraryHealth = createLibraryHealth({ rootDir, store: libraryHealthStore, 
 const deviceStore = createDeviceStore(rootDir);
 const pairingService = createPairingService({ deviceStore, getSettings: () => networkConfigStore.load() });
 const deviceAuth = createDeviceAuth(deviceStore);
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream }, readBody: readJsonBody, send: sendJson });
+const androidTvUpdateService=createAndroidTvUpdateService({updatesRoot:androidTvUpdatesRoot,deviceStore,serveFile:serveMediaFile});
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -102,7 +105,7 @@ const contentTypes = {
 const server = http.createServer(async (request, response) => {
     try {
         const url = new URL(request.url, `http://${request.headers.host}`);
-        const isDeviceRoute = url.pathname === "/api/v1/bootstrap" || url.pathname.startsWith("/api/v1/tv/") || url.pathname.startsWith("/api/device-pairing/") || url.pathname.startsWith("/api/tv/");
+        const isDeviceRoute = url.pathname === "/api/v1/bootstrap" || url.pathname.startsWith("/api/v1/tv/") ||url.pathname.startsWith("/api/v1/android-tv/")|| url.pathname.startsWith("/api/device-pairing/") || url.pathname.startsWith("/api/tv/");
         if (!isDeviceRoute && !canAccessLegacyApi({ lanAccessEnabled: startupNetworkSettings.lanAccessEnabled, remoteAddress: request.socket?.remoteAddress, pathname: url.pathname })) throw new ForbiddenError("Esta API está disponível somente no computador do BRasa.");
         if (!isDeviceRoute) validateLocalWriteRequest(request, { port: activePort });
 
