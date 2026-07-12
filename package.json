@@ -19,5 +19,7 @@
     ,"test:admin-library": "node scripts/test-admin-library.mjs"
     ,"test:admin-profiles": "node scripts/test-admin-profiles.mjs"
     ,"test:admin-logs": "node scripts/test-admin-logs.mjs"
+    ,"test:network": "node scripts/test-network-tv.mjs"
+    ,"test:tv-focus": "node scripts/test-tv-focus.mjs"
   }
 }
