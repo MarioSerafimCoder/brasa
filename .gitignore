@@ -85,5 +85,7 @@ apps/android-tv/**/build/
 apps/android-tv/.idea/
 apps/android-tv/captures/
 apps/android-tv/.toolchain/
+*.jks
+*.keystore
 *.apk
 *.aab
