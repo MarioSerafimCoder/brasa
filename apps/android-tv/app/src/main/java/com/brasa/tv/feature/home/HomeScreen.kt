@@ -34,12 +34,15 @@ import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.core.model.CatalogItem
+import com.brasa.tv.core.model.HomeRow
 import com.brasa.tv.designsystem.BrasaBackground
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
 import com.brasa.tv.designsystem.BrasaText
 import com.brasa.tv.designsystem.BrasaTextMuted
 import com.brasa.tv.designsystem.BrasaTopBar
+import com.brasa.tv.designsystem.BrasaSpacing
+import com.brasa.tv.designsystem.BrasaType
 import com.brasa.tv.designsystem.MediaCard
 import com.brasa.tv.designsystem.MediaCardFormat
 import com.brasa.tv.designsystem.MessagePanel
@@ -55,6 +58,7 @@ fun HomeScreen(
     onSearch: () -> Unit,
     onProfiles: () -> Unit,
     onSettings: () -> Unit,
+    onSeeMore: (HomeRow) -> Unit,
     onRefresh: () -> Unit,
 ) {
     val home = state.home
@@ -79,7 +83,7 @@ fun HomeScreen(
         contentPadding = PaddingValues(bottom = 54.dp),
     ) {
         item {
-            Box(Modifier.fillMaxWidth().height(430.dp)) {
+            Box(Modifier.fillMaxWidth().height(470.dp)) {
                 if (hero != null) {
                     AsyncImage(
                         model = hero.backdrop.ifBlank { hero.poster },
@@ -101,23 +105,24 @@ fun HomeScreen(
                     ),
                 )
                 BrasaTopBar(
-                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = 24.dp, vertical = 16.dp),
+                    modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = BrasaSpacing.safe, vertical = BrasaSpacing.x2),
                     onHome = {},
                     onSearch = onSearch,
                     onProfiles = onProfiles,
                     onSettings = onSettings,
+                    profileInitials = state.profile?.initials.orEmpty(),
                 )
                 if (hero != null) {
                     Column(
-                        Modifier.align(Alignment.CenterStart).padding(start = 54.dp, top = 60.dp).width(570.dp),
+                        Modifier.align(Alignment.CenterStart).padding(start = BrasaSpacing.safe, top = 62.dp).width(620.dp),
                     ) {
-                        Text(metadata(hero), color = BrasaTextMuted, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                        Text(metadata(hero), color = BrasaTextMuted, fontSize = BrasaType.metadata, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(7.dp))
                         Text(
                             hero.title,
                             color = Color.White,
-                            fontSize = 48.sp,
-                            lineHeight = 50.sp,
+                            fontSize = BrasaType.hero,
+                            lineHeight = 64.sp,
                             fontWeight = FontWeight.ExtraBold,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
@@ -126,21 +131,21 @@ fun HomeScreen(
                         Text(
                             hero.overview,
                             color = BrasaText.copy(alpha = .86f),
-                            fontSize = 17.sp,
-                            lineHeight = 24.sp,
-                            maxLines = 3,
+                            fontSize = BrasaType.body,
+                            lineHeight = 30.sp,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
                         Spacer(Modifier.height(21.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             BrasaButton(
-                                if ((hero.progress?.percentage ?: 0.0) > 0) "Continuar" else "Assistir",
+                                continueLabel(hero),
                                 { onPlay(hero) },
                                 Modifier.focusRequester(heroFocus),
                                 style = BrasaButtonStyle.Primary,
                                 leading = "▶",
                             )
-                            BrasaButton("Detalhes", { onItem(hero) }, leading = "＋")
+                            BrasaButton("Detalhes", { onItem(hero) }, leading = "ⓘ")
                         }
                     }
                 }
@@ -151,12 +156,13 @@ fun HomeScreen(
                 val posters = row.id.contains("all", ignoreCase = true) || row.title.contains("Todos", ignoreCase = true)
                 SectionHeading(
                     row.title,
-                    Modifier.padding(start = 54.dp, end = 42.dp, top = 10.dp, bottom = 13.dp),
+                    Modifier.padding(start = BrasaSpacing.safe, end = BrasaSpacing.safe, top = BrasaSpacing.x2, bottom = BrasaSpacing.x2),
                     action = "Veja mais  ›",
+                    onAction = { onSeeMore(row) },
                 )
                 LazyRow(
                     modifier = Modifier.focusRestorer(),
-                    contentPadding = PaddingValues(horizontal = 54.dp, vertical = 6.dp),
+                    contentPadding = PaddingValues(horizontal = BrasaSpacing.safe, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(if (posters) 18.dp else 16.dp),
                 ) {
                     items(row.items, key = { it.mediaKey.ifBlank { it.id } }) { item ->
@@ -167,4 +173,14 @@ fun HomeScreen(
             }
         }
     }
+}
+
+private fun continueLabel(item: CatalogItem): String {
+    val seconds = item.progress?.currentTime?.toLong() ?: 0L
+    if (seconds <= 0) return "Assistir"
+    val hours = seconds / 3600
+    val minutes = seconds % 3600 / 60
+    val rest = seconds % 60
+    val time = if (hours > 0) "%d:%02d:%02d".format(hours, minutes, rest) else "%02d:%02d".format(minutes, rest)
+    return "Continuar de $time"
 }

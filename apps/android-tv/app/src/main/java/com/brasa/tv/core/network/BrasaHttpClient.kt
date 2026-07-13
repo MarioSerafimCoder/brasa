@@ -1,5 +1,8 @@
+@file:androidx.media3.common.util.UnstableApi
+
 package com.brasa.tv.core.network
 
+import androidx.media3.datasource.okhttp.OkHttpDataSource
 import com.brasa.tv.core.model.ApiEnvelope
 import com.brasa.tv.core.model.ApiError
 import com.brasa.tv.core.security.SecureTokenStore
@@ -25,6 +28,12 @@ class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json
     suspend fun <T> put(base:String,path:String,body:String,serializer:KSerializer<T>)=execute(base,path,"PUT",body,serializer,true)
     suspend fun delete(base:String,path:String):Boolean=withContext(Dispatchers.IO){client.newCall(request(base,path,"DELETE",null,true)).execute().use{if(it.code==401)throw DeviceRevokedException();it.isSuccessful}}
     fun authenticatedClient():OkHttpClient=client
+    fun authenticatedMediaDataSource(baseUrl:String):OkHttpDataSource.Factory{
+        val normalized=LocalServerAddress.normalize(baseUrl)
+        val token=tokenStore.load()?.deviceToken.orEmpty()
+        if(pairedOrigin.isBlank()||pairedOrigin!=normalized||token.isBlank())throw IOException("Credencial de mídia indisponível para este servidor.")
+        return OkHttpDataSource.Factory(client).setDefaultRequestProperties(mapOf("X-BRasa-Device-Token" to token))
+    }
     private suspend fun <T> execute(base:String,path:String,method:String,body:String?,serializer:KSerializer<T>,authenticated:Boolean):T=withContext(Dispatchers.IO){client.newCall(request(base,path,method,body,authenticated)).execute().use{response->val text=response.body?.string().orEmpty();if(response.code==401)throw DeviceRevokedException();if(!response.isSuccessful){val error=runCatching{json.decodeFromString(ApiEnvelope.serializer(ApiError.serializer()),text).data}.getOrNull();throw BrasaApiException(response.code,error?.message?:"Falha ao conectar ao BRasa.")};json.decodeFromString(ApiEnvelope.serializer(serializer),text).data?:throw BrasaApiException(response.code,"Resposta vazia do BRasa.")}}
     private fun request(base:String,path:String,method:String,body:String?,authenticated:Boolean):Request{val url=LocalServerAddress.resolve(base,path);val builder=Request.Builder().url(url).header("Accept","application/json").tag(AuthRequired::class.java,AuthRequired(authenticated));return builder.method(method,body?.toRequestBody("application/json; charset=utf-8".toMediaType())).build()}
 }

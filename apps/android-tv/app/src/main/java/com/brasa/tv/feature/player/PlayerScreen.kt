@@ -3,6 +3,8 @@
 package com.brasa.tv.feature.player
 
 import android.app.Activity
+import android.os.SystemClock
+import android.util.Log
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -50,16 +52,16 @@ import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import androidx.tv.material3.Text
 import com.brasa.tv.app.BrasaUiState
+import com.brasa.tv.BuildConfig
 import com.brasa.tv.core.di.AppContainer
 import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.core.model.PlaybackInfo
 import com.brasa.tv.core.model.WatchProgress
-import com.brasa.tv.core.playback.PlaybackFactory
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
-import com.brasa.tv.designsystem.BrasaLogo
 import com.brasa.tv.designsystem.BrasaOrange
+import com.brasa.tv.designsystem.BrasaRed
 import com.brasa.tv.designsystem.BrasaSurface
 import com.brasa.tv.designsystem.BrasaText
 import com.brasa.tv.designsystem.BrasaTextMuted
@@ -74,6 +76,10 @@ fun PlayerScreen(
     onNext: (CatalogItem) -> Unit,
     onBack: () -> Unit,
 ) {
+    if (state.previewMode) {
+        PreviewPlayerScreen(state.selected, onBack)
+        return
+    }
     val info = state.playback
     val settings by container.settings.values.collectAsState(initial = AppSettings())
     if (info == null || settings.serverBaseUrl.isBlank()) {
@@ -96,8 +102,19 @@ private fun PlayerContent(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
-    val player = remember(info.mediaKey, serverBaseUrl) {
-        PlaybackFactory(context, container.http, container.tokenStore).create(serverBaseUrl, info)
+    var acquiredPlayer by remember(info.mediaKey, serverBaseUrl) { mutableStateOf<ExoPlayer?>(null) }
+    var loadError by remember(info.mediaKey, serverBaseUrl) { mutableStateOf("") }
+    LaunchedEffect(info.mediaKey, serverBaseUrl) {
+        runCatching { container.playback.acquire(serverBaseUrl, info) }
+            .onSuccess { acquiredPlayer = it }
+            .onFailure { loadError = it.message ?: "Não foi possível preparar o vídeo." }
+    }
+    val player = acquiredPlayer
+    if (player == null) {
+        Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+            Text(loadError.ifBlank { "Preparando vídeo…" }, color = if (loadError.isBlank()) Color.White else BrasaRed, fontSize = 20.sp)
+        }
+        return
     }
     val session = remember(player) { MediaSession.Builder(context, player).build() }
     val rootFocus = remember { FocusRequester() }
@@ -108,7 +125,9 @@ private fun PlayerContent(
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
     var position by remember { mutableLongStateOf(player.currentPosition.coerceAtLeast(0)) }
     var duration by remember { mutableLongStateOf(0L) }
+    var buffered by remember { mutableLongStateOf(player.bufferedPosition.coerceAtLeast(0)) }
     var trackNotice by remember { mutableStateOf("") }
+    var centerNotice by remember { mutableStateOf("") }
 
     fun save(completed: Boolean = false) {
         val total = player.duration
@@ -137,6 +156,7 @@ private fun PlayerContent(
         val end = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: Long.MAX_VALUE
         player.seekTo((player.currentPosition + delta).coerceIn(0L, end))
         position = player.currentPosition
+        centerNotice = if (delta < 0) "↶ 10s" else "10s ↷"
         revealControls()
     }
 
@@ -144,10 +164,30 @@ private fun PlayerContent(
     DisposableEffect(player) {
         val activity = context as? Activity
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val startedAt = container.playback.startedAt(player)
+        var ready = false
+        var rebufferStartedAt = 0L
+        var rebufferCount = 0
         val listener = object : Player.Listener {
             override fun onIsPlayingChanged(value: Boolean) { isPlaying = value; revealControls() }
             override fun onPlaybackStateChanged(playbackState: Int) {
+                val now = SystemClock.elapsedRealtime()
+                if (playbackState == Player.STATE_BUFFERING && ready && rebufferStartedAt == 0L) rebufferStartedAt = now
+                if (playbackState == Player.STATE_READY) {
+                    if (!ready) Log.i(TAG, "STATE_READY ${info.mediaKey} em ${now - startedAt}ms")
+                    ready = true
+                    if (rebufferStartedAt > 0L) {
+                        rebufferCount++
+                        Log.i(TAG, "Rebuffer #$rebufferCount ${info.mediaKey}: ${now - rebufferStartedAt}ms")
+                        rebufferStartedAt = 0L
+                    }
+                }
                 if (playbackState == Player.STATE_ENDED) { save(true); ended = true; controlsVisible = true }
+            }
+            override fun onRenderedFirstFrame() { Log.i(TAG, "Primeiro frame ${info.mediaKey} em ${SystemClock.elapsedRealtime() - startedAt}ms") }
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                loadError = "Não foi possível reproduzir esta mídia (${error.errorCodeName})."
+                Log.e(TAG, "Falha ${info.mediaKey}: ${error.errorCodeName}")
             }
         }
         player.addListener(listener)
@@ -156,13 +196,13 @@ private fun PlayerContent(
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             player.removeListener(listener)
             session.release()
-            player.release()
+            container.playback.release(player, completed = ended)
         }
     }
-    LaunchedEffect(player) { while (true) { delay(12_000); if (player.isPlaying) save() } }
+    LaunchedEffect(player) { while (true) { delay(12_000); if (player.isPlaying) save(); if (BuildConfig.DEBUG) Log.d(TAG, "Buffer ${info.mediaKey}: ${player.totalBufferedDuration}ms") } }
     LaunchedEffect(controlsVisible, interaction, isPlaying) {
         if (controlsVisible && isPlaying && !ended) {
-            delay(5_500)
+            delay(4_000)
             controlsVisible = false
             runCatching { rootFocus.requestFocus() }
         }
@@ -177,12 +217,14 @@ private fun PlayerContent(
         while (true) {
             position = player.currentPosition.coerceAtLeast(0)
             duration = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L
+            buffered = player.bufferedPosition.coerceAtLeast(position)
             delay(if (controlsVisible) 500 else 1_500)
         }
     }
     LaunchedEffect(trackNotice) {
         if (trackNotice.isNotBlank()) { delay(2_400); trackNotice = "" }
     }
+    LaunchedEffect(centerNotice) { if (centerNotice.isNotBlank()) { delay(900); centerNotice = "" } }
 
     Box(
         Modifier
@@ -196,7 +238,7 @@ private fun PlayerContent(
                 when (event.nativeKeyEvent.keyCode) {
                     KeyEvent.KEYCODE_MEDIA_REWIND -> { seekBy(-10_000); true }
                     KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { seekBy(10_000); true }
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { if (player.isPlaying) player.pause() else player.play(); true }
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { if (player.isPlaying) { player.pause(); centerNotice = "Pausado" } else { player.play(); centerNotice = "Reproduzindo" }; true }
                     else -> !wasVisible
                 }
             }
@@ -208,7 +250,20 @@ private fun PlayerContent(
             update = { it.player = player },
         )
 
-        if (controlsVisible) {
+        if (loadError.isNotBlank()) {
+            Column(
+                Modifier.align(Alignment.Center).width(560.dp).background(BrasaSurface.copy(alpha = .97f), RoundedCornerShape(16.dp)).padding(28.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text("Falha na reprodução", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(10.dp))
+                Text(loadError, color = BrasaTextMuted, fontSize = 17.sp)
+                Spacer(Modifier.height(18.dp))
+                BrasaButton("Voltar", ::exit, style = BrasaButtonStyle.Primary)
+            }
+        }
+
+        if (controlsVisible && loadError.isBlank()) {
             Box(
                 Modifier.fillMaxSize().background(
                     Brush.verticalGradient(
@@ -220,11 +275,7 @@ private fun PlayerContent(
                 Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(horizontal = 34.dp, vertical = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                BrasaLogo()
-                Spacer(Modifier.width(22.dp))
                 Text(title.ifBlank { "Reproduzindo agora" }, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
-                Text("Os controles desaparecem automaticamente", color = BrasaTextMuted, fontSize = 13.sp)
             }
             Column(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 52.dp, vertical = 30.dp),
@@ -237,6 +288,9 @@ private fun PlayerContent(
                     Text(formatTime(position), color = BrasaText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.width(13.dp))
                     Box(Modifier.weight(1f).height(5.dp).background(Color.White.copy(alpha = .24f), RoundedCornerShape(50))) {
+                        if (duration > 0) Box(
+                            Modifier.fillMaxWidth((buffered.toFloat() / duration).coerceIn(0f, 1f)).fillMaxHeight().background(Color.White.copy(alpha = .45f), RoundedCornerShape(50)),
+                        )
                         if (duration > 0) Box(
                             Modifier.fillMaxWidth((position.toFloat() / duration).coerceIn(0f, 1f)).fillMaxHeight().background(BrasaOrange, RoundedCornerShape(50)),
                         )
@@ -254,7 +308,7 @@ private fun PlayerContent(
                     Spacer(Modifier.width(11.dp))
                     BrasaButton(
                         if (isPlaying) "Pausar" else "Reproduzir",
-                        { if (player.isPlaying) player.pause() else player.play() },
+                        { if (player.isPlaying) { player.pause(); centerNotice = "Pausado" } else { player.play(); centerNotice = "Reproduzindo" } },
                         Modifier.focusRequester(playFocus),
                         style = BrasaButtonStyle.Primary,
                         leading = if (isPlaying) "Ⅱ" else "▶",
@@ -265,10 +319,12 @@ private fun PlayerContent(
                     BrasaButton("Áudio", { trackNotice = cycleAudio(player); revealControls() })
                     Spacer(Modifier.width(9.dp))
                     BrasaButton("Legenda", { trackNotice = cycleSubtitle(player); revealControls() })
-                    Spacer(Modifier.width(9.dp))
-                    BrasaButton("Sair", ::exit, style = BrasaButtonStyle.Ghost)
                 }
             }
+        }
+
+        if (centerNotice.isNotBlank()) {
+            Text(centerNotice, modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .72f), RoundedCornerShape(50)).padding(horizontal = 26.dp, vertical = 14.dp), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
 
         if (ended && info.nextEpisode != null) {
@@ -288,6 +344,8 @@ private fun PlayerContent(
         }
     }
 }
+
+private const val TAG = "BRasaPlayback"
 
 private fun formatTime(milliseconds: Long): String {
     val totalSeconds = (milliseconds / 1000).coerceAtLeast(0)

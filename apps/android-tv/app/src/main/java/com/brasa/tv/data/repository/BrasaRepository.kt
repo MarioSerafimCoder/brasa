@@ -34,6 +34,7 @@ class BrasaRepository(
     @Volatile private var profileCache: Pair<Long, List<com.brasa.tv.core.model.Profile>>? = null
 
     suspend fun settings(): AppSettings = settings.values.first()
+    suspend fun serverBaseUrl(): String = requireServer()
 
     suspend fun connect(rawAddress: String): ServerInfo {
         val base = LocalServerAddress.normalize(rawAddress)

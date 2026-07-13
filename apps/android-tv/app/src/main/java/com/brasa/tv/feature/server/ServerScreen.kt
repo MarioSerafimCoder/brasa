@@ -50,13 +50,15 @@ fun ServerScreen(state: BrasaUiState, container: AppContainer, onConnect: (Strin
         ) {
             BrasaLogo()
             Spacer(Modifier.height(25.dp))
-            Text("Encontrar meu BRasa", color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Encontrar meu BRasa", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(8.dp))
             Text("Conecte esta TV ao computador que guarda sua biblioteca.", color = BrasaTextMuted, fontSize = 18.sp)
             Spacer(Modifier.height(25.dp))
             Column(
-                Modifier.width(700.dp).background(BrasaSurface.copy(alpha = .95f), RoundedCornerShape(15.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(15.dp)).padding(24.dp),
+                Modifier.width(760.dp).background(BrasaSurface.copy(alpha = .95f), RoundedCornerShape(16.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(16.dp)).padding(24.dp),
             ) {
+                Text(if (state.loading) "2  Conectando ao computador…" else if (state.server != null) "3  Conectado a ${state.server.name}" else "1  Informe o endereço do computador", color = if (state.server != null) Color(0xFF4ED18B) else Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(14.dp))
                 if (servers.isNotEmpty()) {
                     Text("Computadores encontrados", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(12.dp))
@@ -71,6 +73,7 @@ fun ServerScreen(state: BrasaUiState, container: AppContainer, onConnect: (Strin
                     }
                 }
                 Text("Ou informe o endereço do computador", color = BrasaTextMuted, fontSize = 15.sp)
+                Text("Você encontra o IP e a porta no painel do BRasa no PC.", color = BrasaTextMuted, fontSize = 15.sp)
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     BrasaTextField(address, { address = it }, Modifier.weight(1f), "Ex.: 192.168.1.20:4173")

@@ -49,12 +49,12 @@ fun PairingScreen(state: BrasaUiState, onStart: (String) -> Unit, onBack: () -> 
         ) {
             BrasaLogo()
             Spacer(Modifier.height(25.dp))
-            Text("Autorize esta TV", color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Autorize esta TV", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.ExtraBold)
             Spacer(Modifier.height(8.dp))
             Text("A aprovação é feita com segurança no painel do computador.", color = BrasaTextMuted, fontSize = 18.sp)
             Spacer(Modifier.height(25.dp))
             Column(
-                Modifier.width(680.dp).background(BrasaSurface.copy(alpha = .96f), RoundedCornerShape(15.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(15.dp)).padding(27.dp),
+                Modifier.width(620.dp).background(BrasaSurface.copy(alpha = .96f), RoundedCornerShape(16.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(16.dp)).padding(27.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (pairing == null) {
@@ -66,12 +66,11 @@ fun PairingScreen(state: BrasaUiState, onStart: (String) -> Unit, onBack: () -> 
                 } else {
                     Text("Digite este código no computador", color = BrasaTextMuted, fontSize = 16.sp)
                     Spacer(Modifier.height(7.dp))
-                    Text(pairing.code, color = BrasaOrange, fontSize = 64.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 5.sp)
-                    Text("Aguardando aprovação…", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                    Text(pairing.code.chunked(3).joinToString(" "), color = BrasaOrange, fontSize = 64.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 5.sp)
+                    Text("●  Aguardando aprovação…", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(5.dp))
-                    Text("O código expira em poucos minutos.", color = BrasaTextMuted, fontSize = 15.sp)
-                    Spacer(Modifier.height(20.dp))
-                    BrasaButton("Gerar outro código", { onStart(name) })
+                    Text(if (pairing.remainingMs > 0) "Expira em ${pairing.remainingMs / 60000}:${((pairing.remainingMs / 1000) % 60).toString().padStart(2, '0')}" else "O código expira em poucos minutos.", color = BrasaTextMuted, fontSize = 15.sp)
+                    if (state.message.isNotBlank()) { Spacer(Modifier.height(20.dp)); BrasaButton("Gerar outro código", { onStart(name) }) }
                 }
                 if (state.message.isNotBlank()) {
                     Spacer(Modifier.height(13.dp))

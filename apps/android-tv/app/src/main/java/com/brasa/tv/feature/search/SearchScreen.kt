@@ -20,6 +20,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,8 @@ import com.brasa.tv.designsystem.BrasaButtonStyle
 import com.brasa.tv.designsystem.BrasaTextField
 import com.brasa.tv.designsystem.BrasaTextMuted
 import com.brasa.tv.designsystem.BrasaTopBar
+import com.brasa.tv.designsystem.BrasaSpacing
+import com.brasa.tv.designsystem.BrasaType
 import com.brasa.tv.designsystem.MediaCard
 import com.brasa.tv.designsystem.MediaCardFormat
 
@@ -45,35 +49,39 @@ fun SearchScreen(
 ) {
     BackHandler(onBack = onBack)
     var query by remember { mutableStateOf("") }
-    Column(Modifier.fillMaxSize().background(BrasaBackground).padding(horizontal = 28.dp)) {
+    val searchFocus = remember { FocusRequester() }
+    androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { searchFocus.requestFocus() } }
+    Column(Modifier.fillMaxSize().background(BrasaBackground).padding(horizontal = BrasaSpacing.safe)) {
         BrasaTopBar(
-            modifier = Modifier.padding(top = 16.dp),
+            modifier = Modifier.padding(top = BrasaSpacing.x2),
             active = "Buscar",
             onHome = onBack,
             onSearch = {},
         )
         Spacer(Modifier.height(32.dp))
-        Text("Buscar na biblioteca", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
+        Text("Buscar na biblioteca", color = Color.White, fontSize = BrasaType.page, fontWeight = FontWeight.ExtraBold)
         Spacer(Modifier.height(7.dp))
-        Text("Encontre filmes e séries disponíveis no seu computador.", color = BrasaTextMuted, fontSize = 17.sp)
+        Text("Encontre filmes, séries e episódios disponíveis no computador.", color = BrasaTextMuted, fontSize = BrasaType.body)
         Spacer(Modifier.height(19.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             BrasaTextField(
                 value = query,
                 onValueChange = { query = it; onSearch(it) },
-                modifier = Modifier.width(650.dp),
-                placeholder = "Digite um título…",
+                modifier = Modifier.width(780.dp).focusRequester(searchFocus),
+                placeholder = "⌕  Buscar filmes, séries e episódios",
             )
             if (query.isNotBlank()) BrasaButton("Limpar", { query = ""; onSearch("") })
-            BrasaButton("Voltar", onBack, style = BrasaButtonStyle.Ghost)
         }
         Spacer(Modifier.height(24.dp))
         if (query.isNotBlank() && state.searchResults.isEmpty()) {
-            Text("Nenhum conteúdo encontrado.", color = BrasaTextMuted, fontSize = 20.sp)
+            Text("Nenhum conteúdo encontrado. Atualize a biblioteca no computador.", color = BrasaTextMuted, fontSize = BrasaType.body)
+        } else if (query.isNotBlank()) {
+            Text("${state.searchResults.size} resultado(s)", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+            Spacer(Modifier.height(12.dp))
         }
         LazyVerticalGrid(
             modifier = Modifier.fillMaxWidth(),
-            columns = GridCells.Adaptive(164.dp),
+            columns = GridCells.Adaptive(188.dp),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {

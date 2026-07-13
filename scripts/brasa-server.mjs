@@ -32,6 +32,7 @@ import { startServiceDiscovery } from "../server/service-discovery.mjs";
 import { createAndroidTvUpdateService } from "../server/android-tv-update-service.mjs";
 import { createTvLibraryCache } from "../server/tv-library-cache.mjs";
 import { canAccessLegacyApi, isLoopbackAddress } from "../server/network-access.mjs";
+import { resolveByteRange } from "../server/http-range.mjs";
 import { ensureEnvFile } from "./setup-env.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -49,6 +50,7 @@ const userCollectionsFile = path.join(rootDir, "data", "user-collections.json");
 const userStateFile = path.join(rootDir, "data", "user-state.json");
 const userStateBackupFile = path.join(rootDir, "data", "user-state.backup.json");
 const androidTvUpdatesRoot=path.join(rootDir,"data","android-tv-updates");
+const streamChunkSize = 256 * 1024;
 const systemCollectionIds = new Set(["mcu", "dc", "star-wars", "lotr", "harry-potter", "jurassic", "mission-impossible", "classics", "fast-furious", "pirates-caribbean", "rocky", "pixar", "disney-classics", "dreamworks", "ghibli", "best-picture"]);
 const tmdbImageCache = new Map();
 const tvStreamFileCache = new Map();
@@ -60,6 +62,7 @@ let libraryWatcher = null;
 let dailyRecoveryTimer = null;
 let pendingRecoveryTimer = null;
 let serviceDiscovery = null;
+let activeMediaStreams = 0;
 const mediaStore = createMediaStateStore(rootDir);
 const tvLibraryCache = createTvLibraryCache(rootDir);
 const metadataRetryStore = createMetadataRetryStore(rootDir);
@@ -461,7 +464,7 @@ async function tvProgress(profileId, mediaKey) { const state = await readUserSta
 async function tvSaveProgress(profileId, mediaKey, input) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); const media = await getTvMediaItem(mediaKey); if (!media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), progress = { ...current.progress, [mediaKey]: validateProgress(input, mediaKey) }; state.states[profileId] = { ...current, progress, updatedAt: new Date().toISOString() }; await queueUserStateWrite(state); return progress[mediaKey]; }
 async function tvSaveFavorite(profileId, mediaKey, enabled) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), media = await getTvMediaItem(mediaKey); if (!profile || !media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), legacyId = mediaKey.split(":").slice(1).join(":"), favorites = enabled ? [...new Set([...current.favorites.filter((item) => item !== legacyId), mediaKey])] : current.favorites.filter((item) => item !== mediaKey && item !== legacyId); state.states[profileId] = { ...current, favorites, updatedAt: new Date().toISOString() }; await queueUserStateWrite(state); return { favorite: enabled }; }
 async function tvVerifyPin(profileId, pin) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); return !profile.pinHash || verifyPinHash(profile, String(pin || "")); }
-async function tvStream(request, response, mediaKey, profileId) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), item = await getTvMediaItem(mediaKey); if (!profile || !item || !canTvAccess(item, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const cached=tvStreamFileCache.get(mediaKey);let resolved=cached?.expiresAt>Date.now()?cached.path:"",stat=cached?.expiresAt>Date.now()?cached.stat:null;if(!resolved||!stat){const media = await resolveMedia(mediaKey), candidates = [...new Set([media?.originalPath, item.originalVideo, item.video].filter(Boolean))];for (const candidate of candidates) { const safe = resolvePathInsideLibrary(rootDir, candidate).path, candidateStat = await fs.stat(safe).catch(() => null); if (candidateStat?.isFile()) { resolved = safe; stat = candidateStat; break; } }if(resolved&&stat)tvStreamFileCache.set(mediaKey,{path:resolved,stat,expiresAt:Date.now()+30_000});} if (!resolved || !stat) throw new NotFoundError("Arquivo de mídia não encontrado."); return serveMediaFile(resolved, stat, request, response, { "Content-Type": contentTypes[path.extname(resolved).toLowerCase()] || "application/octet-stream", "Cache-Control": "private, no-store" }); }
+async function tvStream(request, response, mediaKey, profileId) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), item = await getTvMediaItem(mediaKey); if (!profile || !item || !canTvAccess(item, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const cached=tvStreamFileCache.get(mediaKey);let resolved=cached?.expiresAt>Date.now()?cached.path:"",stat=cached?.expiresAt>Date.now()?cached.stat:null;if(!resolved||!stat){const media = await resolveMedia(mediaKey), candidates = [...new Set([media?.originalPath, item.originalVideo, item.video].filter(Boolean))];for (const candidate of candidates) { const safe = resolvePathInsideLibrary(rootDir, candidate).path, candidateStat = await fs.stat(safe).catch(() => null); if (candidateStat?.isFile()) { resolved = safe; stat = candidateStat; break; } }if(resolved&&stat)tvStreamFileCache.set(mediaKey,{path:resolved,stat,expiresAt:Date.now()+30_000});} if (!resolved || !stat) throw new NotFoundError("Arquivo de mídia não encontrado."); return serveMediaFile(resolved, stat, request, response, { "Content-Type": contentTypes[path.extname(resolved).toLowerCase()] || "application/octet-stream", "Cache-Control": "private, no-transform" }); }
 async function getTvMediaItem(mediaKey) { const [type, id] = String(mediaKey).split(":"), library = await tvLibraryCache.load(); if (type === "movie") return library.movieById.get(id) || null; if (type === "episode") return library.episodeById.get(id)?.episode || null; return null; }
 function canTvAccess(item, profile) { if (!item || item.playable === false || item.fileStatus === "missing-file" || (!Array.isArray(item.seasons) && !item.video)) return false; if (profile.kind !== "kids") return item.audience !== "adult" || profile.kind === "adult"; const audience = item.audience || (item.kids ? "kids" : "general"); if (audience === "kids") return true; if (audience === "adult") return false; const level = tvRatingLevel(item.contentRating); return level !== null && level <= Number(profile.maxContentRating ?? 10); }
 function tvRatingLevel(value) { const key = String(value || "").trim().toUpperCase().replace(/\s+/g, ""), levels = { L:0,LIVRE:0,G:0,"TV-Y":0,"TV-Y7":7,"TV-G":0,10:10,"10ANOS":10,12:12,14:14,16:16,18:18,PG:12,"PG-13":13,R:17,"TV-PG":12,"TV-14":14,"TV-MA":18 }; return Object.prototype.hasOwnProperty.call(levels, key) ? levels[key] : null; }
@@ -987,68 +990,55 @@ function getCacheControl(absolutePath, extension) {
 }
 
 async function serveMediaFile(absolutePath, stat, request, response, headers) {
-    const range = request.headers.range;
     const size = stat.size;
-
     headers["Accept-Ranges"] = "bytes";
-
-    if (!range) {
+    const range = resolveByteRange(request.headers.range, size);
+    if (!range.satisfiable) {
+        response.writeHead(416, { ...headers, "Content-Range": `bytes */${size}`, "Content-Length": 0 });
+        response.end();
+        return;
+    }
+    if (!range.partial) {
         response.writeHead(200, {
             ...headers,
             "Content-Length": size
         });
-
         if (request.method === "HEAD") return response.end();
-
-        createReadStream(absolutePath, { highWaterMark: 512 * 1024 }).pipe(response);
+        pipeMediaStream(absolutePath, {}, request, response);
         return;
     }
-
-    const match = /^bytes=(\d*)-(\d*)$/.exec(range);
-
-    if (!match) {
-        response.writeHead(416, {
-            ...headers,
-            "Content-Range": `bytes */${size}`
-        });
-        response.end();
-        return;
-    }
-
-    let start = match[1] === "" ? 0 : Number(match[1]);
-    let end = match[2] === "" ? size - 1 : Number(match[2]);
-
-    if (match[1] === "" && match[2] !== "") {
-        const suffixLength = Number(match[2]);
-        start = Math.max(size - suffixLength, 0);
-        end = size - 1;
-    }
-
-    if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || start >= size) {
-        response.writeHead(416, {
-            ...headers,
-            "Content-Range": `bytes */${size}`
-        });
-        response.end();
-        return;
-    }
-
-    end = Math.min(end, size - 1);
-
-    const length = end - start + 1;
-
+    const length = range.end - range.start + 1;
     response.writeHead(206, {
         ...headers,
         "Content-Length": length,
-        "Content-Range": `bytes ${start}-${end}/${size}`
+        "Content-Range": `bytes ${range.start}-${range.end}/${size}`
     });
+    if (request.method === "HEAD") return response.end();
+    pipeMediaStream(absolutePath, { start: range.start, end: range.end }, request, response);
+}
 
-    if (request.method === "HEAD") {
-        response.end();
-        return;
-    }
-
-    createReadStream(absolutePath, { start, end, highWaterMark: 512 * 1024 }).pipe(response);
+function pipeMediaStream(absolutePath, range, request, response) {
+    const stream = createReadStream(absolutePath, { ...range, highWaterMark: streamChunkSize });
+    activeMediaStreams++;
+    if (process.env.BRASA_DEBUG === "1") console.log(`BRasa stream: aberto; ativos=${activeMediaStreams}`);
+    let closed = false;
+    const destroy = () => { if (!stream.destroyed) stream.destroy(); };
+    const cleanup = () => {
+        if (closed) return;
+        closed = true;
+        activeMediaStreams = Math.max(0, activeMediaStreams - 1);
+        request.removeListener("aborted", destroy);
+        response.removeListener("close", destroy);
+        if (process.env.BRASA_DEBUG === "1") console.log(`BRasa stream: encerrado; ativos=${activeMediaStreams}`);
+    };
+    request.once("aborted", destroy);
+    response.once("close", destroy);
+    stream.once("error", (error) => {
+        console.error(`BRasa stream: erro de leitura (${error.code || error.message}).`);
+        if (!response.destroyed) response.destroy(error);
+    });
+    stream.once("close", cleanup);
+    stream.pipe(response);
 }
 
 function sendJson(response, status, body) {

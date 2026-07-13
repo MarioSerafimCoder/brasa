@@ -3,6 +3,8 @@ package com.brasa.tv.core.di
 import android.content.Context
 import com.brasa.tv.core.network.BrasaHttpClient
 import com.brasa.tv.core.network.LocalNetworkAccessController
+import com.brasa.tv.core.playback.PlaybackCache
+import com.brasa.tv.core.playback.PlaybackCoordinator
 import com.brasa.tv.core.security.SecureTokenStore
 import com.brasa.tv.data.api.BrasaApi
 import com.brasa.tv.data.repository.BrasaRepository
@@ -17,5 +19,6 @@ class AppContainer(val context:Context){
     val json=Json{ignoreUnknownKeys=true;explicitNulls=false;encodeDefaults=true}
     val settings=AppSettingsStore(context);val tokenStore=SecureTokenStore(context,json);val networkAccess=LocalNetworkAccessController(context);val discovery=BrasaNsdDiscovery(context)
     val http=BrasaHttpClient(tokenStore,json);val api=BrasaApi(http,json);val tvCache=TvCacheStore(context,json);val repository=BrasaRepository(api,settings,tokenStore,http,tvCache)
+    val playbackCache=PlaybackCache(context);val playback=PlaybackCoordinator(context,http,playbackCache)
     val updatePreferences=UpdatePreferences(context,json);val updateRepository=UpdateRepository(HttpUpdateApi(http,json),updatePreferences,{settings.values.first().serverBaseUrl});val apkValidator=ApkValidator(AndroidApkInspector(context));val packageInstaller=PackageInstallController(context)
 }
