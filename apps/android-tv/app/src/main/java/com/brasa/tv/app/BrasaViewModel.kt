@@ -19,12 +19,13 @@ class BrasaViewModel(private val repository:BrasaRepository):ViewModel(){private
     fun stopPairing(){pairingJob?.cancel();pairingJob=null}
     fun loadProfiles(onLoaded:(List<Profile>)->Unit)=launch{val profiles=repository.profiles();mutable.value=mutable.value.copy(profiles=profiles);onLoaded(profiles)}
     fun prepareProfile(profile:Profile){mutable.value=mutable.value.copy(profile=profile,message="")}
-    fun chooseProfile(profile:Profile,onReady:()->Unit)=launch{repository.selectProfile(profile.id);val home=repository.home(profile.id);mutable.value=mutable.value.copy(profile=profile,home=home);onReady()}
+    fun chooseProfile(profile:Profile,onReady:()->Unit)=launch{repository.selectProfile(profile.id);var opened=false;repository.cachedHome(profile.id)?.let{mutable.value=mutable.value.copy(profile=profile,home=it);onReady();opened=true};val home=repository.home(profile.id);mutable.value=mutable.value.copy(profile=profile,home=home);if(!opened)onReady()}
     fun refreshHome()=launch{val profile=mutable.value.profile?:return@launch;mutable.value=mutable.value.copy(home=repository.home(profile.id))}
     fun select(item:CatalogItem){mutable.value=mutable.value.copy(selected=item)}
-    fun search(query:String){searchJob?.cancel();searchJob=viewModelScope.launch{kotlinx.coroutines.delay(350);val profile=mutable.value.profile?:return@launch;runCatching{repository.search(profile.id,query)}.onSuccess{mutable.value=mutable.value.copy(searchResults=it)}.onFailure(::error)}}
+    fun search(query:String){searchJob?.cancel();searchJob=viewModelScope.launch{kotlinx.coroutines.delay(150);val profile=mutable.value.profile?:return@launch;runCatching{repository.search(profile.id,query)}.onSuccess{mutable.value=mutable.value.copy(searchResults=it)}.onFailure(::error)}}
     fun toggleFavorite()=launch{val profile=mutable.value.profile?:return@launch;val item=mutable.value.selected?:return@launch;val next=!item.favorite;mutable.value=mutable.value.copy(selected=item.copy(favorite=next));runCatching{repository.favorite(profile.id,item.mediaKey,next)}.onFailure{mutable.value=mutable.value.copy(selected=item);error(it)};refreshHome()}
     fun loadPlayback(item:CatalogItem,onReady:()->Unit)=launch{val profile=mutable.value.profile?:return@launch;mutable.value=mutable.value.copy(playback=repository.playback(profile.id,item.mediaKey));onReady()}
+    fun prefetchPlayback(item:CatalogItem){if(item.type=="series")return;val profile=mutable.value.profile?:return;viewModelScope.launch{repository.prefetchPlayback(profile.id,item.mediaKey)}}
     fun saveProgress(progress:WatchProgress)=viewModelScope.launch{val profile=mutable.value.profile?:return@launch;val item=mutable.value.selected?:return@launch;runCatching{repository.saveProgress(profile.id,item.mediaKey,progress)}}
     fun verifyPin(pin:String,onResult:(Boolean)->Unit)=launch{val profile=mutable.value.profile?:return@launch;onResult(repository.verifyPin(profile.id,pin))}
     fun forget(onDone:()->Unit)=launch{repository.forget();mutable.value=BrasaUiState();onDone()}

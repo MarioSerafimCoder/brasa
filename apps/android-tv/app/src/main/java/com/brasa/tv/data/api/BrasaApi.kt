@@ -15,6 +15,7 @@ class BrasaApi(private val http:BrasaHttpClient,private val json:Json){
     suspend fun profiles(base:String)=http.get(base,"/api/tv/profiles",ListSerializer(Profile.serializer()))
     suspend fun catalog(base:String,profileId:String)=http.get(base,"/api/tv/catalog?profileId=${enc(profileId)}",CatalogResponse.serializer())
     suspend fun home(base:String,profileId:String)=http.get(base,"/api/v1/tv/home?profileId=${enc(profileId)}",HomeResponse.serializer())
+    suspend fun search(base:String,profileId:String,query:String)=http.get(base,"/api/v1/tv/search?profileId=${enc(profileId)}&q=${enc(query)}",ListSerializer(CatalogItem.serializer()))
     suspend fun playback(base:String,profileId:String,mediaKey:String)=http.get(base,"/api/v1/tv/playback/${enc(mediaKey)}?profileId=${enc(profileId)}",PlaybackInfo.serializer())
     suspend fun progress(base:String,profileId:String,mediaKey:String,value:WatchProgress)=http.put(base,"/api/tv/profiles/${enc(profileId)}/progress/${enc(mediaKey)}",json.encodeToString(WatchProgress.serializer(),value),WatchProgress.serializer())
     suspend fun favorite(base:String,profileId:String,mediaKey:String,enabled:Boolean)=if(enabled)http.put(base,"/api/tv/profiles/${enc(profileId)}/favorites/${enc(mediaKey)}","{}",FavoriteResult.serializer())else http.delete(base,"/api/tv/profiles/${enc(profileId)}/favorites/${enc(mediaKey)}")

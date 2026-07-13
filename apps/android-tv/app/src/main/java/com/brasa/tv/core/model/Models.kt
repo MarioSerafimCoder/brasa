@@ -1,5 +1,6 @@
 package com.brasa.tv.core.model
 
+import com.brasa.tv.BuildConfig
 import kotlinx.serialization.Serializable
 
 @Serializable data class ApiEnvelope<T>(val ok:Boolean=false,val data:T?=null,val message:String?=null,val code:String?=null)
@@ -25,6 +26,6 @@ typealias Episode = CatalogItem
 @Serializable data class AudioTrack(val id:String="",val label:String="",val language:String="",val codec:String="")
 @Serializable data class WatchProgress(val mediaType:String="movie",val mediaId:String="",val seriesId:String="",val currentTime:Double=0.0,val duration:Double=0.0,val percentage:Double=0.0,val completed:Boolean=false,val updatedAt:String="")
 @Serializable data class ApiError(val code:String="API_ERROR",val message:String="Não foi possível concluir a operação.",val status:Int=0)
-@Serializable data class ClientCapabilities(val client:String="brasa-android-tv",val clientVersion:String="1.0.0",val platform:String="android-tv",val manufacturer:String="",val model:String="",val screen:ScreenCapabilities=ScreenCapabilities(),val playback:PlaybackCapabilities=PlaybackCapabilities())
+@Serializable data class ClientCapabilities(val client:String="brasa-android-tv",val clientVersion:String=BuildConfig.VERSION_NAME,val platform:String="android-tv",val manufacturer:String="",val model:String="",val screen:ScreenCapabilities=ScreenCapabilities(),val playback:PlaybackCapabilities=PlaybackCapabilities())
 @Serializable data class ScreenCapabilities(val width:Int=0,val height:Int=0)
 @Serializable data class PlaybackCapabilities(val containers:List<String> = emptyList(),val videoCodecs:List<String> = emptyList(),val audioCodecs:List<String> = emptyList(),val subtitleFormats:List<String> = listOf("vtt"))

@@ -10,7 +10,7 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (path === "/api/v1/bootstrap" && method === "GET") return success(response, {
             name: currentSettings.serverName || "BRasa", apiVersion: 1, serverVersion: "1.0.0",
             lanEnabled: currentSettings.lanAccessEnabled, pairingRequired: true,
-            capabilities: { pairing: true, profiles: true, catalog: true, homeRows: true, search: false, progressivePlayback: true, rangeRequests: true, subtitles: true, audioTracks: false }
+            capabilities: { pairing: true, profiles: true, catalog: true, homeRows: true, search: true, progressivePlayback: true, rangeRequests: true, subtitles: true, audioTracks: false }
         });
         if (path === "/api/device-pairing/start" && method === "POST") { const body = await readBody(request); return success(response, await pairing.start({ name: body.name, type: body.type, ip: request.socket?.remoteAddress || "" }), 201); }
         const pairingStatus = path.match(/^\/api\/device-pairing\/status\/([A-Za-z0-9_-]{12,80})$/);
@@ -24,6 +24,7 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (path === "/api/tv/profiles" && method === "GET") return success(response, await tvServices.profiles(device));
         if (path === "/api/tv/catalog" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.catalog(device, profileId)); }
         if (path === "/api/v1/tv/home" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.home(device, profileId)); }
+        if (path === "/api/v1/tv/search" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.search(device, profileId, url.searchParams.get("q") || "")); }
         const playback = path.match(/^\/api\/v1\/tv\/playback\/(movie|episode):([^/]+)$/);
         if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`)); }
         const progress = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/progress\/(movie|episode):([^/]+)$/);

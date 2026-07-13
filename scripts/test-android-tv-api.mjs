@@ -9,6 +9,7 @@ const services = {
     profiles: async () => [{ id: "adult", name: "Adulto" }],
     catalog: async () => ({ movies: [] }),
     home: async () => ({ profile: { id: "adult" }, rows: [{ id: "movies", title: "Filmes", items: [] }] }),
+    search: async (_device, _profile, query) => [{ mediaKey: "movie:42", title: query }],
     playback: async (_device, _profile, key) => ({ mediaKey: key, playbackUrl: `/api/tv/stream/${key}` }),
     progress: async () => null, saveProgress: async () => ({}), saveFavorite: async () => ({ favorite: true }), verifyPin: async () => true, stream: async () => {}
 };
@@ -26,6 +27,8 @@ await controller.handle(request, response, new URL("http://brasa/api/v1/bootstra
 assert.equal(sent.pop().body.data.apiVersion, 1);
 await controller.handle(request, response, new URL("http://brasa/api/v1/tv/home?profileId=adult"));
 assert.equal(sent.pop().body.data.rows[0].id, "movies");
+await controller.handle(request, response, new URL("http://brasa/api/v1/tv/search?profileId=adult&q=Superman"));
+assert.equal(sent.pop().body.data[0].title, "Superman");
 await controller.handle(request, response, new URL("http://brasa/api/v1/tv/playback/movie:42?profileId=adult"));
 assert.equal(sent.pop().body.data.mediaKey, "movie:42");
 
