@@ -26,7 +26,7 @@ try {
     assert.deepEqual(addresses.map((item) => item.ip), ["192.168.1.20", "10.0.0.4"]); ok();
     assert.equal(isPrivateIpv4("172.31.4.2"), true); assert.equal(isPrivateIpv4("172.32.4.2"), false); ok();
     assert.equal(isPrivateClientAddress("::ffff:192.168.1.25"), true); assert.equal(isPrivateClientAddress("8.8.8.8"), false); assert.equal(isLoopbackAddress("::ffff:127.0.0.1"), true); ok();
-    assert.equal(canAccessLegacyApi({ lanAccessEnabled: true, remoteAddress: "192.168.1.2", pathname: "/api/profiles" }), false); assert.equal(canAccessLegacyApi({ lanAccessEnabled: true, remoteAddress: "127.0.0.1", pathname: "/api/profiles" }), true); ok();
+    assert.equal(canAccessLegacyApi({ lanAccessEnabled: true, remoteAddress: "192.168.1.2", pathname: "/api/profiles" }), false); assert.equal(canAccessLegacyApi({ lanAccessEnabled: false, remoteAddress: "192.168.1.2", pathname: "/api/profiles" }), false); assert.equal(canAccessLegacyApi({ lanAccessEnabled: true, remoteAddress: "127.0.0.1", pathname: "/api/profiles" }), true); ok();
 
     const devices = createDeviceStore(root, { now: () => now });
     const created = await devices.create({ name: "TV Sala", type: "tv", maxDevices: 2, ip: "192.168.1.30" });

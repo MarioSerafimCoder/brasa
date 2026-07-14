@@ -7,6 +7,7 @@ import com.brasa.tv.core.model.ApiEnvelope
 import com.brasa.tv.core.model.ApiError
 import com.brasa.tv.core.security.SecureTokenStore
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -18,6 +19,8 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.coroutineContext
+import kotlin.math.max
 
 class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json{ignoreUnknownKeys=true;explicitNulls=false}){
     @Volatile private var pairedOrigin:String=""
@@ -28,6 +31,19 @@ class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json
     suspend fun <T> put(base:String,path:String,body:String,serializer:KSerializer<T>)=execute(base,path,"PUT",body,serializer,true)
     suspend fun delete(base:String,path:String):Boolean=withContext(Dispatchers.IO){client.newCall(request(base,path,"DELETE",null,true)).execute().use{if(it.code==401)throw DeviceRevokedException();it.isSuccessful}}
     fun authenticatedClient():OkHttpClient=client
+    suspend fun measureDownload(base:String,path:String,onProgress:(Long,Long)->Unit):com.brasa.tv.core.model.NetworkTransferMeasurement=withContext(Dispatchers.IO){
+        val started=android.os.SystemClock.elapsedRealtime();var bytes=0L;var failures=0;var sampleStarted=started;var sampleBytes=0L;val samples=mutableListOf<Double>()
+        try{
+            client.newCall(request(base,path,"GET",null,true)).execute().use{response->
+                if(response.code==401)throw DeviceRevokedException()
+                if(!response.isSuccessful)throw BrasaApiException(response.code,"Não foi possível executar o teste de rede.")
+                val source=response.body?.byteStream()?:throw IOException("Resposta vazia no teste de rede.");val buffer=ByteArray(32*1024)
+                while(true){coroutineContext.ensureActive();val read=source.read(buffer);if(read<0)break;if(read==0){failures++;continue};bytes+=read;sampleBytes+=read;val now=android.os.SystemClock.elapsedRealtime();if(now-sampleStarted>=1000){samples+=sampleBytes*8.0/(max(1,now-sampleStarted)*1000.0);sampleBytes=0;sampleStarted=now};onProgress(bytes,now-started)}
+            }
+        }catch(error:Throwable){if(error is kotlinx.coroutines.CancellationException)throw error;failures++;throw error}
+        val elapsed=android.os.SystemClock.elapsedRealtime()-started
+        com.brasa.tv.core.model.NetworkTransferMeasurement(bytes,elapsed,samples,failures)
+    }
     fun authenticatedMediaDataSource(baseUrl:String):OkHttpDataSource.Factory{
         val normalized=LocalServerAddress.normalize(baseUrl)
         val token=tokenStore.load()?.deviceToken.orEmpty()

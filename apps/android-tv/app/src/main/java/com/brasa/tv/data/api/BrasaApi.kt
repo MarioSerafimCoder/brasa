@@ -20,6 +20,11 @@ class BrasaApi(private val http:BrasaHttpClient,private val json:Json){
     suspend fun progress(base:String,profileId:String,mediaKey:String,value:WatchProgress)=http.put(base,"/api/tv/profiles/${enc(profileId)}/progress/${enc(mediaKey)}",json.encodeToString(WatchProgress.serializer(),value),WatchProgress.serializer())
     suspend fun favorite(base:String,profileId:String,mediaKey:String,enabled:Boolean)=if(enabled)http.put(base,"/api/tv/profiles/${enc(profileId)}/favorites/${enc(mediaKey)}","{}",FavoriteResult.serializer())else http.delete(base,"/api/tv/profiles/${enc(profileId)}/favorites/${enc(mediaKey)}")
     suspend fun verifyPin(base:String,profileId:String,pin:String)=http.post(base,"/api/tv/profiles/${enc(profileId)}/verify-pin",json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(),buildJsonObject{put("pin",pin)}),PinResult.serializer())
+    suspend fun networkStatus(base:String)=http.get(base,"/api/v1/network/status",NetworkStatusResponse.serializer())
+    suspend fun startNetworkTest(base:String,profile:String,durationSeconds:Int=60)=http.post(base,"/api/v1/network/test",json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(),buildJsonObject{put("profile",profile);put("durationSeconds",durationSeconds)}),NetworkTestSession.serializer())
+    suspend fun networkTestStatus(base:String,id:String)=http.get(base,"/api/v1/network/test/${enc(id)}",NetworkTestSession.serializer())
+    suspend fun cancelNetworkTest(base:String,id:String)=http.post(base,"/api/v1/network/test/${enc(id)}/cancel","{}",NetworkTestSession.serializer())
+    suspend fun measureNetworkTest(base:String,path:String,onProgress:(Long,Long)->Unit)=http.measureDownload(base,path,onProgress)
     private fun enc(value:String)=URLEncoder.encode(value,Charsets.UTF_8.name())
 }
 @kotlinx.serialization.Serializable data class FavoriteResult(val favorite:Boolean=false)

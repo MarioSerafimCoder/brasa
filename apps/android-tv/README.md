@@ -39,6 +39,10 @@ Antes do primeiro release, crie e proteja a chave permanente com:
 
 Depois, aumente a versão, gere o APK e publique-o localmente usando os scripts em `apps/android-tv/scripts`. O procedimento completo, incluindo a migração inicial do APK debug, backup da chave, reversão e recuperação de falhas, está em [`docs/android-tv-local-updates.md`](../../docs/android-tv-local-updates.md).
 
+## Diagnóstico de rede
+
+Em **Configurações → Diagnóstico de rede**, o APK identifica Ethernet, Wi-Fi ou rede móvel e, quando o Android disponibiliza a informação, mostra a faixa Wi-Fi de 2,4, 5 ou 6 GHz. O teste de convivência usa tráfego sintético autenticado e controlado pelo servidor; ele não abre um filme nem tenta ocupar toda a rede. Escolha 1080p (12 Mbps), 4K equilibrado (25 Mbps) ou 4K alto (40 Mbps), use outros aparelhos durante os 60 segundos e confira a recomendação de bitrate ao final.
+
 ## Teste em dispositivo
 
 Instale o APK com Android Studio ou ADB, valide navegação completa pelo controle remoto, retorno de foco, suspensão/retomada, troca de legenda/áudio e reprodução de arquivos MP4/MKV presentes na biblioteca. O servidor continua sendo necessário durante a reprodução.

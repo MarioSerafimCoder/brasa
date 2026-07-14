@@ -18,13 +18,21 @@ const controller = createDeviceController({
     auth: { requireDevice: async () => ({ id: "tv", allowedProfileIds: ["adult"] }), requireProfile: (_device, id) => id },
     settingsStore: { load: async () => ({ lanAccessEnabled: true, serverName: "BRasa Sala" }), save: async (value) => value },
     deviceStore: { list: async () => [], update: async () => ({}), revoke: async () => ({}), remove: async () => ({}) },
-    networkInfo: () => [], tvServices: services, readBody: async () => payload || {}, send
+    networkInfo: () => [],
+    networkInspector: { inspect: async () => ({ available: true, type: "ethernet", ip: "192.168.1.10" }), firewall: async () => ({ configured: true }) },
+    networkDiagnostics: { start: () => ({ id: "network-test-1", state: "ready" }), status: () => ({ id: "network-test-1", state: "running" }), cancel: () => ({ id: "network-test-1", state: "cancelled" }) },
+    tvServices: services, readBody: async () => payload || {}, send
 });
 const request = { method: "GET", headers: {}, socket: { remoteAddress: "192.168.1.25" } };
 const response = { setHeader() {} };
 
 await controller.handle(request, response, new URL("http://brasa/api/v1/bootstrap"));
 assert.equal(sent.pop().body.data.apiVersion, 1);
+await controller.handle(request, response, new URL("http://brasa/api/v1/network/status"));
+assert.equal(sent.pop().body.data.server.type, "ethernet");
+request.method = "POST";payload = { profile: "1080p" };await controller.handle(request, response, new URL("http://brasa/api/v1/network/test"));assert.equal(sent.pop().status, 201);
+request.method = "GET";await controller.handle(request, response, new URL("http://brasa/api/v1/network/test/network-test-1"));assert.equal(sent.pop().body.data.state, "running");
+request.method = "POST";await controller.handle(request, response, new URL("http://brasa/api/v1/network/test/network-test-1/cancel"));assert.equal(sent.pop().body.data.state, "cancelled");request.method = "GET";
 await controller.handle(request, response, new URL("http://brasa/api/v1/tv/home?profileId=adult"));
 assert.equal(sent.pop().body.data.rows[0].id, "movies");
 await controller.handle(request, response, new URL("http://brasa/api/v1/tv/search?profileId=adult&q=Superman"));

@@ -122,6 +122,11 @@ class BrasaRepository(
     suspend fun saveProgress(profileId: String, key: String, value: WatchProgress) = api.progress(requireServer(), profileId, key, value)
     suspend fun favorite(profileId: String, key: String, enabled: Boolean) = api.favorite(requireServer(), profileId, key, enabled)
     suspend fun verifyPin(profileId: String, pin: String) = api.verifyPin(requireServer(), profileId, pin).valid
+    suspend fun networkStatus() = api.networkStatus(requireServer())
+    suspend fun startNetworkTest(profile: String, durationSeconds: Int = 60) = api.startNetworkTest(requireServer(), profile, durationSeconds)
+    suspend fun networkTestStatus(id: String) = api.networkTestStatus(requireServer(), id)
+    suspend fun measureNetworkTest(path: String, onProgress: (Long, Long) -> Unit) = api.measureNetworkTest(requireServer(), path, onProgress)
+    suspend fun cancelNetworkTest(id: String) = api.cancelNetworkTest(requireServer(), id)
 
     suspend fun forget() {
         tokens.clear()

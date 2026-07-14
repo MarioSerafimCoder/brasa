@@ -29,3 +29,8 @@ typealias Episode = CatalogItem
 @Serializable data class ClientCapabilities(val client:String="brasa-android-tv",val clientVersion:String=BuildConfig.VERSION_NAME,val platform:String="android-tv",val manufacturer:String="",val model:String="",val screen:ScreenCapabilities=ScreenCapabilities(),val playback:PlaybackCapabilities=PlaybackCapabilities())
 @Serializable data class ScreenCapabilities(val width:Int=0,val height:Int=0)
 @Serializable data class PlaybackCapabilities(val containers:List<String> = emptyList(),val videoCodecs:List<String> = emptyList(),val audioCodecs:List<String> = emptyList(),val subtitleFormats:List<String> = listOf("vtt"))
+@Serializable data class NetworkServerStatus(val available:Boolean=false,val type:String="unknown",val connectionLabel:String="Conexão não identificada",val name:String="",val ip:String="",val mac:String="",val gateway:String="",val subnetMask:String="",val speed:Long=0,val category:String="",val serverUrl:String="",val port:Int=4173,val dynamicIpWarning:String="",val message:String="")
+@Serializable data class NetworkFirewallStatus(val configured:Boolean=false,val supported:Boolean=false,val publicNetwork:Boolean=false,val message:String="")
+@Serializable data class NetworkStatusResponse(val server:NetworkServerStatus=NetworkServerStatus(),val firewall:NetworkFirewallStatus=NetworkFirewallStatus())
+@Serializable data class NetworkTestSession(val id:String="",val profile:String="1080p",val bitrateMbps:Int=12,val durationSeconds:Int=60,val state:String="ready",val bytesSent:Long=0,val interruptions:Int=0,val elapsedMs:Long=0,val streamPath:String="")
+data class NetworkTransferMeasurement(val bytesRead:Long,val elapsedMs:Long,val samplesMbps:List<Double>,val failures:Int)

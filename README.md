@@ -112,3 +112,21 @@ Os arquivos reais `data/network-settings.json`, `data/devices.json` e seus backu
 - `node scripts/test-network-tv.mjs`
 - `node scripts/test-tv-focus.mjs`
 - `npm test`
+
+## Diagnóstico e convivência da rede
+
+O painel **Rede e dispositivos** mostra a interface ativa do computador, tipo de conexão, velocidade do link, IP, MAC, gateway, máscara e URL do servidor. Use esses dados para criar uma reserva DHCP no roteador; o BRasa não altera a configuração do roteador. A reserva evita que o endereço usado pela TV mude após uma reinicialização.
+
+O servidor aceita `BRASA_HOST` e `BRASA_PORT` no `.env`. Para uso na LAN, mantenha `BRASA_HOST=0.0.0.0`, porta `4173`, acesso LAN e pareamento ativados. As APIs do diagnóstico exigem o token do aparelho e aceitam somente endereços privados IPv4 ou IPv6 local/link-local.
+
+Para liberar somente a rede local no Firewall do Windows, abra o PowerShell como administrador e execute:
+
+```powershell
+.\scripts\install-brasa-firewall.ps1 -Port 4173
+```
+
+A regra é idempotente, limitada a `LocalSubnet`, TCP e perfil `Private`. Para removê-la, execute `.\scripts\remove-brasa-firewall.ps1`. Não habilite a porta no perfil público.
+
+No APK, abra **Configurações → Diagnóstico de rede**. O teste dura 60 segundos e envia dados sintéticos limitados a 12 Mbps (1080p), 25 Mbps (4K equilibrado) ou 40 Mbps (4K alto). Durante o teste, use os outros aparelhos da casa normalmente. O resultado informa velocidade, latência, falhas, oscilação, bitrate recomendado e se a rede está excelente, boa, limitada ou instável. Nenhum filme é carregado pelo teste.
+
+Teste automatizado específico: `node scripts/test-network-diagnostics.mjs`.

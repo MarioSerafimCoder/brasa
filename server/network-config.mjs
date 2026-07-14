@@ -45,3 +45,13 @@ export function validateNetworkSettings(input = {}) {
 }
 
 export function hostForNetworkSettings(settings) { return settings?.lanAccessEnabled ? "0.0.0.0" : "127.0.0.1"; }
+
+export function resolveServerHost(environmentHost, settings) {
+    const host = String(environmentHost || "").trim();
+    if (!host) return hostForNetworkSettings(settings);
+    if (host === "0.0.0.0" || host === "127.0.0.1" || host === "::" || host === "::1") return host;
+    const octets = host.split(".").map(Number);
+    const validIpv4 = octets.length === 4 && octets.every((part) => Number.isInteger(part) && part >= 0 && part <= 255);
+    if (validIpv4 && (octets[0] === 10 || (octets[0] === 192 && octets[1] === 168) || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31))) return host;
+    throw new ValidationError("BRASA_HOST deve ser uma interface local válida.");
+}

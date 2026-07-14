@@ -1,7 +1,7 @@
 import { ForbiddenError, NotFoundError } from "./app-errors.mjs";
 import { isLoopbackAddress, isPrivateClientAddress } from "./network-access.mjs";
 
-export function createDeviceController({ pairing, auth, settingsStore, deviceStore, networkInfo, tvServices, updateService, readBody, send }) {
+export function createDeviceController({ pairing, auth, settingsStore, deviceStore, networkInfo, tvServices, updateService, networkDiagnostics, networkInspector, getPort = () => 4173, readBody, send }) {
     async function handle(request, response, url) {
         const path = decodeURIComponent(url.pathname), method = request.method;
         if (!isPrivateClientAddress(request.socket?.remoteAddress)) throw new ForbiddenError("O modo TV aceita somente dispositivos da rede privada.");
@@ -16,10 +16,16 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         const pairingStatus = path.match(/^\/api\/device-pairing\/status\/([A-Za-z0-9_-]{12,80})$/);
         if (pairingStatus && method === "GET") return success(response, pairing.status(pairingStatus[1]));
         const androidUpdate=path==="/api/v1/android-tv/update",androidApk=path==="/api/v1/android-tv/update/apk";
-        if (!path.startsWith("/api/tv/") && !path.startsWith("/api/v1/tv/")&&!androidUpdate&&!androidApk) throw new NotFoundError("Rota de dispositivo não encontrada.");
+        const networkRoute = path.startsWith("/api/v1/network/");
+        if (!path.startsWith("/api/tv/") && !path.startsWith("/api/v1/tv/")&&!androidUpdate&&!androidApk&&!networkRoute) throw new NotFoundError("Rota de dispositivo não encontrada.");
         const device = await auth.requireDevice(request);
         if(androidUpdate&&method==="GET")return success(response,await updateService.check(request,device));
         if(androidApk&&["GET","HEAD"].includes(method))return updateService.download(request,response,device);
+        if (path === "/api/v1/network/status" && method === "GET") return success(response, { server: await networkInspector.inspect(getPort()), firewall: await networkInspector.firewall(getPort()) });
+        if (path === "/api/v1/network/interfaces" && method === "GET") return success(response, { active: await networkInspector.inspect(getPort()), addresses: networkInfo(getPort()) });
+        if (path === "/api/v1/network/test" && method === "POST") return success(response, networkDiagnostics.start(device.id, await readBody(request)), 201);
+        const networkTest = path.match(/^\/api\/v1\/network\/test\/([A-Za-z0-9_-]{12,80})(?:\/(stream|cancel))?$/);
+        if (networkTest) { const [, id, action] = networkTest; if (method === "GET" && !action) return success(response, networkDiagnostics.status(id, device.id)); if (method === "GET" && action === "stream") return networkDiagnostics.stream(id, device.id, request, response); if (method === "POST" && action === "cancel") return success(response, networkDiagnostics.cancel(id, device.id)); }
         if (path === "/api/tv/session" && method === "POST") { const token = String(request.headers?.["x-brasa-device-token"] || ""); response.setHeader("Set-Cookie", `brasa_device_token=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/api/tv; Max-Age=2592000`); return success(response, { authenticated: true, device }); }
         if (path === "/api/tv/profiles" && method === "GET") return success(response, await tvServices.profiles(device));
         if (path === "/api/tv/catalog" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.catalog(device, profileId)); }
@@ -38,7 +44,7 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         throw new NotFoundError("Recurso da TV não encontrado.");
     }
     const admin = {
-        async network(port) { const settings = await settingsStore.load(); return { ...settings, enabled: settings.lanAccessEnabled, host: settings.lanAccessEnabled ? "0.0.0.0" : "127.0.0.1", port, addresses: networkInfo(port), restartRequired: false }; },
+        async network(port) { const settings = await settingsStore.load(); return { ...settings, enabled: settings.lanAccessEnabled, host: settings.lanAccessEnabled ? "0.0.0.0" : "127.0.0.1", port, addresses: networkInfo(port), activeInterface: await networkInspector.inspect(port), firewall: await networkInspector.firewall(port), restartRequired: false }; },
         async updateNetwork(input, port, currentHost) { const settings = await settingsStore.save(input); return { ...await this.network(port), restartRequired: (settings.lanAccessEnabled ? "0.0.0.0" : "127.0.0.1") !== currentHost }; },
         pairings: () => pairing.list(), approve: async (id, input) => pairing.approve(id, input.allowedProfileIds || []), reject: (id) => pairing.reject(id),
         devices: () => deviceStore.list(),updateStatus:()=>updateService.status(), updateDevice: (id, input) => deviceStore.update(id, input), revokeDevice: (id) => deviceStore.revoke(id), removeDevice: (id) => deviceStore.remove(id)

@@ -1,0 +1,23 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import { classifyNetworkResult, createNetworkDiagnostics, validateNetworkTest } from "../server/network-diagnostics.mjs";
+import { classifyConnection, createWindowsNetworkInspector, prefixToMask } from "../server/windows-network-status.mjs";
+import { resolveServerHost } from "../server/network-config.mjs";
+import { isPrivateClientAddress } from "../server/network-access.mjs";
+
+let scenarios = 0;const ok=()=>scenarios++;
+assert.deepEqual(validateNetworkTest({ profile:"4k-balanced",durationSeconds:60 }),{profile:"4k-balanced",bitrateMbps:25,durationSeconds:60});ok();
+assert.throws(()=>validateNetworkTest({profile:"8k"}));assert.throws(()=>validateNetworkTest({durationSeconds:61}));ok();
+assert.equal(classifyNetworkResult({profile:"4k-high",averageMbps:20,latencyMs:40}).level,"unstable");assert.equal(classifyNetworkResult({profile:"1080p",averageMbps:25,latencyMs:15}).level,"excellent");ok();
+let time=1_000,tick,cleared=false;const diagnostics=createNetworkDiagnostics({now:()=>time,randomId:()=>"abcdefghijklmnop",setTimer:(fn)=>{tick=fn;return 7},clearTimer:()=>{cleared=true}});
+const session=diagnostics.start("tv-1",{profile:"1080p",durationSeconds:5});assert.equal(session.bitrateMbps,12);ok();
+const writes=[];const response={destroyed:false,writableEnded:false,writeHead:(status,headers)=>writes.push({status,headers}),write:(chunk)=>{writes.push(chunk.length);return true},end(){this.writableEnded=true},once(){}};diagnostics.stream(session.id,"tv-1",{once(){}},response);tick();assert.equal(writes.filter(Number.isInteger).reduce((a,b)=>a+b,0),75_000);ok();
+time+=5_100;tick();assert.equal(diagnostics.status(session.id,"tv-1").state,"completed");assert.equal(cleared,true);ok();
+assert.throws(()=>diagnostics.status(session.id,"other-tv"));ok();
+const cancelled=diagnostics.start("tv-1",{profile:"4k-high",durationSeconds:5});diagnostics.cancel(cancelled.id,"tv-1");assert.equal(diagnostics.status(cancelled.id,"tv-1").state,"cancelled");ok();
+assert.equal(prefixToMask(24),"255.255.255.0");assert.equal(classifyConnection("Wi-Fi","Intel Wireless"),"wifi");assert.equal(classifyConnection("Ethernet","Realtek GbE"),"ethernet");ok();
+const inspector=createWindowsNetworkInspector({platform:"linux"});assert.equal((await inspector.inspect()).available,false);assert.equal((await inspector.firewall()).supported,false);ok();
+assert.equal(resolveServerHost("0.0.0.0",{}),"0.0.0.0");assert.equal(resolveServerHost("192.168.1.20",{}),"192.168.1.20");assert.throws(()=>resolveServerHost("8.8.8.8",{}));ok();
+assert.equal(isPrivateClientAddress("fd12:3456::1"),true);assert.equal(isPrivateClientAddress("fe80::1"),true);assert.equal(isPrivateClientAddress("2001:4860:4860::8888"),false);ok();
+const install=await fs.readFile(new URL("./install-brasa-firewall.ps1",import.meta.url),"utf8");assert.match(install,/-Profile Private/);assert.match(install,/-RemoteAddress LocalSubnet/);assert.match(install,/-LocalPort \$Port/);ok();
+console.log(`Diagnóstico de rede: ${scenarios} cenários aprovados.`);

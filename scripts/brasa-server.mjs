@@ -22,8 +22,10 @@ import { createAdminLogService } from "../server/admin-log.mjs";
 import { createAdminServices } from "../server/admin-services.mjs";
 import { createAdminController } from "../server/admin-controller.mjs";
 import { createMetadataRetryStore } from "../server/metadata-retry-store.mjs";
-import { createNetworkConfigStore, hostForNetworkSettings } from "../server/network-config.mjs";
+import { createNetworkConfigStore, resolveServerHost } from "../server/network-config.mjs";
 import { getPrivateNetworkAddresses } from "../server/network-interfaces.mjs";
+import { createNetworkDiagnostics } from "../server/network-diagnostics.mjs";
+import { createWindowsNetworkInspector } from "../server/windows-network-status.mjs";
 import { createDeviceStore } from "../server/device-store.mjs";
 import { createPairingService } from "../server/pairing-service.mjs";
 import { createDeviceAuth } from "../server/device-auth.mjs";
@@ -42,7 +44,7 @@ await loadEnvFile();
 
 const networkConfigStore = createNetworkConfigStore(rootDir);
 const startupNetworkSettings = await networkConfigStore.load();
-const host = hostForNetworkSettings(startupNetworkSettings);
+const host = resolveServerHost(process.env.BRASA_HOST, startupNetworkSettings);
 const preferredPort = Number(process.env.BRASA_PORT || 4173);
 let activePort = preferredPort;
 const stateFile = path.join(rootDir, ".brasa-server.json");
@@ -74,7 +76,9 @@ const deviceStore = createDeviceStore(rootDir);
 const pairingService = createPairingService({ deviceStore, getSettings: () => networkConfigStore.load() });
 const deviceAuth = createDeviceAuth(deviceStore);
 const androidTvUpdateService=createAndroidTvUpdateService({updatesRoot:androidTvUpdatesRoot,deviceStore,serveFile:serveMediaFile});
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
+const networkDiagnostics = createNetworkDiagnostics();
+const networkInspector = createWindowsNetworkInspector();
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -111,7 +115,7 @@ const contentTypes = {
 const server = http.createServer(async (request, response) => {
     try {
         const url = new URL(request.url, `http://${request.headers.host}`);
-        const isDeviceRoute = url.pathname === "/api/v1/bootstrap" || url.pathname.startsWith("/api/v1/tv/") ||url.pathname.startsWith("/api/v1/android-tv/")|| url.pathname.startsWith("/api/device-pairing/") || url.pathname.startsWith("/api/tv/");
+        const isDeviceRoute = url.pathname === "/api/v1/bootstrap" || url.pathname.startsWith("/api/v1/tv/") || url.pathname.startsWith("/api/v1/network/") ||url.pathname.startsWith("/api/v1/android-tv/")|| url.pathname.startsWith("/api/device-pairing/") || url.pathname.startsWith("/api/tv/");
         if (!isDeviceRoute && !canAccessLegacyApi({ lanAccessEnabled: startupNetworkSettings.lanAccessEnabled, remoteAddress: request.socket?.remoteAddress, pathname: url.pathname })) throw new ForbiddenError("Esta API está disponível somente no computador do BRasa.");
         if (!isDeviceRoute) validateLocalWriteRequest(request, { port: activePort });
 

@@ -47,6 +47,7 @@ fun SettingsScreen(
     state: BrasaUiState,
     lastUpdateCheckAt: Long,
     onUpdates: () -> Unit,
+    onNetworkDiagnostics: () -> Unit,
     onProfiles: () -> Unit,
     onClearCache: () -> Unit,
     onLoadCache: () -> Unit,
@@ -66,6 +67,7 @@ fun SettingsScreen(
                 StatusLine("Computador conectado", state.server?.name ?: "Não conectado")
                 StatusLine("Status", if (state.paired) "● Conectado" else "● Offline", if (state.paired) BrasaSuccess else BrasaRed)
             }
+            BrasaButton("Diagnóstico de rede", onNetworkDiagnostics, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Primary)
             Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Reprodução") {
                 StatusLine("Cache utilizado", formatBytes(state.cacheBytes))
