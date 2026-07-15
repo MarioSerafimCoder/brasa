@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +38,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
@@ -107,19 +109,19 @@ fun BrasaButton(
     Row(
         modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .shadow(if (focused) 10.dp else 0.dp, RoundedCornerShape(14.dp), ambientColor = BrasaOrange, spotColor = BrasaOrange)
-            .background(background, RoundedCornerShape(14.dp))
-            .border(if (focused) 3.dp else 1.dp, border, RoundedCornerShape(14.dp))
+            .shadow(if (focused) 8.dp else 0.dp, RoundedCornerShape(10.dp), ambientColor = BrasaOrange, spotColor = BrasaOrange)
+            .background(background, RoundedCornerShape(10.dp))
+            .border(if (focused) 2.dp else 1.dp, border, RoundedCornerShape(10.dp))
             .onFocusChanged { focused = it.isFocused }
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .heightIn(min = 56.dp)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
+            .heightIn(min = 46.dp)
+            .padding(horizontal = 19.dp, vertical = 9.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (leading != null) {
-            Text(leading, color = foreground, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.width(9.dp))
+            Text(leading, color = foreground, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.width(8.dp))
         }
         Text(text, color = foreground, fontSize = BrasaType.button, fontWeight = FontWeight.Bold, maxLines = 1)
     }
@@ -138,13 +140,13 @@ fun BrasaTopBar(
     Row(
         modifier
             .fillMaxWidth()
-            .background(BrasaBackground.copy(alpha = .78f), RoundedCornerShape(16.dp))
-            .border(1.dp, BrasaBorder.copy(alpha = .45f), RoundedCornerShape(16.dp))
-            .padding(horizontal = 20.dp, vertical = 6.dp),
+            .background(BrasaBackground.copy(alpha = .82f), RoundedCornerShape(13.dp))
+            .border(1.dp, BrasaBorder.copy(alpha = .55f), RoundedCornerShape(13.dp))
+            .padding(horizontal = 18.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BrasaLogo()
-        Spacer(Modifier.width(32.dp))
+        Spacer(Modifier.width(26.dp))
         if (onHome != null) NavItem("Início", active == "Início", onHome)
         Spacer(Modifier.weight(1f))
         if (onSearch != null) NavItem("⌕  Buscar", active == "Buscar", onSearch)
@@ -181,18 +183,19 @@ fun MediaCard(
     onFocused: () -> Unit = {},
 ) {
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (focused) 1.05f else 1f, tween(165), label = "cardScale")
-    val width = if (format == MediaCardFormat.Poster) 188.dp else 318.dp
+    val scale by animateFloatAsState(if (focused) 1.04f else 1f, tween(165), label = "cardScale")
+    val density = LocalCardDensity.current
+    val width = (if (format == MediaCardFormat.Poster) 164.dp else 278.dp) * density
     val imageRatio = if (format == MediaCardFormat.Poster) 2f / 3f else 16f / 9f
     LaunchedEffect(focused, item.mediaKey) { if (focused) { delay(180); onFocused() } }
     Column(
         modifier
             .width(width)
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .shadow(if (focused) 12.dp else 1.dp, RoundedCornerShape(16.dp), ambientColor = Color.Black, spotColor = BrasaOrange)
-            .background(BrasaSurface, RoundedCornerShape(16.dp))
-            .border(if (focused) 3.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, RoundedCornerShape(16.dp))
-            .clip(RoundedCornerShape(16.dp))
+            .shadow(if (focused) 10.dp else 1.dp, RoundedCornerShape(11.dp), ambientColor = Color.Black, spotColor = BrasaOrange)
+            .background(BrasaSurface, RoundedCornerShape(11.dp))
+            .border(if (focused) 2.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, RoundedCornerShape(11.dp))
+            .clip(RoundedCornerShape(11.dp))
             .onFocusChanged { focused = it.isFocused }
             .clickable(role = Role.Button, onClick = onClick),
     ) {
@@ -233,10 +236,10 @@ fun MediaCard(
             }
         }
         if (format == MediaCardFormat.Poster) {
-            Column(Modifier.fillMaxWidth().heightIn(min = 82.dp).padding(horizontal = 14.dp, vertical = 10.dp)) {
-                Text(item.title, color = BrasaText, fontSize = 20.sp, lineHeight = 23.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(4.dp))
-                Text(metadata(item), color = if (focused) BrasaText else BrasaTextMuted, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Column(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 11.dp, vertical = 8.dp)) {
+                Text(item.title, color = BrasaText, fontSize = 16.sp, lineHeight = 19.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(3.dp))
+                Text(metadata(item), color = if (focused) BrasaText else BrasaTextMuted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -257,7 +260,7 @@ fun GenreChip(text: String) {
             .border(1.dp, BrasaBorder, RoundedCornerShape(50))
             .padding(horizontal = 13.dp, vertical = 7.dp),
         color = BrasaText,
-        fontSize = 17.sp,
+        fontSize = 14.sp,
         fontWeight = FontWeight.SemiBold,
     )
 }
@@ -271,6 +274,8 @@ fun BrasaTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     var focused by remember { mutableStateOf(false) }
+    val keyboard = LocalSoftwareKeyboardController.current
+    DisposableEffect(Unit) { onDispose { keyboard?.hide() } }
     androidx.compose.foundation.text.BasicTextField(
         value = value,
         onValueChange = onValueChange,
@@ -278,10 +283,10 @@ fun BrasaTextField(
         visualTransformation = visualTransformation,
         textStyle = androidx.compose.ui.text.TextStyle(color = BrasaText, fontSize = BrasaType.body, fontWeight = FontWeight.Medium),
         modifier = modifier
-            .background(BrasaSurfaceElevated, RoundedCornerShape(14.dp))
-            .border(if (focused) 3.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, RoundedCornerShape(14.dp))
+            .background(BrasaSurfaceElevated, RoundedCornerShape(10.dp))
+            .border(if (focused) 2.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, RoundedCornerShape(10.dp))
             .onFocusChanged { focused = it.isFocused }
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 11.dp),
         decorationBox = { inner ->
             if (value.isEmpty()) Text(placeholder, color = BrasaTextMuted, fontSize = BrasaType.body)
             inner()
@@ -307,14 +312,14 @@ fun AmbientBackground(content: @Composable () -> Unit) {
 fun MessagePanel(title: String, message: String, action: String? = null, onAction: () -> Unit = {}) {
     AmbientBackground {
         Column(
-            Modifier.fillMaxSize().padding(horizontal = 72.dp),
+            Modifier.fillMaxSize().padding(horizontal = BrasaSpacing.safe),
             verticalArrangement = Arrangement.Center,
         ) {
             BrasaLogo()
-            Spacer(Modifier.height(30.dp))
-            Text(title, color = BrasaText, fontSize = 40.sp, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(12.dp))
-            Text(message, modifier = Modifier.widthIn(max = 700.dp), color = BrasaTextMuted, fontSize = 19.sp)
+            Spacer(Modifier.height(24.dp))
+            Text(title, color = BrasaText, fontSize = BrasaType.page, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(10.dp))
+            Text(message, modifier = Modifier.widthIn(max = 700.dp), color = BrasaTextMuted, fontSize = BrasaType.body)
             if (action != null) {
                 Spacer(Modifier.height(26.dp))
                 BrasaButton(action, onAction, style = BrasaButtonStyle.Primary)

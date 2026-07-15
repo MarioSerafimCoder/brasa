@@ -27,11 +27,13 @@ import com.brasa.tv.designsystem.BrasaTopBar
 import com.brasa.tv.designsystem.BrasaType
 import com.brasa.tv.designsystem.MediaCard
 import com.brasa.tv.designsystem.MediaCardFormat
+import com.brasa.tv.designsystem.LocalCardDensity
 
 @Composable
 fun CatalogScreen(state: BrasaUiState, onItem: (CatalogItem) -> Unit, onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     val row = state.selectedRow
+    val cardDensity=LocalCardDensity.current
     Column(Modifier.fillMaxSize().background(BrasaBackground).padding(horizontal = BrasaSpacing.safe)) {
         BrasaTopBar(Modifier.padding(top = BrasaSpacing.x2), active = row?.title.orEmpty(), onHome = onBack, profileInitials = state.profile?.initials.orEmpty())
         Spacer(Modifier.height(BrasaSpacing.x4))
@@ -39,7 +41,7 @@ fun CatalogScreen(state: BrasaUiState, onItem: (CatalogItem) -> Unit, onBack: ()
         Text("${row?.items?.size ?: 0} títulos", color = BrasaTextMuted, fontSize = BrasaType.metadata)
         Spacer(Modifier.height(BrasaSpacing.x3))
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(188.dp),
+            columns = GridCells.Adaptive(188.dp*cardDensity),
             contentPadding = PaddingValues(bottom = BrasaSpacing.x8),
             horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x3),
             verticalArrangement = Arrangement.spacedBy(BrasaSpacing.x4),

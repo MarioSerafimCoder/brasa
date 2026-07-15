@@ -25,6 +25,7 @@ import kotlin.math.max
 class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json{ignoreUnknownKeys=true;explicitNulls=false}){
     @Volatile private var pairedOrigin:String=""
     private val client=OkHttpClient.Builder().connectTimeout(5,TimeUnit.SECONDS).readTimeout(15,TimeUnit.SECONDS).followRedirects(false).addInterceptor(HostBoundAuthInterceptor{pairedOrigin to tokenStore.load()?.deviceToken.orEmpty()}).build()
+    private val mediaClient=client.newBuilder().connectTimeout(10,TimeUnit.SECONDS).readTimeout(60,TimeUnit.SECONDS).writeTimeout(30,TimeUnit.SECONDS).callTimeout(0,TimeUnit.MILLISECONDS).retryOnConnectionFailure(true).build()
     fun bindServer(baseUrl:String){pairedOrigin=LocalServerAddress.normalize(baseUrl)}
     suspend fun <T> get(base:String,path:String,serializer:KSerializer<T>,authenticated:Boolean=true)=execute(base,path,"GET",null,serializer,authenticated)
     suspend fun <T> post(base:String,path:String,body:String,serializer:KSerializer<T>,authenticated:Boolean=true)=execute(base,path,"POST",body,serializer,authenticated)
@@ -48,7 +49,7 @@ class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json
         val normalized=LocalServerAddress.normalize(baseUrl)
         val token=tokenStore.load()?.deviceToken.orEmpty()
         if(pairedOrigin.isBlank()||pairedOrigin!=normalized||token.isBlank())throw IOException("Credencial de mídia indisponível para este servidor.")
-        return OkHttpDataSource.Factory(client).setDefaultRequestProperties(mapOf("X-BRasa-Device-Token" to token))
+        return OkHttpDataSource.Factory(mediaClient).setDefaultRequestProperties(mapOf("X-BRasa-Device-Token" to token))
     }
     private suspend fun <T> execute(base:String,path:String,method:String,body:String?,serializer:KSerializer<T>,authenticated:Boolean):T=withContext(Dispatchers.IO){client.newCall(request(base,path,method,body,authenticated)).execute().use{response->val text=response.body?.string().orEmpty();if(response.code==401)throw DeviceRevokedException();if(!response.isSuccessful){val error=runCatching{json.decodeFromString(ApiEnvelope.serializer(ApiError.serializer()),text).data}.getOrNull();throw BrasaApiException(response.code,error?.message?:"Falha ao conectar ao BRasa.")};json.decodeFromString(ApiEnvelope.serializer(serializer),text).data?:throw BrasaApiException(response.code,"Resposta vazia do BRasa.")}}
     private fun request(base:String,path:String,method:String,body:String?,authenticated:Boolean):Request{val url=LocalServerAddress.resolve(base,path);val builder=Request.Builder().url(url).header("Accept","application/json").tag(AuthRequired::class.java,AuthRequired(authenticated));return builder.method(method,body?.toRequestBody("application/json; charset=utf-8".toMediaType())).build()}

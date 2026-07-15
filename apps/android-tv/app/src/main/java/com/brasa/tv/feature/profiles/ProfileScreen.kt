@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.core.model.Profile
@@ -60,7 +61,7 @@ fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -
             Spacer(Modifier.height(BrasaSpacing.x1))
             Text("Escolha um perfil para personalizar sua biblioteca.", color = BrasaTextMuted, fontSize = BrasaType.body)
             Spacer(Modifier.height(BrasaSpacing.x6))
-            Row(horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x6)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x4)) {
                 state.profiles.forEachIndexed { index, profile ->
                     ProfileAvatar(profile, { onSelect(profile) }, if (index == 0) Modifier.focusRequester(firstFocus) else Modifier)
                 }
@@ -73,15 +74,15 @@ fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -
 @Composable
 private fun ProfileAvatar(profile: Profile, onClick: () -> Unit, modifier: Modifier = Modifier) {
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (focused) 1.08f else 1f, tween(165), label = "profileScale")
+    val scale by animateFloatAsState(if (focused) 1.06f else 1f, tween(165), label = "profileScale")
     val accent = if (profile.kind == "kids") Color(0xFF36B8FF) else BrasaOrange
     Column(modifier.graphicsLayer { scaleX = scale; scaleY = scale }.onFocusChanged { focused = it.isFocused }.clickable(role = Role.Button, onClick = onClick), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
-            Modifier.size(142.dp).shadow(if (focused) 14.dp else 2.dp, CircleShape, spotColor = accent).background(Brush.linearGradient(listOf(accent, if (profile.kind == "kids") Color(0xFF654DFF) else BrasaRed)), CircleShape).border(if (focused) 4.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, CircleShape),
+            Modifier.size(112.dp).shadow(if (focused) 11.dp else 2.dp, CircleShape, spotColor = accent).background(Brush.linearGradient(listOf(accent, if (profile.kind == "kids") Color(0xFF654DFF) else BrasaRed)), CircleShape).border(if (focused) 3.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Text(profile.initials.ifBlank { profile.name.take(1).uppercase() }, color = Color.White, fontSize = BrasaType.page, fontWeight = FontWeight.Black)
-            if (profile.hasPin) Text("PIN", modifier = Modifier.align(Alignment.BottomEnd).background(Color.Black.copy(alpha = .82f), CircleShape).padding(9.dp), color = Color.White, fontSize = BrasaType.metadata, fontWeight = FontWeight.Bold)
+            if (profile.hasPin) Text("PIN", modifier = Modifier.align(Alignment.BottomEnd).background(Color.Black.copy(alpha = .82f), CircleShape).padding(7.dp), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
         Spacer(Modifier.height(BrasaSpacing.x2))
         Text(profile.name, color = if (focused) BrasaText else BrasaTextMuted, fontSize = BrasaType.body, fontWeight = FontWeight.Bold)

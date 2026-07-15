@@ -10,6 +10,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.brasa.tv.core.model.PlaybackInfo
@@ -22,11 +23,11 @@ class PlaybackFactory(
 ) {
     private companion object {
         const val TAG = "BRasaPlayback"
-        const val MIN_BUFFER_MS = 20_000
-        const val MAX_BUFFER_MS = 45_000
-        const val BUFFER_FOR_PLAYBACK_MS = 1_200
-        const val BUFFER_AFTER_REBUFFER_MS = 4_000
-        const val BACK_BUFFER_MS = 15_000
+        const val MIN_BUFFER_MS = 12_000
+        const val MAX_BUFFER_MS = 150_000
+        const val BUFFER_FOR_PLAYBACK_MS = 8_000
+        const val BUFFER_AFTER_REBUFFER_MS = 12_000
+        const val BACK_BUFFER_MS = 30_000
     }
 
     fun create(baseUrl: String, info: PlaybackInfo, cache: SimpleCache, autoPlay: Boolean): ExoPlayer {
@@ -70,7 +71,7 @@ class PlaybackFactory(
             .build()
         return ExoPlayer.Builder(context)
             .setLoadControl(loadControl)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSource))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSource).setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(6)))
             .build()
             .apply {
                 setMediaItem(mediaItem)

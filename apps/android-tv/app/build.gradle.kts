@@ -48,7 +48,7 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling); debugImplementation(libs.compose.test.manifest)
     implementation(libs.activity.compose); implementation(libs.lifecycle.runtime); implementation(libs.lifecycle.viewmodel)
     implementation(libs.navigation.compose); implementation(libs.tv.material)
-    implementation(libs.media3.exoplayer); implementation(libs.media3.ui); implementation(libs.media3.session); implementation(libs.media3.okhttp); implementation(libs.media3.database)
+    implementation(libs.media3.exoplayer); implementation(libs.media3.exoplayer.hls); implementation(libs.media3.ui); implementation(libs.media3.session); implementation(libs.media3.okhttp); implementation(libs.media3.database)
     implementation(libs.datastore); implementation(libs.coroutines.android); implementation(libs.serialization.json)
     implementation(libs.okhttp); implementation(libs.okhttp.logging); implementation(libs.coil.compose); implementation(libs.coil.network)
     testImplementation(libs.junit); testImplementation(libs.mockwebserver)

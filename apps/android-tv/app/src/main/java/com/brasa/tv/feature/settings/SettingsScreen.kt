@@ -20,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -27,6 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import com.brasa.tv.BuildConfig
 import com.brasa.tv.app.BrasaUiState
+import com.brasa.tv.data.storage.AppSettings
+import com.brasa.tv.data.storage.AppSettingsStore
 import com.brasa.tv.designsystem.AmbientBackground
 import com.brasa.tv.designsystem.BrasaBorder
 import com.brasa.tv.designsystem.BrasaButton
@@ -41,10 +45,12 @@ import com.brasa.tv.designsystem.BrasaTopBar
 import com.brasa.tv.designsystem.BrasaType
 import java.text.DateFormat
 import java.util.Date
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
     state: BrasaUiState,
+    settingsStore: AppSettingsStore,
     lastUpdateCheckAt: Long,
     onUpdates: () -> Unit,
     onNetworkDiagnostics: () -> Unit,
@@ -55,6 +61,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     var confirmForget by remember { mutableStateOf(false) }
+    val deviceSettings by settingsStore.values.collectAsState(initial=AppSettings())
+    val scope=rememberCoroutineScope()
     BackHandler { if (confirmForget) confirmForget = false else onBack() }
     LaunchedEffect(Unit) { onLoadCache() }
     AmbientBackground {
@@ -74,6 +82,15 @@ fun SettingsScreen(
                 BrasaButton(if (state.loading) "Limpando cache…" else "Limpar cache", onClearCache, Modifier.fillMaxWidth(), enabled = !state.loading)
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
+            SettingsSection("Interface da TV") {
+                Text("Escala da interface",color=BrasaTextMuted,fontSize=BrasaType.metadata)
+                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){ScaleOption("80%",.8f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}};ScaleOption("90%",.9f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}};ScaleOption("100%",1f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}};ScaleOption("110%",1.1f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}}}
+                Spacer(Modifier.height(BrasaSpacing.x2))
+                Text("Densidade dos cards",color=BrasaTextMuted,fontSize=BrasaType.metadata)
+                Text("Altera somente cards e a quantidade de conteúdo visível.",color=BrasaTextMuted,fontSize=BrasaType.metadata)
+                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){ScaleOption("Compacta",.85f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}};ScaleOption("Normal",1f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}};ScaleOption("Ampla",1.15f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}}}
+            }
+            Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Aplicativo") {
                 StatusLine("Versão", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 StatusLine("Última verificação", if (lastUpdateCheckAt > 0) DateFormat.getDateTimeInstance().format(Date(lastUpdateCheckAt)) else "Nunca")
@@ -91,6 +108,8 @@ fun SettingsScreen(
         }
     }
 }
+
+@Composable private fun ScaleOption(label:String,value:Float,current:Float,onSelect:(Float)->Unit){BrasaButton(label,{onSelect(value)},style=if(kotlin.math.abs(value-current)<.01f)BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)}
 
 @Composable private fun SettingsSection(title: String, content: @Composable () -> Unit) {
     Column(Modifier.fillMaxWidth().background(BrasaSurface.copy(alpha = .9f), RoundedCornerShape(16.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(16.dp)).padding(horizontal = BrasaSpacing.x3, vertical = BrasaSpacing.x2)) {

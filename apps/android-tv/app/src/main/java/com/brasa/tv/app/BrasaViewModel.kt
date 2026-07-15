@@ -47,6 +47,7 @@ class BrasaViewModel(
     private var searchJob: Job? = null
     private var metadataPrefetchJob: Job? = null
     private var mediaPreloadJob: Job? = null
+    private var playbackPreparationJob: Job? = null
 
     fun enablePreview(page: String = "home") {
         mutable.value = PreviewCatalog.state(page)
@@ -139,9 +140,22 @@ class BrasaViewModel(
             return@launch
         }
         val profile = mutable.value.profile ?: return@launch
-        val playback = repository.playback(profile.id, item.mediaKey)
-        mutable.value = mutable.value.copy(playback = playback)
+        playbackPreparationJob?.cancel()
+        val playback = repository.playback(profile.id, item.mediaKey, forceRefresh = true)
+        mutable.value = mutable.value.copy(selected = item, playback = playback)
         onReady()
+        if (playback.preparationStatus !in setOf("ready", "failed")) playbackPreparationJob = viewModelScope.launch {
+            while (true) {
+                delay(1_000)
+                val next = runCatching { repository.playback(profile.id, item.mediaKey, forceRefresh = true) }.getOrElse {
+                    mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível receber os dados do servidor."))
+                    return@launch
+                }
+                if (mutable.value.selected?.mediaKey != item.mediaKey) return@launch
+                mutable.value = mutable.value.copy(playback = next)
+                if (next.preparationStatus in setOf("ready", "failed")) return@launch
+            }
+        }
     }
 
     fun prefetchPlaybackMetadata(item: CatalogItem) {
@@ -166,7 +180,7 @@ class BrasaViewModel(
             val info = repository.playback(profile.id, item.mediaKey)
             val selected = mutable.value.selected ?: return@launch
             if (selected.mediaKey != item.mediaKey && selected.type != "series") return@launch
-            playbackCoordinator.preload(repository.serverBaseUrl(), info)
+            if (info.preparationStatus == "ready" && info.playbackUrl.isNotBlank()) playbackCoordinator.preload(repository.serverBaseUrl(), info)
         }
     }
 
@@ -192,7 +206,7 @@ class BrasaViewModel(
     fun forget(onDone: () -> Unit) = launch { cancelPreload(); playbackCoordinator.clear(); repository.forget(); mutable.value = BrasaUiState(); onDone() }
 
     override fun onCleared() {
-        pairingJob?.cancel(); searchJob?.cancel(); metadataPrefetchJob?.cancel(); cancelPreload()
+        pairingJob?.cancel(); searchJob?.cancel(); metadataPrefetchJob?.cancel(); playbackPreparationJob?.cancel(); cancelPreload()
         super.onCleared()
     }
 

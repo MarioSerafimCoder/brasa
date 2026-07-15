@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable data class ApiEnvelope<T>(val ok:Boolean=false,val data:T?=null,val message:String?=null,val code:String?=null)
 @Serializable data class ServerInfo(val name:String="BRasa",val apiVersion:Int=1,val serverVersion:String="",val lanEnabled:Boolean=false,val pairingRequired:Boolean=true,val capabilities:ServerCapabilities=ServerCapabilities())
-@Serializable data class ServerCapabilities(val pairing:Boolean=true,val profiles:Boolean=true,val catalog:Boolean=true,val homeRows:Boolean=false,val search:Boolean=false,val progressivePlayback:Boolean=true,val rangeRequests:Boolean=true,val subtitles:Boolean=true,val audioTracks:Boolean=false)
+@Serializable data class ServerCapabilities(val pairing:Boolean=true,val profiles:Boolean=true,val catalog:Boolean=true,val homeRows:Boolean=false,val search:Boolean=false,val progressivePlayback:Boolean=true,val adaptiveHls:Boolean=false,val rangeRequests:Boolean=true,val subtitles:Boolean=true,val audioTracks:Boolean=false)
 @Serializable data class DeviceSession(val deviceId:String="",val deviceToken:String="")
 @Serializable data class PairingRequest(val requestId:String="",val code:String="",val name:String="",val type:String="tv",val status:String="pending",val expiresAt:String="",val remainingMs:Long=0)
 @Serializable data class PairingStatus(val requestId:String="",val code:String="",val status:String="pending",val expiresAt:String="",val remainingMs:Long=0,val token:String?=null,val device:AuthorizedDevice?=null)
@@ -21,7 +21,7 @@ typealias Series = CatalogItem
 @Serializable data class Season(val seasonNumber:Int=0,val episodes:List<CatalogItem> = emptyList())
 typealias Episode = CatalogItem
 @Serializable data class Collection(val id:String="",val title:String="",val subtitle:String="",val banner:String="",val items:List<CatalogItem> = emptyList())
-@Serializable data class PlaybackInfo(val mediaId:String="",val mediaKey:String="",val playbackUrl:String="",val mimeType:String="video/*",val container:String="",val videoCodec:String="",val audioCodec:String="",val supportsRange:Boolean=true,val duration:Long?=null,val resumePosition:Long=0,val subtitles:List<SubtitleTrack> = emptyList(),val audioTracks:List<AudioTrack> = emptyList(),val nextEpisode:CatalogItem?=null,val preparationStatus:String="ready")
+@Serializable data class PlaybackInfo(val mediaId:String="",val mediaKey:String="",val playbackUrl:String="",val mimeType:String="video/*",val container:String="",val videoCodec:String="",val audioCodec:String="",val supportsRange:Boolean=true,val duration:Long?=null,val resumePosition:Long=0,val subtitles:List<SubtitleTrack> = emptyList(),val audioTracks:List<AudioTrack> = emptyList(),val nextEpisode:CatalogItem?=null,val preparationStatus:String="ready",val preparationProgress:Double=100.0,val playbackMode:String="direct",val qualities:List<String> = emptyList(),val quality:String="Automática",val errorType:String="",val errorMessage:String="",val adaptiveReasons:List<String> = emptyList())
 @Serializable data class SubtitleTrack(val label:String="",val srclang:String="",val src:String="",val mimeType:String="text/vtt",val default:Boolean=false)
 @Serializable data class AudioTrack(val id:String="",val label:String="",val language:String="",val codec:String="")
 @Serializable data class WatchProgress(val mediaType:String="movie",val mediaId:String="",val seriesId:String="",val currentTime:Double=0.0,val duration:Double=0.0,val percentage:Double=0.0,val completed:Boolean=false,val updatedAt:String="")

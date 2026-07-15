@@ -109,12 +109,12 @@ class BrasaRepository(
         return value.copy(movies = value.movies.map { it.withArtwork(base) }, series = value.series.map { it.withArtwork(base) })
     }
 
-    suspend fun playback(profileId: String, key: String): PlaybackInfo {
+    suspend fun playback(profileId: String, key: String, forceRefresh: Boolean = false): PlaybackInfo {
         val cacheKey = "$profileId:$key"
         val cached = playbackCache[cacheKey]
-        if (cached != null && System.currentTimeMillis() - cached.first < PLAYBACK_CACHE_MS) return cached.second
+        if (!forceRefresh && cached != null && System.currentTimeMillis() - cached.first < PLAYBACK_CACHE_MS) return cached.second
         val value = api.playback(requireServer(), profileId, key)
-        playbackCache[cacheKey] = System.currentTimeMillis() to value
+        if (value.preparationStatus == "ready") playbackCache[cacheKey] = System.currentTimeMillis() to value else playbackCache.remove(cacheKey)
         return value
     }
 

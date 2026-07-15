@@ -20,8 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,6 +37,7 @@ import com.brasa.tv.designsystem.BrasaSpacing
 import com.brasa.tv.designsystem.BrasaType
 import com.brasa.tv.designsystem.MediaCard
 import com.brasa.tv.designsystem.MediaCardFormat
+import com.brasa.tv.designsystem.LocalCardDensity
 
 @Composable
 fun SearchScreen(
@@ -49,8 +48,7 @@ fun SearchScreen(
 ) {
     BackHandler(onBack = onBack)
     var query by remember { mutableStateOf("") }
-    val searchFocus = remember { FocusRequester() }
-    androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { searchFocus.requestFocus() } }
+    val cardDensity=LocalCardDensity.current
     Column(Modifier.fillMaxSize().background(BrasaBackground).padding(horizontal = BrasaSpacing.safe)) {
         BrasaTopBar(
             modifier = Modifier.padding(top = BrasaSpacing.x2),
@@ -67,7 +65,7 @@ fun SearchScreen(
             BrasaTextField(
                 value = query,
                 onValueChange = { query = it; onSearch(it) },
-                modifier = Modifier.width(780.dp).focusRequester(searchFocus),
+                modifier = Modifier.width(780.dp),
                 placeholder = "⌕  Buscar filmes, séries e episódios",
             )
             if (query.isNotBlank()) BrasaButton("Limpar", { query = ""; onSearch("") })
@@ -81,7 +79,7 @@ fun SearchScreen(
         }
         LazyVerticalGrid(
             modifier = Modifier.fillMaxWidth(),
-            columns = GridCells.Adaptive(188.dp),
+            columns = GridCells.Adaptive(188.dp*cardDensity),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {

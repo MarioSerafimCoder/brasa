@@ -1,12 +1,16 @@
 [CmdletBinding()]
 param([string]$KeyStorePath=(Join-Path $HOME ".brasa\signing\brasa-tv-release.jks"),[string]$KeyAlias="")
 $ErrorActionPreference="Stop";$projectRoot=Split-Path -Parent $PSScriptRoot
+$bundledJdk=Get-ChildItem (Join-Path $projectRoot ".toolchain\jdk") -Directory -ErrorAction SilentlyContinue|Where-Object{Test-Path (Join-Path $_.FullName "bin\keytool.exe")}|Select-Object -First 1
+if((!$env:JAVA_HOME -or -not (Test-Path (Join-Path $env:JAVA_HOME "bin\keytool.exe"))) -and $bundledJdk){$env:JAVA_HOME=$bundledJdk.FullName}
+if(!$env:ANDROID_HOME -and (Test-Path (Join-Path $projectRoot ".toolchain\android-sdk"))){$env:ANDROID_HOME=Join-Path $projectRoot ".toolchain\android-sdk"}
 if(-not(Test-Path -LiteralPath $KeyStorePath)){throw "Keystore não encontrado em $KeyStorePath. Execute setup-release-signing.ps1 primeiro."}
 $keytool=if($env:JAVA_HOME -and (Test-Path (Join-Path $env:JAVA_HOME "bin\keytool.exe"))){Join-Path $env:JAVA_HOME "bin\keytool.exe"}else{(Get-Command keytool.exe -ErrorAction SilentlyContinue).Source}
 if(-not $keytool){throw "keytool não foi encontrado. Configure JAVA_HOME com um JDK 17 ou superior."}
-$storeSecure=Read-Host "Senha do keystore" -AsSecureString;$keySecure=Read-Host "Senha da chave" -AsSecureString
 function Convert-Secure([Security.SecureString]$value){$ptr=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($value);try{[Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)}finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)}}
-$storePassword=Convert-Secure $storeSecure;$keyPassword=Convert-Secure $keySecure
+$storePassword=$env:BRASA_TV_KEYSTORE_PASSWORD;$keyPassword=$env:BRASA_TV_KEY_PASSWORD
+if([string]::IsNullOrWhiteSpace($storePassword)){$storePassword=Convert-Secure (Read-Host "Senha do keystore" -AsSecureString)}
+if([string]::IsNullOrWhiteSpace($keyPassword)){$keyPassword=Convert-Secure (Read-Host "Senha da chave" -AsSecureString)}
 try{
     $env:BRASA_TV_KEYSTORE_PATH=(Resolve-Path -LiteralPath $KeyStorePath).Path;$env:BRASA_TV_KEYSTORE_PASSWORD=$storePassword;$env:BRASA_TV_KEY_PASSWORD=$keyPassword
     if([string]::IsNullOrWhiteSpace($KeyAlias)){

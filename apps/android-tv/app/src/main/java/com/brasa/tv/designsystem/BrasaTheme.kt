@@ -1,6 +1,10 @@
 package com.brasa.tv.designsystem
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,30 +23,33 @@ val BrasaText = Color(0xFFF7F8FA)
 val BrasaTextMuted = Color(0xFFA7AFBA)
 val BrasaSuccess = Color(0xFF4ED18B)
 val BrasaDisabled = Color(0xFF626A75)
+val LocalCardDensity = staticCompositionLocalOf { 1f }
 
 object BrasaSpacing {
-    val x1 = 8.dp
-    val x2 = 16.dp
-    val x3 = 24.dp
-    val x4 = 32.dp
-    val x6 = 48.dp
-    val x8 = 64.dp
-    val safe = 72.dp
-    val safeWide = 96.dp
+    val x1 = 6.dp
+    val x2 = 12.dp
+    val x3 = 18.dp
+    val x4 = 24.dp
+    val x6 = 36.dp
+    val x8 = 48.dp
+    val safe = 54.dp
+    val safeWide = 72.dp
 }
 
 object BrasaType {
-    val hero = 60.sp
-    val page = 48.sp
-    val section = 32.sp
-    val body = 24.sp
-    val metadata = 20.sp
-    val button = 24.sp
+    val hero = 48.sp
+    val page = 38.sp
+    val section = 25.sp
+    val body = 18.sp
+    val metadata = 15.sp
+    val button = 17.sp
 }
 
 @Composable
-fun BrasaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(
+fun BrasaTheme(uiScale:Float=.9f,cardDensity:Float=1f,content: @Composable () -> Unit) {
+    val baseDensity=LocalDensity.current
+    val scaledDensity=Density(baseDensity.density*uiScale.coerceIn(.8f,1.1f),baseDensity.fontScale)
+    CompositionLocalProvider(LocalDensity provides scaledDensity,LocalCardDensity provides cardDensity.coerceIn(.8f,1.15f)){ MaterialTheme(
         colorScheme = darkColorScheme(
             primary = BrasaOrange,
             secondary = BrasaRed,
@@ -54,5 +61,5 @@ fun BrasaTheme(content: @Composable () -> Unit) {
             onSurface = BrasaText,
         ),
         content = content,
-    )
+    ) }
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -48,6 +49,7 @@ import com.brasa.tv.designsystem.MediaCardFormat
 import com.brasa.tv.designsystem.MessagePanel
 import com.brasa.tv.designsystem.SectionHeading
 import com.brasa.tv.designsystem.metadata
+import kotlinx.coroutines.delay
 
 @Composable
 fun HomeScreen(
@@ -76,14 +78,24 @@ fun HomeScreen(
             ?: home.rows.firstNotNullOfOrNull { it.items.firstOrNull() }
     }
     val heroFocus = remember { FocusRequester() }
-    LaunchedEffect(hero?.mediaKey) { if (hero != null) { onPrefetch(hero); runCatching { heroFocus.requestFocus() } } }
+    val listState = rememberLazyListState()
+    LaunchedEffect(hero?.mediaKey, state.profile?.id) {
+        listState.scrollToItem(0)
+        if (hero != null) {
+            onPrefetch(hero)
+            runCatching { heroFocus.requestFocus() }
+            delay(80)
+            listState.scrollToItem(0)
+        }
+    }
 
     LazyColumn(
         Modifier.fillMaxSize().background(BrasaBackground),
+        state = listState,
         contentPadding = PaddingValues(bottom = 54.dp),
     ) {
         item {
-            Box(Modifier.fillMaxWidth().height(470.dp)) {
+            Box(Modifier.fillMaxWidth().height(430.dp)) {
                 if (hero != null) {
                     AsyncImage(
                         model = hero.backdrop.ifBlank { hero.poster },
@@ -114,7 +126,7 @@ fun HomeScreen(
                 )
                 if (hero != null) {
                     Column(
-                        Modifier.align(Alignment.CenterStart).padding(start = BrasaSpacing.safe, top = 62.dp).width(620.dp),
+                        Modifier.align(Alignment.CenterStart).padding(start = BrasaSpacing.safe, top = 56.dp).width(570.dp),
                     ) {
                         Text(metadata(hero), color = BrasaTextMuted, fontSize = BrasaType.metadata, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(7.dp))
@@ -122,7 +134,7 @@ fun HomeScreen(
                             hero.title,
                             color = Color.White,
                             fontSize = BrasaType.hero,
-                            lineHeight = 64.sp,
+                            lineHeight = 51.sp,
                             fontWeight = FontWeight.ExtraBold,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
@@ -132,8 +144,8 @@ fun HomeScreen(
                             hero.overview,
                             color = BrasaText.copy(alpha = .86f),
                             fontSize = BrasaType.body,
-                            lineHeight = 30.sp,
-                            maxLines = 2,
+                            lineHeight = 24.sp,
+                            maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                         )
                         Spacer(Modifier.height(21.dp))

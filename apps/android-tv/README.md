@@ -1,12 +1,23 @@
 # BRasa para Android TV
 
-Aplicativo nativo em Kotlin e Jetpack Compose for TV. Ele encontra o BRasa na rede local, realiza pareamento por código, respeita os perfis autorizados e reproduz a biblioteca diretamente do computador com Media3.
+Aplicativo nativo em Kotlin e Jetpack Compose for TV. Ele encontra o BRasa na rede local, realiza pareamento por código, respeita os perfis autorizados e reproduz direct play ou HLS adaptativo do computador com Media3.
 
 ## Pré-requisitos
 
 - BRasa em execução no computador com **Acesso pela rede** e **Permitir novos dispositivos** ativados.
 - Computador e TV na mesma rede doméstica.
 - JDK 17 e Android SDK 36 para compilar.
+- FFmpeg e FFprobe no servidor para MKV, HEVC, 4K, áudio incompatível e arquivos pesados.
+
+## Interface e controle remoto
+
+A preferência local `uiScale` redimensiona toda a interface e oferece 80%, 90%, 100% e 110%; 90% é o padrão recomendado para TV. A preferência `density` é independente e altera apenas cards, espaçamento das grades e quantidade de conteúdo visível. O vídeo em tela cheia e as legendas do Media3 não são reduzidos pela escala da interface.
+
+Busca e PIN não recebem foco de digitação ao abrir uma tela. O PIN usa um painel numérico próprio. Setas, Enter e Voltar navegam pelos controles; o player fecha antes do aplicativo e mantém o ponto de reprodução.
+
+## Reprodução adaptativa
+
+O APK não atribui o MKV original ao player enquanto o servidor analisa a mídia. As telas mostram “Analisando mídia” e “Preparando reprodução”; quando os primeiros segmentos estão prontos, o Media3 inicia HLS na qualidade automática. O menu do player informa qualidade e buffer e permite limitar manualmente as variantes disponíveis.
 
 ## Compilar e testar
 
