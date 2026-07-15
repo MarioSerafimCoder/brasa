@@ -35,13 +35,21 @@ const hdrArgs = buildHlsArgs("movie.mkv", path.resolve("cache"), ladder1080, "h2
 assert.ok(hdrArgs.some((value) => value.includes("scale_cuda") && value.includes("hwdownload") && value.includes("tonemap")), "HDR deve reduzir na GPU antes do tone mapping compatível");
 assert.ok(hdrArgs.includes("hevc_cuvid"), "HEVC pesado deve usar o decoder CUVID que produz quadros válidos para o Superman");
 
-const googleTv = { containers: ["matroska", "mp4", "hls"], videoCodecs: ["h264", "hevc", "hevc-main10", "dolby-vision"], audioCodecs: ["aac", "eac3"], hdrTypes: ["hdr10", "dolby-vision"], maxWidth: 3840, maxHeight: 2160 };
+const googleTv = { containers: ["matroska", "mp4", "hls"], videoCodecs: ["h264", "hevc", "hevc-main10", "dolby-vision"], audioCodecs: ["aac", "eac3"], hdrTypes: ["hdr10", "dolby-vision"], maxWidth: 3840, maxHeight: 2160, videoCapabilities: [
+    { codec: "h264", maxWidth: 3840, maxHeight: 2160, maxBitrate: 80_000_000, hardware: true, profiles: [] },
+    { codec: "hevc", maxWidth: 3840, maxHeight: 2160, maxBitrate: 80_000_000, hardware: true, profiles: ["main10"] },
+    { codec: "dolby-vision", maxWidth: 3840, maxHeight: 2160, maxBitrate: 80_000_000, hardware: true, profiles: [] },
+] };
 const superman = probe({ size: 25_119_571_112, container: "matroska", video: { codec: "hevc", width: 3840, height: 2160, bitDepth: 10, hdr: true, hdrType: "dolby-vision", dolbyVision: true }, audioTracks: [{ codec: "eac3" }] });
-assert.equal(selectTvPlaybackPlan(superman, googleTv).mode, "direct", "Google TV compatível deve receber o Superman original mesmo acima de 20 GB");
-const remuxPlan = selectTvPlaybackPlan({ ...superman, audioTracks: [{ codec: "dts" }] }, googleTv);
+assert.equal(selectTvPlaybackPlan(superman, googleTv).mode, "transcode", "Dolby Vision em MKV não deve ser enviado diretamente ao Media3");
+assert.equal(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv).mode, "direct", "Dolby Vision em MP4 pode usar decoder e tela compatíveis");
+const hdr10Mkv = { ...superman, video: { ...superman.video, hdrType: "hdr10", dolbyVision: false } };
+const remuxPlan = selectTvPlaybackPlan({ ...hdr10Mkv, audioTracks: [{ codec: "dts" }] }, googleTv);
 assert.equal(remuxPlan.mode, "remux", "áudio incompatível deve usar remux");
 assert.equal(remuxPlan.audioAction, "aac", "remux deve converter somente o áudio");
 assert.equal(selectTvPlaybackPlan(superman, { ...googleTv, videoCodecs: ["h264"], hdrTypes: [] }).mode, "transcode", "TV sem HEVC/HDR deve receber transcodificação");
+assert.equal(selectTvPlaybackPlan(hdr10Mkv, { ...googleTv, videoCapabilities: googleTv.videoCapabilities.map((item) => item.codec === "hevc" ? { ...item, maxWidth: 1920, maxHeight: 1080 } : item) }).mode, "transcode", "limite do decoder HEVC deve ser aplicado por codec");
+assert.equal(selectTvPlaybackPlan(hdr10Mkv, { ...googleTv, videoCapabilities: googleTv.videoCapabilities.filter((item) => item.codec !== "hevc") }).mode, "transcode", "codec sem decoder de hardware não deve usar direct play");
 const remuxArgs = buildRemuxHlsArgs("movie.mkv", path.resolve("cache"), superman, { audioAction: "aac" });
 assert.equal(remuxArgs[remuxArgs.indexOf("-c:v") + 1], "copy");
 assert.equal(remuxArgs[remuxArgs.indexOf("-c:a") + 1], "aac");

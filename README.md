@@ -109,7 +109,7 @@ O BRasa analisa a mídia com FFprobe antes de liberar o player. O aplicativo Goo
 
 As playlists ficam em `data/prepared-media/hls`, usam segmentos de aproximadamente dois segundos e nunca substituem o original. A reprodução sob demanda começa com uma única variante: 720p para HDR que exige tone mapping ou até 1080p para SDR. Remux mantém a resolução original. Playlists em processamento não recebem cache agressivo e segmentos finalizados podem ser reutilizados.
 
-Configurações padrão: `autoAnalyze=true`, `autoPrepare=true`, `cpuFallback=true`, `acceleration=auto`, segmentos de 2 s, buffer inicial de 4 s, alvo de 30 s e máximo de 90 s. O APK inicia após aproximadamente 3 s armazenados. O cache HLS tem limite padrão de 160 GB. Consulte `GET /api/media/cache`; para apagar somente HLS, use `DELETE /api/media/cache/hls` no próprio computador ou remova a pasta com o servidor encerrado.
+Configurações padrão: `autoAnalyze=true`, `autoPrepare=true`, `cpuFallback=true`, `acceleration=auto`, segmentos de 2 s, buffer inicial de 4 s, alvo de 30 s e máximo de 90 s. O APK inicia com cerca de 3 s em HLS e usa 5 s para direct play 4K ou acima de 20 Mbps, mantendo uma reserva maior contra oscilações do Wi-Fi. O cache HLS tem limite padrão de 160 GB. Consulte `GET /api/media/cache`; para apagar somente HLS, use `DELETE /api/media/cache/hls` no próprio computador ou remova a pasta com o servidor encerrado.
 
 ### Aceleração NVIDIA
 

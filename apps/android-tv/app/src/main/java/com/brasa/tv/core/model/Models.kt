@@ -21,14 +21,26 @@ typealias Series = CatalogItem
 @Serializable data class Season(val seasonNumber:Int=0,val episodes:List<CatalogItem> = emptyList())
 typealias Episode = CatalogItem
 @Serializable data class Collection(val id:String="",val title:String="",val subtitle:String="",val banner:String="",val items:List<CatalogItem> = emptyList())
-@Serializable data class PlaybackInfo(val mediaId:String="",val mediaKey:String="",val playbackUrl:String="",val mimeType:String="video/*",val container:String="",val videoCodec:String="",val audioCodec:String="",val supportsRange:Boolean=true,val duration:Long?=null,val resumePosition:Long=0,val subtitles:List<SubtitleTrack> = emptyList(),val audioTracks:List<AudioTrack> = emptyList(),val nextEpisode:CatalogItem?=null,val preparationStatus:String="ready",val preparationProgress:Double=100.0,val playbackMode:String="direct",val qualities:List<String> = emptyList(),val quality:String="Automática",val errorType:String="",val errorMessage:String="",val adaptiveReasons:List<String> = emptyList())
+@Serializable data class PlaybackInfo(
+    val mediaId:String="",val mediaKey:String="",val playbackUrl:String="",val mimeType:String="video/*",val container:String="",val videoCodec:String="",val audioCodec:String="",
+    val supportsRange:Boolean=true,val duration:Long?=null,val resumePosition:Long=0,val bitrate:Long=0,val width:Int=0,val height:Int=0,val playbackRevision:String="",
+    val subtitles:List<SubtitleTrack> = emptyList(),val audioTracks:List<AudioTrack> = emptyList(),val nextEpisode:CatalogItem?=null,val preparationStatus:String="ready",
+    val preparationProgress:Double=100.0,val playbackMode:String="direct",val qualities:List<String> = emptyList(),val quality:String="Automática",val errorType:String="",
+    val errorMessage:String="",val adaptiveReasons:List<String> = emptyList(),
+)
 @Serializable data class SubtitleTrack(val label:String="",val srclang:String="",val src:String="",val mimeType:String="text/vtt",val default:Boolean=false)
 @Serializable data class AudioTrack(val id:String="",val label:String="",val language:String="",val codec:String="")
 @Serializable data class WatchProgress(val mediaType:String="movie",val mediaId:String="",val seriesId:String="",val currentTime:Double=0.0,val duration:Double=0.0,val percentage:Double=0.0,val completed:Boolean=false,val updatedAt:String="")
 @Serializable data class ApiError(val code:String="API_ERROR",val message:String="Não foi possível concluir a operação.",val status:Int=0)
 @Serializable data class ClientCapabilities(val client:String="brasa-android-tv",val clientVersion:String=BuildConfig.VERSION_NAME,val platform:String="android-tv",val manufacturer:String="",val model:String="",val screen:ScreenCapabilities=ScreenCapabilities(),val playback:PlaybackCapabilities=PlaybackCapabilities())
 @Serializable data class ScreenCapabilities(val width:Int=0,val height:Int=0)
-@Serializable data class PlaybackCapabilities(val containers:List<String> = emptyList(),val videoCodecs:List<String> = emptyList(),val audioCodecs:List<String> = emptyList(),val hdrTypes:List<String> = emptyList(),val maxWidth:Int=0,val maxHeight:Int=0,val subtitleFormats:List<String> = listOf("vtt"))
+@Serializable data class VideoCodecCapability(
+    val codec:String="",val maxWidth:Int=0,val maxHeight:Int=0,val maxBitrate:Long=0,val hardware:Boolean=false,val profiles:List<String> = emptyList(),
+)
+@Serializable data class PlaybackCapabilities(
+    val containers:List<String> = emptyList(),val videoCodecs:List<String> = emptyList(),val audioCodecs:List<String> = emptyList(),val hdrTypes:List<String> = emptyList(),
+    val videoCapabilities:List<VideoCodecCapability> = emptyList(),val maxWidth:Int=0,val maxHeight:Int=0,val subtitleFormats:List<String> = listOf("vtt"),
+)
 @Serializable data class NetworkServerStatus(val available:Boolean=false,val type:String="unknown",val connectionLabel:String="Conexão não identificada",val name:String="",val ip:String="",val mac:String="",val gateway:String="",val subnetMask:String="",val speed:Long=0,val category:String="",val serverUrl:String="",val port:Int=4173,val dynamicIpWarning:String="",val message:String="")
 @Serializable data class NetworkFirewallStatus(val configured:Boolean=false,val supported:Boolean=false,val publicNetwork:Boolean=false,val message:String="")
 @Serializable data class NetworkStatusResponse(val server:NetworkServerStatus=NetworkServerStatus(),val firewall:NetworkFirewallStatus=NetworkFirewallStatus())

@@ -38,8 +38,16 @@ export function normalizePlaybackCapabilities(input = {}) {
     const videoCodecs = tokens(input.videoCodecs, new Set(["h264", "hevc", "hevc-main10", "dolby-vision", "vp8", "vp9", "av1", "mpeg2video"]));
     const audioCodecs = tokens(input.audioCodecs, new Set(["aac", "mp3", "ac3", "eac3", "ac4", "dts", "dts-hd", "truehd", "opus", "vorbis"]));
     const hdrTypes = tokens(input.hdrTypes, new Set(["hdr10", "hdr10-plus", "hlg", "dolby-vision"]));
+    const videoCapabilities = (Array.isArray(input.videoCapabilities) ? input.videoCapabilities : []).slice(0, 16).map((item) => ({
+        codec: tokens([item?.codec], new Set(["h264", "hevc", "dolby-vision", "vp8", "vp9", "av1", "mpeg2video"]))[0] || "",
+        maxWidth: bounded(item?.maxWidth, 320, 16384),
+        maxHeight: bounded(item?.maxHeight, 240, 8640),
+        maxBitrate: bounded(item?.maxBitrate, 100_000, 1_000_000_000),
+        hardware: item?.hardware === true,
+        profiles: tokens(item?.profiles, new Set(["main10"])),
+    })).filter((item) => item.codec && item.hardware);
     return {
-        containers, videoCodecs, audioCodecs, hdrTypes,
+        containers, videoCodecs, audioCodecs, hdrTypes, videoCapabilities,
         maxWidth: bounded(input.maxWidth, 320, 16384),
         maxHeight: bounded(input.maxHeight, 240, 8640),
         reported: containers.length > 0 && videoCodecs.length > 0,
@@ -54,15 +62,22 @@ export function selectTvPlaybackPlan(probe, rawCapabilities = {}) {
     const audio = normalizeAudio(probe?.audioTracks?.[0]?.codec);
     const bitDepth = Number(probe?.video?.bitDepth || 8);
     const hdrType = String(probe?.video?.hdrType || (probe?.video?.hdr ? "hdr10" : "")).toLowerCase();
-    const containerSupported = capabilities.containers.includes(container);
+    const dolbyVision = probe?.video?.dolbyVision === true || hdrType === "dolby-vision";
+    const dolbyVisionContainerSupported = !dolbyVision || container === "mp4";
+    const containerSupported = capabilities.containers.includes(container) && dolbyVisionContainerSupported;
     const dimensionsSupported = (!capabilities.maxWidth || Number(probe?.video?.width || 0) <= capabilities.maxWidth) && (!capabilities.maxHeight || Number(probe?.video?.height || 0) <= capabilities.maxHeight);
     const baseVideoSupported = capabilities.videoCodecs.includes(video);
-    const main10Supported = video !== "hevc" || bitDepth <= 8 || capabilities.videoCodecs.includes("hevc-main10") || capabilities.videoCodecs.includes("dolby-vision");
+    const codecCapability = capabilities.videoCapabilities.find((item) => item.codec === (dolbyVision ? "dolby-vision" : video));
+    const hardwareSupported = capabilities.videoCapabilities.length === 0 || Boolean(codecCapability?.hardware);
+    const codecDimensionsSupported = !codecCapability || ((!codecCapability.maxWidth || Number(probe?.video?.width || 0) <= codecCapability.maxWidth) && (!codecCapability.maxHeight || Number(probe?.video?.height || 0) <= codecCapability.maxHeight));
+    const codecBitrateSupported = !codecCapability?.maxBitrate || !Number(probe?.bitrate || 0) || Number(probe.bitrate) <= codecCapability.maxBitrate;
+    const main10Supported = dolbyVision || video !== "hevc" || bitDepth <= 8 || (codecCapability ? codecCapability.profiles.includes("main10") : capabilities.videoCodecs.includes("hevc-main10") || capabilities.videoCodecs.includes("dolby-vision"));
     const hdrSupported = !hdrType || capabilities.hdrTypes.includes(hdrType) || (hdrType === "hdr10" && capabilities.hdrTypes.includes("hdr10-plus"));
-    const dolbyVisionSupported = !probe?.video?.dolbyVision || capabilities.videoCodecs.includes("dolby-vision") || capabilities.hdrTypes.includes("dolby-vision");
-    const videoSupported = baseVideoSupported && main10Supported && hdrSupported && dolbyVisionSupported && dimensionsSupported;
+    const dolbyVisionSupported = !dolbyVision || ((codecCapability ? codecCapability.codec === "dolby-vision" : capabilities.videoCodecs.includes("dolby-vision")) && capabilities.hdrTypes.includes("dolby-vision"));
+    const videoSupported = baseVideoSupported && main10Supported && hdrSupported && dolbyVisionSupported && dolbyVisionContainerSupported && dimensionsSupported && hardwareSupported && codecDimensionsSupported && codecBitrateSupported;
     const audioSupported = !audio || capabilities.audioCodecs.includes(audio);
     const reasons = [];
+    if (!dolbyVisionContainerSupported) reasons.push("Dolby Vision fora de MP4 exige transcodificação");
     if (!containerSupported) reasons.push(`contêiner ${container || "desconhecido"} incompatível`);
     if (!videoSupported) reasons.push(`vídeo ${video || "desconhecido"} incompatível`);
     if (!audioSupported) reasons.push(`áudio ${audio || "desconhecido"} incompatível`);

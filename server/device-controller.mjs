@@ -32,7 +32,7 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (path === "/api/v1/tv/home" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.home(device, profileId)); }
         if (path === "/api/v1/tv/search" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.search(device, profileId, url.searchParams.get("q") || "")); }
         const playback = path.match(/^\/api\/v1\/tv\/playback\/(movie|episode):([^/]+)$/);
-        if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`, playbackCapabilities(request.headers))); }
+        if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`, playbackCapabilities(request.headers), fallbackMode(url.searchParams.get("fallback")))); }
         const progress = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/progress\/(movie|episode):([^/]+)$/);
         if (progress) { const profileId = auth.requireProfile(device, progress[1]), mediaKey = `${progress[2]}:${progress[3]}`; if (method === "GET") return success(response, await tvServices.progress(profileId, mediaKey)); if (method === "PUT") return success(response, await tvServices.saveProgress(profileId, mediaKey, await readBody(request))); }
         const favorite = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/favorites\/(movie|episode):([^/]+)$/);
@@ -58,12 +58,15 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
 function playbackCapabilities(headers = {}) {
     const list = (name) => String(headers[name] || "").slice(0, 512).split(",").map((value) => value.trim().toLowerCase()).filter((value) => /^[a-z0-9-]{2,32}$/.test(value)).slice(0, 32);
     const dimension = (name) => { const value=Number(headers[name] || 0);return Number.isSafeInteger(value) && value > 0 ? Math.min(16384, value) : 0; };
+    const videoCapabilities = () => { try { const parsed=JSON.parse(String(headers["x-brasa-video-capabilities"] || "").slice(0,4096));return Array.isArray(parsed)?parsed.slice(0,16):[]; } catch { return []; } };
     return {
         containers: list("x-brasa-playback-containers"),
         videoCodecs: list("x-brasa-video-codecs"),
         audioCodecs: list("x-brasa-audio-codecs"),
         hdrTypes: list("x-brasa-hdr-types"),
+        videoCapabilities: videoCapabilities(),
         maxWidth: dimension("x-brasa-max-video-width"),
         maxHeight: dimension("x-brasa-max-video-height"),
     };
 }
+function fallbackMode(value) { return ["transcode"].includes(String(value || "").toLowerCase()) ? "transcode" : ""; }

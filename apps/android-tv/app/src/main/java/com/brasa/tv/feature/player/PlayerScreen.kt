@@ -76,7 +76,8 @@ import java.util.Locale
 fun PlayerScreen(
     state: BrasaUiState,
     container: AppContainer,
-    onProgress: (WatchProgress) -> Unit,
+    onProgress: (String, WatchProgress) -> Unit,
+    onPlaybackFallback: (String) -> Unit,
     onNext: (CatalogItem) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -91,8 +92,9 @@ fun PlayerScreen(
     } else if (info.preparationStatus != "ready" || info.playbackUrl.isBlank()) {
         PreparationScreen(info, onBack)
     } else {
-        key(info.mediaKey) {
-            PlayerContent(info, state.selected?.title.orEmpty(), settings.serverBaseUrl, container, onProgress, onNext, onBack)
+        val identity = "${info.mediaKey}|${info.playbackMode}|${info.playbackRevision}|${info.playbackUrl}"
+        key(identity) {
+            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, container, onProgress, onPlaybackFallback, onNext, onBack)
         }
     }
 }
@@ -119,19 +121,21 @@ private fun PreparationScreen(info: PlaybackInfo, onBack: () -> Unit) {
 @Composable
 private fun PlayerContent(
     info: PlaybackInfo,
+    playbackIdentity: String,
     title: String,
     serverBaseUrl: String,
     container: AppContainer,
-    onProgress: (WatchProgress) -> Unit,
+    onProgress: (String, WatchProgress) -> Unit,
+    onPlaybackFallback: (String) -> Unit,
     onNext: (CatalogItem) -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { keyboard?.hide() }
-    var acquiredPlayer by remember(info.mediaKey, serverBaseUrl) { mutableStateOf<ExoPlayer?>(null) }
-    var loadError by remember(info.mediaKey, serverBaseUrl) { mutableStateOf("") }
-    LaunchedEffect(info.mediaKey, serverBaseUrl) {
+    var acquiredPlayer by remember(playbackIdentity, serverBaseUrl) { mutableStateOf<ExoPlayer?>(null) }
+    var loadError by remember(playbackIdentity, serverBaseUrl) { mutableStateOf("") }
+    LaunchedEffect(playbackIdentity, serverBaseUrl) {
         runCatching { container.playback.acquire(serverBaseUrl, info) }
             .onSuccess { acquiredPlayer = it }
             .onFailure { loadError = it.message ?: "Não foi possível preparar o vídeo." }
@@ -156,6 +160,7 @@ private fun PlayerContent(
     var trackNotice by remember { mutableStateOf("") }
     var centerNotice by remember { mutableStateOf("") }
     var retryCount by remember { mutableIntStateOf(0) }
+    var fallbackRequested by remember { mutableStateOf(false) }
     var selectedQuality by remember { mutableStateOf("Automática") }
     val playbackScope = rememberCoroutineScope()
 
@@ -169,6 +174,7 @@ private fun PlayerContent(
         val total = player.duration
         if (total <= 0 || total == C.TIME_UNSET) return
         onProgress(
+            info.mediaKey,
             WatchProgress(
                 mediaType = if (info.mediaKey.startsWith("episode:")) "episode" else "movie",
                 mediaId = info.mediaId,
@@ -225,7 +231,14 @@ private fun PlayerContent(
                 val recoverable = error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
                     error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
                     error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
-                if (recoverable && retryCount < 2) {
+                if (info.playbackMode == "direct" && isCompatibilityError(error) && !fallbackRequested) {
+                    fallbackRequested = true
+                    loadError = ""
+                    save()
+                    player.pause()
+                    onPlaybackFallback(info.mediaKey)
+                    Log.w(TAG, "Fallback HLS solicitado para ${info.mediaKey}: ${error.errorCodeName}", error)
+                } else if (recoverable && retryCount < 2) {
                     retryCount++
                     loadError = ""
                     playbackScope.launch { delay(800L * retryCount); retryPlayback() }
@@ -449,3 +462,12 @@ private fun publicPlaybackError(error: PlaybackException): String = when (error.
     PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED, PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED, PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED -> "O formato original não é compatível com este dispositivo."
     else -> "Não foi possível reproduzir esta mídia."
 }
+
+private fun isCompatibilityError(error: PlaybackException): Boolean = error.errorCode in setOf(
+    PlaybackException.ERROR_CODE_DECODING_FAILED,
+    PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
+    PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED,
+    PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED,
+    PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
+    PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
+)

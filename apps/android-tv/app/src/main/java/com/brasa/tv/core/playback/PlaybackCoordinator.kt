@@ -30,16 +30,17 @@ class PlaybackCoordinator(
 
     suspend fun preload(baseUrl: String, info: PlaybackInfo) {
         val requestGeneration = ++generation
-        val simpleCache = cache.getOrCreate()
+        val simpleCache = if (info.playbackMode == "hls") null else cache.getOrCreate()
         withContext(Dispatchers.Main.immediate) {
             if (requestGeneration != generation) return@withContext
             val factory = PlaybackFactory(appContext, http)
-            val cacheKey = factory.cacheKey(baseUrl, info)
+            val identity = factory.playbackIdentity(baseUrl, info)
+            val cacheKey = if (info.playbackMode == "hls") null else factory.cacheKey(baseUrl, info)
             val existing = current
-            if (existing?.matches(cacheKey) == true) return@withContext
+            if (existing?.matches(identity) == true) return@withContext
             releaseCurrent()
             val player = factory.create(baseUrl, info, simpleCache, autoPlay = false)
-            current = Holder(baseUrl, info.mediaKey, cacheKey, player, preloading = true)
+            current = Holder(baseUrl, info.mediaKey, identity, cacheKey, player, preloading = true)
             monitorPreload(player, info.mediaKey)
             Log.d(TAG, "Preload iniciado: ${info.mediaKey}")
         }
@@ -47,13 +48,14 @@ class PlaybackCoordinator(
 
     suspend fun acquire(baseUrl: String, info: PlaybackInfo): ExoPlayer {
         val requestGeneration = ++generation
-        val simpleCache = cache.getOrCreate()
+        val simpleCache = if (info.playbackMode == "hls") null else cache.getOrCreate()
         return withContext(Dispatchers.Main.immediate) {
             check(requestGeneration == generation) { "Preparação de mídia substituída." }
             val factory = PlaybackFactory(appContext, http)
-            val cacheKey = factory.cacheKey(baseUrl, info)
+            val identity = factory.playbackIdentity(baseUrl, info)
+            val cacheKey = if (info.playbackMode == "hls") null else factory.cacheKey(baseUrl, info)
             val existing = current
-            if (existing?.matches(cacheKey) == true) {
+            if (existing?.matches(identity) == true) {
                 preloadMonitor?.cancel()
                 preloadMonitor = null
                 existing.preloading = false
@@ -71,6 +73,7 @@ class PlaybackCoordinator(
             current = Holder(
                 baseUrl,
                 info.mediaKey,
+                identity,
                 cacheKey,
                 player,
                 preloading = false,
@@ -93,7 +96,7 @@ class PlaybackCoordinator(
             if (holder?.player === player) {
                 val cacheKey = holder.cacheKey
                 releaseCurrent()
-                if (completed) scheduleCompletedRemoval(cacheKey)
+                if (completed && cacheKey != null) scheduleCompletedRemoval(cacheKey)
             } else {
                 player.stop()
                 player.release()
@@ -161,12 +164,13 @@ class PlaybackCoordinator(
     private data class Holder(
         val baseUrl: String,
         val mediaKey: String,
-        val cacheKey: String,
+        val identity: String,
+        val cacheKey: String?,
         val player: ExoPlayer,
         var preloading: Boolean,
         var startedAtMs: Long = 0,
     ) {
-        fun matches(candidateCacheKey: String) = cacheKey == candidateCacheKey
+        fun matches(candidateIdentity: String) = identity == candidateIdentity
     }
 
     private companion object {

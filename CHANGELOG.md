@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.9 — 2026-07-15
+
+- Direct play passa a considerar somente decoders de vídeo por hardware, com limites de resolução, bitrate e perfil por codec.
+- Dolby Vision em MKV deixa de ser enviado diretamente ao Media3 e usa transcodificação HLS compatível; Dolby Vision direto fica restrito a MP4 e tela/decoder compatíveis.
+- Falhas de decoder ou contêiner no fluxo direto acionam automaticamente uma nova fonte HLS transcodificada.
+- Player é recriado quando URL, modo ou revisão do arquivo muda; o cache progressivo não reutiliza mais arquivos substituídos.
+- HLS deixa de usar a chave de cache progressivo, evitando a remoção acidental de segmentos ativos.
+- Buffers foram ampliados para 4K/alto bitrate e para retomada de HLS; progresso de episódios é salvo sempre na chave correta.
+- Media3 atualizado para 1.10.1 e fallback entre decoders habilitado.
+
 ## 1.0.8 — 2026-07-15
 
 - Capacidades reais de contêiner, vídeo, áudio, HDR e resolução são detectadas no Google TV e enviadas ao servidor.

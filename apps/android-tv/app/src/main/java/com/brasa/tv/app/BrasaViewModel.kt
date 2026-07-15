@@ -158,6 +158,25 @@ class BrasaViewModel(
         }
     }
 
+    fun fallbackPlayback(mediaKey: String) {
+        if (mutable.value.previewMode || mutable.value.playback?.mediaKey != mediaKey) return
+        val profile = mutable.value.profile ?: return
+        playbackPreparationJob?.cancel()
+        mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(playbackUrl = "", preparationStatus = "preparing", preparationProgress = 0.0, playbackMode = "hls", errorType = "", errorMessage = ""))
+        playbackPreparationJob = viewModelScope.launch {
+            while (true) {
+                val next = runCatching { repository.playback(profile.id, mediaKey, forceRefresh = true, fallbackMode = "transcode") }.getOrElse {
+                    if (mutable.value.playback?.mediaKey == mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível preparar a versão compatível."))
+                    return@launch
+                }
+                if (mutable.value.playback?.mediaKey != mediaKey) return@launch
+                mutable.value = mutable.value.copy(playback = next)
+                if (next.preparationStatus in setOf("ready", "failed")) return@launch
+                delay(1_000)
+            }
+        }
+    }
+
     fun prefetchPlaybackMetadata(item: CatalogItem) {
         if (mutable.value.previewMode) return
         if (item.type == "series") return
@@ -180,7 +199,7 @@ class BrasaViewModel(
             val info = repository.playback(profile.id, item.mediaKey)
             val selected = mutable.value.selected ?: return@launch
             if (selected.mediaKey != item.mediaKey && selected.type != "series") return@launch
-            if (info.preparationStatus == "ready" && info.playbackUrl.isNotBlank()) playbackCoordinator.preload(repository.serverBaseUrl(), info)
+            if (info.preparationStatus == "ready" && info.playbackUrl.isNotBlank() && info.playbackMode != "hls") playbackCoordinator.preload(repository.serverBaseUrl(), info)
         }
     }
 
@@ -190,11 +209,10 @@ class BrasaViewModel(
         playbackCoordinator.cancelPreload()
     }
 
-    fun saveProgress(progress: WatchProgress) = viewModelScope.launch {
+    fun saveProgress(mediaKey: String, progress: WatchProgress) = viewModelScope.launch {
         if (mutable.value.previewMode) return@launch
         val profile = mutable.value.profile ?: return@launch
-        val item = mutable.value.selected ?: return@launch
-        runCatching { repository.saveProgress(profile.id, item.mediaKey, progress) }
+        runCatching { repository.saveProgress(profile.id, mediaKey, progress) }
     }
 
     fun verifyPin(pin: String, onResult: (Boolean) -> Unit) = launch {

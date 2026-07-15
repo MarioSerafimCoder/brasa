@@ -17,7 +17,7 @@ Busca e PIN não recebem foco de digitação ao abrir uma tela. O PIN usa um pai
 
 ## Reprodução adaptativa
 
-O APK detecta os decoders, tipos HDR e resolução do Google TV e envia essas capacidades ao servidor. Um MKV grande compatível usa direct play autenticado com Range; incompatibilidade apenas de áudio ou contêiner usa remux HLS sem recodificar o vídeo. As telas mostram “Analisando mídia” e “Preparando reprodução” somente quando algum processamento é realmente necessário.
+O APK detecta decoders de vídeo por hardware, perfis, limites de bitrate/resolução e tipos HDR do Google TV e envia essas capacidades ao servidor. Um MKV grande realmente compatível usa direct play autenticado com Range; Dolby Vision direto fica restrito a MP4. Incompatibilidade apenas de áudio usa remux HLS, e uma falha real do decoder aciona automaticamente HLS transcodificado. As telas mostram “Analisando mídia” e “Preparando reprodução” somente quando algum processamento é necessário.
 
 Em servidores NVIDIA, o BRasa valida o NVENC com uma codificação prática e usa NVDEC/CUDA + NVENC. Quando a TV não suporta o HDR original e o FFmpeg precisa fazer tone mapping, filmes pesados começam em uma única variante 720p. Segmentos de dois segundos e buffer inicial reduzido diminuem o tempo até o primeiro quadro sem alterar o arquivo original.
 

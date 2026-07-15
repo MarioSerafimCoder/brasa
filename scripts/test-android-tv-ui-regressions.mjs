@@ -9,6 +9,7 @@ const pin = await fs.readFile(`${root}/feature/profiles/ProfilePinScreen.kt`, "u
 const player = await fs.readFile(`${root}/feature/player/PlayerScreen.kt`, "utf8");
 const http = await fs.readFile(`${root}/core/network/BrasaHttpClient.kt`, "utf8");
 const factory = await fs.readFile(`${root}/core/playback/PlaybackFactory.kt`, "utf8");
+const viewModel = await fs.readFile(`${root}/app/BrasaViewModel.kt`, "utf8");
 const settings = await fs.readFile(`${root}/data/storage/AppSettingsStore.kt`, "utf8");
 
 assert.match(theme, /val hero = 48\.sp/);
@@ -24,6 +25,13 @@ assert.match(settings, /floatPreferencesKey\("card_density"\)/);
 assert.match(theme, /LocalDensity provides scaledDensity/);
 assert.match(http, /readTimeout\(60,TimeUnit\.SECONDS\)/);
 assert.match(factory, /DefaultLoadErrorHandlingPolicy\(6\)/);
-assert.match(factory, /info\.playbackMode.*info\.playbackUrl/);
+assert.match(factory, /setEnableDecoderFallback\(true\)/);
+assert.match(factory, /info\.playbackMode == "hls"/);
+assert.match(factory, /info\.playbackRevision/);
+assert.match(factory, /info\.bitrate >= 20_000_000L/);
 assert.match(player, /Tentar novamente/);
+assert.match(player, /onPlaybackFallback\(info\.mediaKey\)/);
+assert.match(player, /playbackRevision/);
+assert.match(viewModel, /fun saveProgress\(mediaKey: String/);
+assert.match(viewModel, /fallbackMode = "transcode"/);
 console.log("Regressoes Android TV: escala, topo, teclado e player aprovados.");
