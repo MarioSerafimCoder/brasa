@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.7 — 2026-07-14
+
+- Corrigida a sessão do Superman que avançava pelo áudio sem produzir segmentos de vídeo.
+- HEVC/H.265 em CUDA passa a selecionar explicitamente `hevc_cuvid`, necessário para o arquivo Dolby Vision testado.
+- GOP e IDR do NVENC fixados em aproximadamente quatro segundos para liberar segmentos HLS progressivamente.
+- A preparação interrompe e aciona fallback quando nenhum quadro de vídeo é decodificado nos primeiros 20 segundos.
+- Teste real confirmou dois segmentos disponíveis em 10,7 segundos e reprodução simultânea da playlist por cinco segundos.
+
 ## 1.0.6 — 2026-07-14
 
 - Corrigido o falso negativo de NVENC causado pelo teste com resolução abaixo do limite aceito pela GPU.
