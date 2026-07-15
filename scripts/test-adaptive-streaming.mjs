@@ -26,6 +26,8 @@ const cudaArgs = buildHlsArgs("movie.mkv", path.resolve("cache"), ladder1080, "h
 assert.deepEqual(cudaArgs.slice(0, 5), ["-y", "-hwaccel", "cuda", "-hwaccel_output_format", "cuda"]);
 assert.ok(cudaArgs.some((value) => value.includes("scale_cuda")), "NVENC deve manter redimensionamento na GPU");
 assert.ok(cudaArgs.includes("p1") && cudaArgs.includes("vbr"), "NVENC deve usar preset rápido e controle de taxa apropriados");
+assert.ok(cudaArgs.includes("96") && cudaArgs.includes("1"), "HLS deve forçar GOP e IDR periódicos para liberar segmentos durante a conversão");
 const hdrArgs = buildHlsArgs("movie.mkv", path.resolve("cache"), ladder1080, "h264_nvenc", probe({ video: { codec: "hevc", width: 1920, height: 1080, hdr: true } }));
 assert.ok(hdrArgs.some((value) => value.includes("scale_cuda") && value.includes("hwdownload") && value.includes("tonemap")), "HDR deve reduzir na GPU antes do tone mapping compatível");
+assert.ok(hdrArgs.includes("hevc_cuvid"), "HEVC pesado deve usar o decoder CUVID que produz quadros válidos para o Superman");
 console.log("Streaming adaptativo: CUDA/NVENC e geração HLS aprovados.");

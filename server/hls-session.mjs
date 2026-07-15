@@ -64,14 +64,23 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
             const pipeline = encoder === "h264_nvenc" ? (probe?.video?.hdr ? "NVDEC/CUDA scale + CPU HDR tone map + NVENC" : "NVDEC/CUDA + NVENC") : `software decode + ${encoder}`;
             const child = spawn(command, args, { windowsHide: true, shell: false });
             session.child = child;
-            let out = "", stderr = "", lastSave = 0;
+            let out = "", stderr = "", lastSave = 0, videoFrames = 0, stoppedForNoVideo = false;
             child.stdout.on("data", (chunk) => {
                 out += chunk;
                 const lines = out.split(/\r?\n/); out = lines.pop() || "";
                 for (const line of lines) {
                     const [name, value] = line.split("=");
+                    if (name === "frame") { videoFrames = Math.max(videoFrames, Number(value) || 0); continue; }
                     if (name !== "out_time_ms") continue;
-                    session.progress = Math.min(99, Math.max(0, Number(value) / 1e6 / Number(probe.duration || 1) * 100));
+                    const outputSeconds = Number(value) / 1e6;
+                    if (!videoFrames && outputSeconds >= 20 && !stoppedForNoVideo) {
+                        stoppedForNoVideo = true;
+                        stderr += "\nNenhum quadro de vídeo foi decodificado nos primeiros 20 segundos.";
+                        child.kill("SIGKILL");
+                        continue;
+                    }
+                    if (!videoFrames) continue;
+                    session.progress = Math.min(99, Math.max(0, outputSeconds / Number(probe.duration || 1) * 100));
                     if (Date.now() - lastSave > 1500) { lastSave = Date.now(); persist(session).catch(() => {}); store.update(session.mediaKey, { status: "processing", playbackStrategy: "hls", hlsSessionId: session.id, progress: Number(session.progress.toFixed(1)), encoder, decoder: encoder === "h264_nvenc" ? "cuda" : "software", pipeline, ffmpegStderr: stderr.slice(-1200) }).catch(() => {}); }
                 }
             });
@@ -126,13 +135,15 @@ export function buildHlsArgs(input, directory, ladder, encoder = "libx264", prob
             filters.push(`[v${index}]${hdrToSdr}scale=${size}[v${index}o]`);
         }
     });
-    const args = ["-y", ...(cuda ? ["-hwaccel", "cuda", "-hwaccel_output_format", "cuda"] : []), "-i", input, "-filter_complex", filters.join(";"), "-map_metadata", "-1"];
+    const cudaDecoder = cuda && ["hevc", "h265"].includes(String(probe?.video?.codec || "").toLowerCase()) ? ["-c:v", "hevc_cuvid"] : [];
+    const args = ["-y", ...(cuda ? ["-hwaccel", "cuda", "-hwaccel_output_format", "cuda", ...cudaDecoder] : []), "-i", input, "-filter_complex", filters.join(";"), "-map_metadata", "-1"];
     ladder.forEach((quality, index) => {
         args.push("-map", `[v${index}o]`, "-map", "0:a:0?", `-c:v:${index}`, encoder, `-b:v:${index}`, String(quality.bitrate), `-maxrate:v:${index}`, String(quality.maxrate), `-bufsize:v:${index}`, String(quality.buffer));
+        args.push(`-g:v:${index}`, "96", `-keyint_min:v:${index}`, "96", `-sc_threshold:v:${index}`, "0");
         if (!cuda || probe?.video?.hdr) args.push(`-pix_fmt:v:${index}`, "yuv420p");
         args.push(`-c:a:${index}`, "aac", `-b:a:${index}`, String(quality.audioBitrate), `-ac:a:${index}`, "2");
         if (encoder === "libx264") args.push(`-preset:v:${index}`, "superfast", `-profile:v:${index}`, "high");
-        if (encoder === "h264_nvenc") args.push(`-preset:v:${index}`, "p1", `-tune:v:${index}`, "ll", `-rc:v:${index}`, "vbr", `-cq:v:${index}`, "25", `-spatial-aq:v:${index}`, "1");
+        if (encoder === "h264_nvenc") args.push(`-preset:v:${index}`, "p1", `-tune:v:${index}`, "ll", `-rc:v:${index}`, "vbr", `-cq:v:${index}`, "25", `-spatial-aq:v:${index}`, "1", `-forced-idr:v:${index}`, "1", `-no-scenecut:v:${index}`, "1", `-strict_gop:v:${index}`, "1");
     });
     const map = ladder.map((quality, index) => `v:${index},a:${index},name:${quality.id}`).join(" ");
     return [...args, "-force_key_frames", `expr:gte(t,n_forced*${HLS_LIMITS.segmentSeconds})`, "-f", "hls", "-hls_time", String(HLS_LIMITS.segmentSeconds), "-hls_list_size", "0", "-hls_playlist_type", "event", "-hls_flags", "independent_segments+temp_file", "-master_pl_name", "master.m3u8", "-var_stream_map", map, "-hls_segment_filename", path.join(directory, "%v", "seg-%06d.ts"), path.join(directory, "%v", "index.m3u8"), "-progress", "pipe:1", "-nostats"];
