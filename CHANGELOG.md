@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.8 — 2026-07-15
+
+- Capacidades reais de contêiner, vídeo, áudio, HDR e resolução são detectadas no Google TV e enviadas ao servidor.
+- Arquivos acima de 20 GB deixam de exigir HLS quando o dispositivo suporta o original; o streaming usa Range autenticado.
+- Incompatibilidade apenas de áudio ou contêiner usa remux HLS com cópia de vídeo e conversão AAC quando necessária.
+- Transcodificação sob demanda começa com uma única variante, segmentos de dois segundos e quatro segundos de buffer no servidor.
+- Buffer inicial do Media3 reduzido para três segundos em rede local.
+- Fallback de hardware para CPU permanece em `preparing` e não encerra mais o acompanhamento do APK com falso erro.
+- Sessões HLS registram modo, encoder, decoder, pipeline, primeiro quadro, instante reproduzível e motivo do fallback.
+
 ## 1.0.7 — 2026-07-14
 
 - Corrigida a sessão do Superman que avançava pelo áudio sem produzir segmentos de vídeo.

@@ -33,12 +33,13 @@ class PlaybackCoordinator(
         val simpleCache = cache.getOrCreate()
         withContext(Dispatchers.Main.immediate) {
             if (requestGeneration != generation) return@withContext
-            val existing = current
-            if (existing?.matches(baseUrl, info.mediaKey) == true) return@withContext
-            releaseCurrent()
             val factory = PlaybackFactory(appContext, http)
+            val cacheKey = factory.cacheKey(baseUrl, info)
+            val existing = current
+            if (existing?.matches(cacheKey) == true) return@withContext
+            releaseCurrent()
             val player = factory.create(baseUrl, info, simpleCache, autoPlay = false)
-            current = Holder(baseUrl, info.mediaKey, factory.cacheKey(baseUrl, info.mediaKey), player, preloading = true)
+            current = Holder(baseUrl, info.mediaKey, cacheKey, player, preloading = true)
             monitorPreload(player, info.mediaKey)
             Log.d(TAG, "Preload iniciado: ${info.mediaKey}")
         }
@@ -49,8 +50,10 @@ class PlaybackCoordinator(
         val simpleCache = cache.getOrCreate()
         return withContext(Dispatchers.Main.immediate) {
             check(requestGeneration == generation) { "Preparação de mídia substituída." }
+            val factory = PlaybackFactory(appContext, http)
+            val cacheKey = factory.cacheKey(baseUrl, info)
             val existing = current
-            if (existing?.matches(baseUrl, info.mediaKey) == true) {
+            if (existing?.matches(cacheKey) == true) {
                 preloadMonitor?.cancel()
                 preloadMonitor = null
                 existing.preloading = false
@@ -64,12 +67,11 @@ class PlaybackCoordinator(
                 return@withContext existing.player
             }
             releaseCurrent()
-            val factory = PlaybackFactory(appContext, http)
             val player = factory.create(baseUrl, info, simpleCache, autoPlay = true)
             current = Holder(
                 baseUrl,
                 info.mediaKey,
-                factory.cacheKey(baseUrl, info.mediaKey),
+                cacheKey,
                 player,
                 preloading = false,
                 startedAtMs = SystemClock.elapsedRealtime(),
@@ -164,14 +166,13 @@ class PlaybackCoordinator(
         var preloading: Boolean,
         var startedAtMs: Long = 0,
     ) {
-        fun matches(candidateBaseUrl: String, candidateMediaKey: String) =
-            baseUrl == candidateBaseUrl && mediaKey == candidateMediaKey
+        fun matches(candidateCacheKey: String) = cacheKey == candidateCacheKey
     }
 
     private companion object {
         const val TAG = "BRasaPlayback"
-        const val PRELOAD_TARGET_MS = 4_000L
-        const val PRELOAD_TIMEOUT_MS = 8_000L
+        const val PRELOAD_TARGET_MS = 3_000L
+        const val PRELOAD_TIMEOUT_MS = 6_000L
         const val PRELOAD_POLL_MS = 100L
         const val COMPLETED_CACHE_GRACE_MS = 2 * 60_000L
     }

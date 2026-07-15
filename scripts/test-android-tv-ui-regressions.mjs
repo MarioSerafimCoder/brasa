@@ -24,5 +24,6 @@ assert.match(settings, /floatPreferencesKey\("card_density"\)/);
 assert.match(theme, /LocalDensity provides scaledDensity/);
 assert.match(http, /readTimeout\(60,TimeUnit\.SECONDS\)/);
 assert.match(factory, /DefaultLoadErrorHandlingPolicy\(6\)/);
+assert.match(factory, /info\.playbackMode.*info\.playbackUrl/);
 assert.match(player, /Tentar novamente/);
 console.log("Regressoes Android TV: escala, topo, teclado e player aprovados.");

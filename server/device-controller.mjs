@@ -32,7 +32,7 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (path === "/api/v1/tv/home" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.home(device, profileId)); }
         if (path === "/api/v1/tv/search" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.search(device, profileId, url.searchParams.get("q") || "")); }
         const playback = path.match(/^\/api\/v1\/tv\/playback\/(movie|episode):([^/]+)$/);
-        if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`)); }
+        if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`, playbackCapabilities(request.headers))); }
         const progress = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/progress\/(movie|episode):([^/]+)$/);
         if (progress) { const profileId = auth.requireProfile(device, progress[1]), mediaKey = `${progress[2]}:${progress[3]}`; if (method === "GET") return success(response, await tvServices.progress(profileId, mediaKey)); if (method === "PUT") return success(response, await tvServices.saveProgress(profileId, mediaKey, await readBody(request))); }
         const favorite = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/favorites\/(movie|episode):([^/]+)$/);
@@ -40,7 +40,7 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         const verifyPin = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/verify-pin$/);
         if (verifyPin && method === "POST") { const profileId = auth.requireProfile(device, verifyPin[1]); return success(response, { valid: await tvServices.verifyPin(profileId, (await readBody(request)).pin) }); }
         const stream = path.match(/^\/api\/tv\/stream\/(movie|episode):([^/]+)$/);
-        if (stream && ["GET", "HEAD"].includes(method)) { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return tvServices.stream(request, response, `${stream[1]}:${stream[2]}`, profileId); }
+        if (stream && ["GET", "HEAD"].includes(method)) { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return tvServices.stream(request, response, `${stream[1]}:${stream[2]}`, profileId, url.searchParams.get("source") || ""); }
         const hls = path.match(/^\/api\/v1\/tv\/hls\/([a-f0-9]{24})\/(.+)$/);
         if (hls && ["GET", "HEAD"].includes(method)) return tvServices.hls(request, response, device, hls[1], hls[2]);
         throw new NotFoundError("Recurso da TV não encontrado.");
@@ -53,4 +53,17 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
     };
     return { handle, admin };
     function success(response, data, status = 200) { send(response, status, { ok: true, data }); }
+}
+
+function playbackCapabilities(headers = {}) {
+    const list = (name) => String(headers[name] || "").slice(0, 512).split(",").map((value) => value.trim().toLowerCase()).filter((value) => /^[a-z0-9-]{2,32}$/.test(value)).slice(0, 32);
+    const dimension = (name) => { const value=Number(headers[name] || 0);return Number.isSafeInteger(value) && value > 0 ? Math.min(16384, value) : 0; };
+    return {
+        containers: list("x-brasa-playback-containers"),
+        videoCodecs: list("x-brasa-video-codecs"),
+        audioCodecs: list("x-brasa-audio-codecs"),
+        hdrTypes: list("x-brasa-hdr-types"),
+        maxWidth: dimension("x-brasa-max-video-width"),
+        maxHeight: dimension("x-brasa-max-video-height"),
+    };
 }

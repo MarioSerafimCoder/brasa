@@ -105,11 +105,11 @@ Depois do pareamento, setas movem o foco, `Enter` abre ou confirma, espaço repr
 
 ### Streaming adaptativo HLS
 
-O BRasa analisa a mídia com FFprobe antes de liberar o player. A ordem é direct play, remux, conversão de áudio, HLS e transcodificação completa. HLS é selecionado para arquivos acima de 12 GB, obrigatório acima de 20 GB, bitrate superior a 20 Mb/s, 4K, HEVC/H.265/VC-1/MPEG-2, DTS/TrueHD/E-AC3 ou falha de compatibilidade.
+O BRasa analisa a mídia com FFprobe antes de liberar o player. O aplicativo Google TV informa contêineres, codecs de vídeo e áudio, HDR e resolução realmente suportados. A ordem é direct play autenticado com Range, remux HLS copiando o vídeo e, somente quando necessário, transcodificação. O tamanho do arquivo isoladamente não força HLS em clientes que reportam compatibilidade; clientes antigos mantêm a política conservadora por tamanho, bitrate e codec.
 
-As playlists ficam em `data/prepared-media/hls`, usam segmentos de aproximadamente quatro segundos e nunca substituem o original. Playlists em processamento não recebem cache agressivo; segmentos finalizados podem ser armazenados localmente. Em máquinas sem encoder de hardware validado, o BRasa prioriza 720p por CPU para manter velocidade suficiente. Com NVENC, Quick Sync ou AMF válidos, publica a escada compatível de 720p, 1080p e 2160p sem upscale.
+As playlists ficam em `data/prepared-media/hls`, usam segmentos de aproximadamente dois segundos e nunca substituem o original. A reprodução sob demanda começa com uma única variante: 720p para HDR que exige tone mapping ou até 1080p para SDR. Remux mantém a resolução original. Playlists em processamento não recebem cache agressivo e segmentos finalizados podem ser reutilizados.
 
-Configurações padrão: `autoAnalyze=true`, `autoPrepare=true`, `cpuFallback=true`, `acceleration=auto`, buffer inicial de 12 s, alvo de 45 s e máximo de 150 s. O cache HLS tem limite padrão de 160 GB. Consulte `GET /api/media/cache`; para apagar somente HLS, use `DELETE /api/media/cache/hls` no próprio computador ou remova a pasta com o servidor encerrado.
+Configurações padrão: `autoAnalyze=true`, `autoPrepare=true`, `cpuFallback=true`, `acceleration=auto`, segmentos de 2 s, buffer inicial de 4 s, alvo de 30 s e máximo de 90 s. O APK inicia após aproximadamente 3 s armazenados. O cache HLS tem limite padrão de 160 GB. Consulte `GET /api/media/cache`; para apagar somente HLS, use `DELETE /api/media/cache/hls` no próprio computador ou remova a pasta com o servidor encerrado.
 
 ### Aceleração NVIDIA
 

@@ -17,9 +17,9 @@ Busca e PIN não recebem foco de digitação ao abrir uma tela. O PIN usa um pai
 
 ## Reprodução adaptativa
 
-O APK não atribui o MKV original ao player enquanto o servidor analisa a mídia. As telas mostram “Analisando mídia” e “Preparando reprodução”; quando os primeiros segmentos estão prontos, o Media3 inicia HLS na qualidade automática. O menu do player informa qualidade e buffer e permite limitar manualmente as variantes disponíveis.
+O APK detecta os decoders, tipos HDR e resolução do Google TV e envia essas capacidades ao servidor. Um MKV grande compatível usa direct play autenticado com Range; incompatibilidade apenas de áudio ou contêiner usa remux HLS sem recodificar o vídeo. As telas mostram “Analisando mídia” e “Preparando reprodução” somente quando algum processamento é realmente necessário.
 
-Em servidores NVIDIA, o BRasa valida o NVENC com uma codificação prática e usa NVDEC/CUDA + NVENC. Filmes HDR muito pesados podem oferecer inicialmente apenas 720p quando o FFmpeg do servidor precisar fazer o tone mapping na CPU; essa decisão preserva a reprodução contínua e não altera o arquivo original.
+Em servidores NVIDIA, o BRasa valida o NVENC com uma codificação prática e usa NVDEC/CUDA + NVENC. Quando a TV não suporta o HDR original e o FFmpeg precisa fazer tone mapping, filmes pesados começam em uma única variante 720p. Segmentos de dois segundos e buffer inicial reduzido diminuem o tempo até o primeiro quadro sem alterar o arquivo original.
 
 ## Compilar e testar
 

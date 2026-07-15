@@ -23,10 +23,10 @@ class PlaybackFactory(
 ) {
     private companion object {
         const val TAG = "BRasaPlayback"
-        const val MIN_BUFFER_MS = 12_000
-        const val MAX_BUFFER_MS = 150_000
-        const val BUFFER_FOR_PLAYBACK_MS = 8_000
-        const val BUFFER_AFTER_REBUFFER_MS = 12_000
+        const val MIN_BUFFER_MS = 6_000
+        const val MAX_BUFFER_MS = 90_000
+        const val BUFFER_FOR_PLAYBACK_MS = 3_000
+        const val BUFFER_AFTER_REBUFFER_MS = 6_000
         const val BACK_BUFFER_MS = 30_000
     }
 
@@ -54,7 +54,7 @@ class PlaybackFactory(
         val mediaItem = MediaItem.Builder()
             .setMediaId(info.mediaKey)
             .setUri(LocalServerAddress.resolve(baseUrl, info.playbackUrl))
-            .setCustomCacheKey(cacheKey(baseUrl, info.mediaKey))
+            .setCustomCacheKey(cacheKey(baseUrl, info))
             .setMimeType(info.mimeType)
             .setSubtitleConfigurations(subtitles)
             .build()
@@ -81,5 +81,6 @@ class PlaybackFactory(
             }
     }
 
-    fun cacheKey(baseUrl: String, mediaKey: String) = "${LocalServerAddress.normalize(baseUrl)}|$mediaKey"
+    fun cacheKey(baseUrl: String, info: PlaybackInfo) =
+        "${LocalServerAddress.normalize(baseUrl)}|${info.mediaKey}|${info.playbackMode}|${info.playbackUrl}"
 }
