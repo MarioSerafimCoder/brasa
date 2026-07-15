@@ -111,6 +111,12 @@ As playlists ficam em `data/prepared-media/hls`, usam segmentos de aproximadamen
 
 Configurações padrão: `autoAnalyze=true`, `autoPrepare=true`, `cpuFallback=true`, `acceleration=auto`, buffer inicial de 12 s, alvo de 45 s e máximo de 150 s. O cache HLS tem limite padrão de 160 GB. Consulte `GET /api/media/cache`; para apagar somente HLS, use `DELETE /api/media/cache/hls` no próprio computador ou remova a pasta com o servidor encerrado.
 
+### Aceleração NVIDIA
+
+O BRasa procura `FFMPEG_PATH` e `FFPROBE_PATH`, depois a cópia em `tools/ffmpeg`, o `PATH` do Windows e instalações conhecidas. O suporte NVENC só é ativado após uma codificação prática em 256×256; listar o encoder não é considerado suficiente. O painel **Configurações → FFmpeg e aceleração de vídeo** mostra os caminhos completos, o encoder escolhido e permite repetir o teste sem reiniciar o servidor.
+
+Com NVENC válido, vídeos SDR usam NVDEC/CUDA, redimensionamento `scale_cuda` e `h264_nvenc` no perfil rápido para streaming. Para HDR, o build atual do FFmpeg não possui `tonemap_cuda`: a decodificação e a redução de resolução continuam na GPU, mas o tone mapping HDR→SDR ocorre na CPU. Por estabilidade, filmes HDR pesados começam em 720p. Para publicar várias qualidades HDR simultaneamente em tempo real, é recomendável uma CPU mais rápida ou um build confiável de FFmpeg com tone mapping acelerado compatível.
+
 Para revogar um aparelho, use **Rede e dispositivos → Revogar**. Para desativar totalmente, mude **Modo LAN** para desativado, salve e reinicie o BRasa.
 
 Os arquivos reais `data/network-settings.json`, `data/devices.json` e seus backups são locais e ignorados pelo Git. Os arquivos `.example.json` documentam apenas a estrutura segura, sem tokens ou hashes reais.

@@ -1,0 +1,6 @@
+[
+  "Pipeline de filmes pesados corrigido para NVDEC/CUDA e NVENC.",
+  "Detecção prática de NVENC sem falsos negativos e com diagnóstico detalhado.",
+  "Perfil HLS NVIDIA ajustado para produção em tempo real na TV.",
+  "Painel administrativo mostra FFmpeg, caminhos, encoder ativo e permite retestar."
+]

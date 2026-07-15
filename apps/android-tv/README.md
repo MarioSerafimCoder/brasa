@@ -19,6 +19,8 @@ Busca e PIN não recebem foco de digitação ao abrir uma tela. O PIN usa um pai
 
 O APK não atribui o MKV original ao player enquanto o servidor analisa a mídia. As telas mostram “Analisando mídia” e “Preparando reprodução”; quando os primeiros segmentos estão prontos, o Media3 inicia HLS na qualidade automática. O menu do player informa qualidade e buffer e permite limitar manualmente as variantes disponíveis.
 
+Em servidores NVIDIA, o BRasa valida o NVENC com uma codificação prática e usa NVDEC/CUDA + NVENC. Filmes HDR muito pesados podem oferecer inicialmente apenas 720p quando o FFmpeg do servidor precisar fazer o tone mapping na CPU; essa decisão preserva a reprodução contínua e não altera o arquivo original.
+
 ## Compilar e testar
 
 No diretório `apps/android-tv`:

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.6 — 2026-07-14
+
+- Corrigido o falso negativo de NVENC causado pelo teste com resolução abaixo do limite aceito pela GPU.
+- Detecção de FFmpeg/FFprobe com prioridade explícita, caminhos completos, cache atualizável e diagnóstico de driver, GPU, parâmetros e timeout.
+- Pipeline HLS NVIDIA com NVDEC, `scale_cuda` e NVENC em perfil de baixa latência.
+- Conteúdo HDR é reduzido na GPU antes do tone mapping; o estágio de tone mapping permanece na CPU porque o FFmpeg instalado não inclui `tonemap_cuda`.
+- Perfil HDR pesado limitado inicialmente a 720p para manter a geração dos segmentos em tempo real neste computador.
+- Painel administrativo com encoder selecionado, suporte H.264/HEVC/AV1 e ação **Testar novamente**.
+- Testes reais realizados com CODA em 1080p e Superman em HEVC Main10 HDR 4K.
+
 ## 1.0.5 — 2026-07-14
 
 - Análise obrigatória antes de entregar uma fonte ao player da TV.
