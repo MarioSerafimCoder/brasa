@@ -10,7 +10,7 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (path === "/api/v1/bootstrap" && method === "GET") return success(response, {
             name: currentSettings.serverName || "BRasa", apiVersion: 1, serverVersion: "1.0.0",
             lanEnabled: currentSettings.lanAccessEnabled, pairingRequired: true,
-            capabilities: { pairing: true, profiles: true, catalog: true, homeRows: true, search: true, progressivePlayback: true, rangeRequests: true, subtitles: true, audioTracks: false }
+            capabilities: { pairing: true, profiles: true, catalog: true, homeRows: true, search: true, progressivePlayback: true, adaptiveHls: true, rangeRequests: true, subtitles: true, audioTracks: true }
         });
         if (path === "/api/device-pairing/start" && method === "POST") { const body = await readBody(request); return success(response, await pairing.start({ name: body.name, type: body.type, ip: request.socket?.remoteAddress || "" }), 201); }
         const pairingStatus = path.match(/^\/api\/device-pairing\/status\/([A-Za-z0-9_-]{12,80})$/);
@@ -41,6 +41,8 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (verifyPin && method === "POST") { const profileId = auth.requireProfile(device, verifyPin[1]); return success(response, { valid: await tvServices.verifyPin(profileId, (await readBody(request)).pin) }); }
         const stream = path.match(/^\/api\/tv\/stream\/(movie|episode):([^/]+)$/);
         if (stream && ["GET", "HEAD"].includes(method)) { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return tvServices.stream(request, response, `${stream[1]}:${stream[2]}`, profileId); }
+        const hls = path.match(/^\/api\/v1\/tv\/hls\/([a-f0-9]{24})\/(.+)$/);
+        if (hls && ["GET", "HEAD"].includes(method)) return tvServices.hls(request, response, device, hls[1], hls[2]);
         throw new NotFoundError("Recurso da TV não encontrado.");
     }
     const admin = {

@@ -8,6 +8,9 @@ import crypto from "node:crypto";
 import { getMediaToolsStatus } from "../server/media-tools.mjs";
 import { createMediaStateStore } from "../server/media-state.mjs";
 import { createMediaQueue } from "../server/media-queue.mjs";
+import { createHlsSessionManager } from "../server/hls-session.mjs";
+import { createMediaCache } from "../server/media-cache.mjs";
+import { shouldUseAdaptiveHls } from "../server/transcoding-profiles.mjs";
 import { createLibraryHealthStore } from "../server/library-health-store.mjs";
 import { createSyncHistory } from "../server/sync-history.mjs";
 import { createLibraryHealth } from "../server/library-health.mjs";
@@ -69,6 +72,8 @@ const mediaStore = createMediaStateStore(rootDir);
 const tvLibraryCache = createTvLibraryCache(rootDir);
 const metadataRetryStore = createMetadataRetryStore(rootDir);
 const mediaQueue = createMediaQueue({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir), resolveMedia });
+const hlsSessions = createHlsSessionManager({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir) });
+const mediaCache = createMediaCache({ rootDir, store: mediaStore });
 const libraryHealthStore = createLibraryHealthStore(rootDir);
 const syncHistoryStore = createSyncHistory(rootDir);
 const libraryHealth = createLibraryHealth({ rootDir, store: libraryHealthStore, mediaStore, mediaQueue, syncHistory: syncHistoryStore });
@@ -78,7 +83,7 @@ const deviceAuth = createDeviceAuth(deviceStore);
 const androidTvUpdateService=createAndroidTvUpdateService({updatesRoot:androidTvUpdatesRoot,deviceStore,serveFile:serveMediaFile});
 const networkDiagnostics = createNetworkDiagnostics();
 const networkInspector = createWindowsNetworkInspector();
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -110,6 +115,9 @@ const contentTypes = {
     ".mp4": "video/mp4",
     ".mkv": "video/x-matroska",
     ".webm": "video/webm"
+    ,".m3u8": "application/vnd.apple.mpegurl; charset=utf-8"
+    ,".ts": "video/mp2t"
+    ,".m4s": "video/iso.segment"
 };
 
 const server = http.createServer(async (request, response) => {
@@ -186,6 +194,7 @@ server.keepAliveTimeout = 30_000;
 server.headersTimeout = 35_000;
 
 listen(preferredPort);
+mediaCache.cleanup().catch((error) => console.log(`BRasa: não foi possível limpar o cache de mídia (${error.message}).`));
 mediaQueue.restore().catch((error) => console.log(`BRasa: não foi possível restaurar a fila (${error.message}).`));
 
 async function loadEnvFile() {
@@ -366,8 +375,10 @@ async function handleMediaApi(request,response,url){const pathName=url.pathname;
     if(request.method==="GET"&&pathName==="/api/media-tools/status"){const tools=await getMediaToolsStatus(rootDir);return sendJson(response,200,{...tools,ffmpegPath:tools.ffmpegPath?path.basename(tools.ffmpegPath):"",ffprobePath:tools.ffprobePath?path.basename(tools.ffprobePath):""});}
     if(request.method==="GET"&&pathName==="/api/media/status")return sendJson(response,200,await mediaStore.all());
     if(request.method==="GET"&&pathName==="/api/media/queue")return sendJson(response,200,mediaQueue.snapshot());
+    if(request.method==="GET"&&pathName==="/api/media/cache")return sendJson(response,200,{cache:await mediaCache.inspect()});
+    if(request.method==="DELETE"&&pathName==="/api/media/cache/hls")return sendJson(response,200,{cache:await mediaCache.clearHls()});
     if(request.method==="GET"&&pathName==="/api/media/settings")return sendJson(response,200,{settings:await mediaStore.settings()});
-    if(request.method==="PUT"&&pathName==="/api/media/settings"){const input=await readJsonBody(request);const allowed=["autoAnalyze","autoPrepare","generateThumbnails","extractSubtitles","keepOriginal","cpuFallback","maxConcurrent","acceleration","quality","audioLanguage","subtitleLanguages","minimumFreeGb","maxPreparedGb","removePartialOnFailure","paused"];const clean=Object.fromEntries(Object.entries(input).filter(([key])=>allowed.includes(key)));return sendJson(response,200,{settings:await mediaStore.setSettings(clean)});}
+    if(request.method==="PUT"&&pathName==="/api/media/settings"){const input=await readJsonBody(request);const allowed=["autoAnalyze","autoPrepare","generateThumbnails","extractSubtitles","keepOriginal","cpuFallback","maxConcurrent","acceleration","quality","audioLanguage","subtitleLanguages","minimumFreeGb","maxPreparedGb","maxHlsGb","removePartialOnFailure","retainAdvancedPreparation","hlsSegmentSeconds","hlsStartBufferSeconds","hlsTargetBufferSeconds","hlsMaxBufferSeconds","paused"];const clean=Object.fromEntries(Object.entries(input).filter(([key])=>allowed.includes(key)));return sendJson(response,200,{settings:await mediaStore.setSettings(clean)});}
     const parts=pathName.split("/").filter(Boolean),action=parts[2]||"",key=decodeURIComponent(parts.slice(3).join("/"));
     if(action==="status"&&request.method==="GET"){if(!isValidMediaKey(key))return sendJson(response,400,{ok:false,message:"Identificador de mídia inválido."});let item=await mediaStore.get(key);if(item){const media=await resolveMedia(key);if(media){const stat=await fs.stat(path.resolve(rootDir,media.originalPath)).catch(()=>null);if(stat&&item.fingerprint&&(item.fingerprint.size!==stat.size||item.fingerprint.mtimeMs!==Math.round(stat.mtimeMs)))item=await mediaStore.update(key,{status:"pending",preparedPath:"",progress:0,error:"O arquivo original mudou e precisa ser analisado novamente.",probe:null,fingerprint:null});}}return item?sendJson(response,200,{item}):sendJson(response,404,{ok:false,message:"Mídia ainda não analisada."});}
     if(action==="analyze"&&request.method==="POST"){const body=key?{}:await readJsonBody(request),mediaKey=key||String(body.mediaKey||"");if(!isValidMediaKey(mediaKey))return sendJson(response,400,{ok:false,message:"Identificador de mídia inválido."});return sendJson(response,202,{item:await mediaQueue.analyze(mediaKey,{prepare:Boolean(body.prepare),priority:20})});}
@@ -455,20 +466,43 @@ async function tvPlayback(device, profileId, mediaKey) {
     if (!item) throw new NotFoundError("Conteúdo não encontrado.");
     const source = await resolveMedia(mediaKey), extension = path.extname(source?.originalPath || "").toLowerCase();
     const currentEpisodeIndex = seriesEpisodes.findIndex((episode) => episode.mediaKey === mediaKey), nextEpisode = currentEpisodeIndex >= 0 ? seriesEpisodes[currentEpisodeIndex + 1] || null : null;
-    return {
-        mediaId: item.id, mediaKey, playbackUrl: item.streamUrl,
-        mimeType: contentTypes[extension] || "video/*", container: extension.replace(".", ""), supportsRange: true,
+    const base = {
+        mediaId: item.id, mediaKey, playbackUrl: "", mimeType: "video/*", container: extension.replace(".", ""), videoCodec: "", audioCodec: "", supportsRange: true,
         resumePosition: Math.max(0, Math.round(Number(item.progress?.currentTime || 0) * 1000)),
         subtitles: (item.subtitles || []).map((track) => ({ ...track, src: String(track.src || "").startsWith("/") ? track.src : `/${track.src}` })),
-        audioTracks: [], nextEpisode, preparationStatus: "ready"
+        audioTracks: [], nextEpisode, preparationStatus: "analyzing", preparationProgress: 0, playbackMode: "pending", qualities: [], quality: "Automática", errorType: "", errorMessage: ""
     };
+    if (nextEpisode?.mediaKey && !(await mediaStore.get(nextEpisode.mediaKey))) mediaQueue.analyze(nextEpisode.mediaKey, { prepare: true, priority: 50 }).catch(() => {});
+    if (!source?.originalPath) return { ...base, preparationStatus: "failed", errorType: "source", errorMessage: "O arquivo original não foi encontrado." };
+    const mediaState = await mediaStore.get(mediaKey);
+    const original = resolvePathInsideLibrary(rootDir, source.originalPath).path;
+    const originalStat = await fs.stat(original).catch(() => null);
+    const stale = mediaState?.fingerprint && originalStat && (mediaState.fingerprint.size !== originalStat.size || mediaState.fingerprint.mtimeMs !== Math.round(originalStat.mtimeMs));
+    if (!mediaState?.probe || stale) {
+        if (!mediaState || !["queued", "analyzing"].includes(mediaState.status)) mediaQueue.analyze(mediaKey, { prepare: false, priority: 100 }).catch(() => {});
+        return { ...base, preparationStatus: "analyzing", preparationProgress: Number(mediaState?.progress || 0) };
+    }
+    const probe = mediaState.probe;
+    const codecs = { container: probe.container || base.container, videoCodec: probe.video?.codec || "", audioCodec: probe.audioTracks?.[0]?.codec || "", duration: Math.round(Number(probe.duration || 0) * 1000), audioTracks: (probe.audioTracks || []).map((track) => ({ id: String(track.index), label: track.title || track.language || `Faixa ${track.index}`, language: track.language || "und", codec: track.codec || "" })) };
+    if (["corrupted", "unsupported"].includes(mediaState.strategy) || ["corrupted", "failed"].includes(mediaState.status)) return { ...base, ...codecs, preparationStatus: "failed", errorType: mediaState.strategy === "corrupted" ? "decode" : "codec", errorMessage: mediaState.error || mediaState.reason || "A mídia não pôde ser preparada." };
+    const adaptive = shouldUseAdaptiveHls(probe, { browserCompatible: true });
+    if (adaptive.useHls) {
+        const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings());
+        if (session.state === "ready") return { ...base, ...codecs, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities };
+        return { ...base, ...codecs, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: adaptive.reasons };
+    }
+    if (mediaState.strategy === "direct-play") return { ...base, ...codecs, playbackUrl: item.streamUrl, mimeType: contentTypes[extension] || "video/*", preparationStatus: "ready", preparationProgress: 100, playbackMode: "direct" };
+    if (mediaState.status === "ready" && mediaState.preparedPath) return { ...base, ...codecs, playbackUrl: item.streamUrl, mimeType: "video/mp4", container: "mp4", preparationStatus: "ready", preparationProgress: 100, playbackMode: mediaState.strategy };
+    if (!["queued", "processing", "analyzing"].includes(mediaState.status)) mediaQueue.prepare(mediaKey, { priority: 100 }).catch(() => {});
+    return { ...base, ...codecs, preparationStatus: "preparing", preparationProgress: Number(mediaState.progress || 0), playbackMode: mediaState.strategy || "prepare", errorType: mediaState.status === "failed" ? "processing" : "", errorMessage: mediaState.status === "failed" ? mediaState.error || "O servidor não conseguiu preparar esta mídia." : "" };
 }
 
 async function tvProgress(profileId, mediaKey) { const state = await readUserState(); if (!state.profiles.some((item) => item.id === profileId)) throw new NotFoundError("Perfil não encontrado."); return validateProfileState(state.states[profileId] || {}).progress[mediaKey] || null; }
 async function tvSaveProgress(profileId, mediaKey, input) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); const media = await getTvMediaItem(mediaKey); if (!media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), progress = { ...current.progress, [mediaKey]: validateProgress(input, mediaKey) }; state.states[profileId] = { ...current, progress, updatedAt: new Date().toISOString() }; await queueUserStateWrite(state); return progress[mediaKey]; }
 async function tvSaveFavorite(profileId, mediaKey, enabled) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), media = await getTvMediaItem(mediaKey); if (!profile || !media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), legacyId = mediaKey.split(":").slice(1).join(":"), favorites = enabled ? [...new Set([...current.favorites.filter((item) => item !== legacyId), mediaKey])] : current.favorites.filter((item) => item !== mediaKey && item !== legacyId); state.states[profileId] = { ...current, favorites, updatedAt: new Date().toISOString() }; await queueUserStateWrite(state); return { favorite: enabled }; }
 async function tvVerifyPin(profileId, pin) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); return !profile.pinHash || verifyPinHash(profile, String(pin || "")); }
-async function tvStream(request, response, mediaKey, profileId) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), item = await getTvMediaItem(mediaKey); if (!profile || !item || !canTvAccess(item, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const cached=tvStreamFileCache.get(mediaKey);let resolved=cached?.expiresAt>Date.now()?cached.path:"",stat=cached?.expiresAt>Date.now()?cached.stat:null;if(!resolved||!stat){const media = await resolveMedia(mediaKey), candidates = [...new Set([media?.originalPath, item.originalVideo, item.video].filter(Boolean))];for (const candidate of candidates) { const safe = resolvePathInsideLibrary(rootDir, candidate).path, candidateStat = await fs.stat(safe).catch(() => null); if (candidateStat?.isFile()) { resolved = safe; stat = candidateStat; break; } }if(resolved&&stat)tvStreamFileCache.set(mediaKey,{path:resolved,stat,expiresAt:Date.now()+30_000});} if (!resolved || !stat) throw new NotFoundError("Arquivo de mídia não encontrado."); return serveMediaFile(resolved, stat, request, response, { "Content-Type": contentTypes[path.extname(resolved).toLowerCase()] || "application/octet-stream", "Cache-Control": "private, no-transform" }); }
+async function tvStream(request, response, mediaKey, profileId) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), item = await getTvMediaItem(mediaKey); if (!profile || !item || !canTvAccess(item, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const mediaState=await mediaStore.get(mediaKey),cached=tvStreamFileCache.get(mediaKey);let resolved=cached?.expiresAt>Date.now()?cached.path:"",stat=cached?.expiresAt>Date.now()?cached.stat:null;if(!resolved||!stat){const media = await resolveMedia(mediaKey), candidates = [...new Set([mediaState?.preparedPath,media?.originalPath, item.originalVideo, item.video].filter(Boolean))];for (const candidate of candidates) { const safe = String(candidate).startsWith("data/prepared-media/")?path.resolve(rootDir,candidate):resolvePathInsideLibrary(rootDir, candidate).path, candidateStat = await fs.stat(safe).catch(() => null); if (candidateStat?.isFile()) { resolved = safe; stat = candidateStat; break; } }if(resolved&&stat)tvStreamFileCache.set(mediaKey,{path:resolved,stat,expiresAt:Date.now()+30_000});} if (!resolved || !stat) throw new NotFoundError("Arquivo de mídia não encontrado."); return serveMediaFile(resolved, stat, request, response, { "Content-Type": contentTypes[path.extname(resolved).toLowerCase()] || "application/octet-stream", "Cache-Control": "private, no-transform" }); }
+async function tvHls(request, response, device, sessionId, requested) { const resolved=await hlsSessions.resolve(sessionId,requested);if(!resolved)throw new NotFoundError("Segmento de streaming ainda não está disponível.");const media=await getTvMediaItem(resolved.session?.mediaKey||"");const state=await readUserState(),profiles=state.profiles.filter((profile)=>!device.allowedProfileIds.length||device.allowedProfileIds.includes(profile.id));if(!media||!profiles.some((profile)=>canTvAccess(media,profile)))throw new ForbiddenError("Conteúdo indisponível para este dispositivo.");const extension=path.extname(resolved.file).toLowerCase();return serveMediaFile(resolved.file,resolved.stat,request,response,{"Content-Type":contentTypes[extension]||"application/octet-stream","Cache-Control":extension===".m3u8"?"private, no-cache, max-age=0":"private, max-age=86400, immutable"});}
 async function getTvMediaItem(mediaKey) { const [type, id] = String(mediaKey).split(":"), library = await tvLibraryCache.load(); if (type === "movie") return library.movieById.get(id) || null; if (type === "episode") return library.episodeById.get(id)?.episode || null; return null; }
 function canTvAccess(item, profile) { if (!item || item.playable === false || item.fileStatus === "missing-file" || (!Array.isArray(item.seasons) && !item.video)) return false; if (profile.kind !== "kids") return item.audience !== "adult" || profile.kind === "adult"; const audience = item.audience || (item.kids ? "kids" : "general"); if (audience === "kids") return true; if (audience === "adult") return false; const level = tvRatingLevel(item.contentRating); return level !== null && level <= Number(profile.maxContentRating ?? 10); }
 function tvRatingLevel(value) { const key = String(value || "").trim().toUpperCase().replace(/\s+/g, ""), levels = { L:0,LIVRE:0,G:0,"TV-Y":0,"TV-Y7":7,"TV-G":0,10:10,"10ANOS":10,12:12,14:14,16:16,18:18,PG:12,"PG-13":13,R:17,"TV-PG":12,"TV-14":14,"TV-MA":18 }; return Object.prototype.hasOwnProperty.call(levels, key) ? levels[key] : null; }

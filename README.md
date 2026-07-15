@@ -1,6 +1,6 @@
 # BRasa
 
-Servidor local de biblioteca de mídia com sincronização automática, perfis independentes e preparação opcional por FFmpeg.
+Servidor local de biblioteca de mídia com sincronização automática, perfis independentes e reprodução adaptativa por FFmpeg.
 
 ## Comandos
 
@@ -49,7 +49,7 @@ No início de cada sincronização, o BRasa verifica OMDb, TMDb e OpenSubtitles 
 
 O estado dessa fila e a saúde dos serviços aparecem no resumo da API do painel administrativo. Os arquivos de estado ficam em `data/metadata-retry.json` e `data/provider-health.json`, são ignorados pelo Git e nunca armazenam chaves de API.
 
-FFmpeg e FFprobe são opcionais. Quando não estiverem instalados, o BRasa mantém a reprodução do arquivo original e simplesmente não executa análise de codecs, preparação ou geração automática de thumbnails. A ausência dessas ferramentas não gera um aviso repetido em cada filme.
+FFmpeg e FFprobe são necessários para analisar MKV, HEVC, 4K, áudio incompatível e arquivos pesados. Execute `./scripts/install-ffmpeg.ps1` no Windows; o instalador baixa o pacote indicado pela página oficial do FFmpeg para `tools/ffmpeg`, pasta local ignorada pelo Git. MP4 H.264/AAC leve continua apto a direct play.
 
 ## Painel administrativo
 
@@ -101,7 +101,15 @@ Depois do pareamento, setas movem o foco, `Enter` abre ou confirma, espaço repr
 - Dispositivos usam uma API separada e não podem acessar sincronização, logs, metadados, configurações ou administração.
 - O streaming remoto usa `/api/tv/stream/:mediaKey`, valida dispositivo, perfil e audiência e não revela caminhos absolutos.
 - O BRasa não altera o Firewall do Windows. Caso outro aparelho não conecte, permita manualmente o Node.js apenas em redes privadas.
-- Esta versão não oferece acesso pela internet, HLS, Chromecast, AirPlay, aplicativo nativo, WebSocket ou controle por celular.
+- Esta versão não oferece acesso pela internet, Chromecast, AirPlay, WebSocket ou controle por celular. HLS e o aplicativo Android TV são integrados localmente ao BRasa.
+
+### Streaming adaptativo HLS
+
+O BRasa analisa a mídia com FFprobe antes de liberar o player. A ordem é direct play, remux, conversão de áudio, HLS e transcodificação completa. HLS é selecionado para arquivos acima de 12 GB, obrigatório acima de 20 GB, bitrate superior a 20 Mb/s, 4K, HEVC/H.265/VC-1/MPEG-2, DTS/TrueHD/E-AC3 ou falha de compatibilidade.
+
+As playlists ficam em `data/prepared-media/hls`, usam segmentos de aproximadamente quatro segundos e nunca substituem o original. Playlists em processamento não recebem cache agressivo; segmentos finalizados podem ser armazenados localmente. Em máquinas sem encoder de hardware validado, o BRasa prioriza 720p por CPU para manter velocidade suficiente. Com NVENC, Quick Sync ou AMF válidos, publica a escada compatível de 720p, 1080p e 2160p sem upscale.
+
+Configurações padrão: `autoAnalyze=true`, `autoPrepare=true`, `cpuFallback=true`, `acceleration=auto`, buffer inicial de 12 s, alvo de 45 s e máximo de 150 s. O cache HLS tem limite padrão de 160 GB. Consulte `GET /api/media/cache`; para apagar somente HLS, use `DELETE /api/media/cache/hls` no próprio computador ou remova a pasta com o servidor encerrado.
 
 Para revogar um aparelho, use **Rede e dispositivos → Revogar**. Para desativar totalmente, mude **Modo LAN** para desativado, salve e reinicie o BRasa.
 

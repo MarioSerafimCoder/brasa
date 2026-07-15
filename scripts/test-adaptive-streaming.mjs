@@ -1,0 +1,25 @@
+import assert from "node:assert/strict";
+import path from "node:path";
+import { shouldUseAdaptiveHls, createQualityLadder, estimateHlsCacheBytes } from "../server/transcoding-profiles.mjs";
+import { buildHlsArgs } from "../server/hls-session.mjs";
+
+const probe = (overrides = {}) => ({ duration: 7200, size: 2 * 1024 ** 3, bitrate: 8_000_000, container: "mov", video: { codec: "h264", width: 1920, height: 1080, bitDepth: 8 }, audioTracks: [{ codec: "aac" }], ...overrides });
+assert.equal(shouldUseAdaptiveHls(probe()).useHls, false, "MP4 H.264 leve deve usar direct play");
+assert.equal(shouldUseAdaptiveHls(probe({ size: 21 * 1024 ** 3 })).required, true, "arquivo acima de 20 GB exige HLS");
+assert.equal(shouldUseAdaptiveHls(probe({ bitrate: 21_000_000 })).useHls, true, "bitrate alto exige HLS");
+assert.equal(shouldUseAdaptiveHls(probe({ video: { codec: "hevc", width: 1920, height: 1080 } })).useHls, true, "HEVC exige HLS");
+assert.equal(shouldUseAdaptiveHls(probe({ audioTracks: [{ codec: "dts" }] })).useHls, true, "DTS exige HLS");
+const ladder1080 = createQualityLadder(probe());
+assert.deepEqual(ladder1080.map((item) => item.id), ["720p", "1080p"]);
+const ladder4k = createQualityLadder(probe({ video: { codec: "hevc", width: 3840, height: 2160 } }));
+assert.deepEqual(ladder4k.map((item) => item.id), ["720p", "1080p", "2160p"]);
+assert.deepEqual(createQualityLadder(probe({ video: { codec: "hevc", width: 3840, height: 2016 } })).map((item) => item.id), ["720p", "1080p", "2160p"]);
+assert.equal(createQualityLadder(probe({ video: { codec: "h264", width: 1280, height: 720 } })).some((item) => item.height > 720), false, "não deve fazer upscale");
+assert.ok(estimateHlsCacheBytes(7200, ladder1080) > 0);
+const args = buildHlsArgs("movie.mkv", path.resolve("cache"), ladder1080);
+assert.ok(args.includes("4"), "segmentos devem ter quatro segundos");
+assert.ok(args.includes("independent_segments+temp_file"), "segmentos devem usar escrita temporária atômica");
+assert.ok(args.includes("master.m3u8"), "manifesto principal obrigatório");
+assert.ok(args.some((value) => value.includes("%v") && value.includes("seg-%06d.ts")), "segmentos variantes obrigatórios");
+assert.ok(args.includes("event"), "playlist deve permanecer disponível durante o processamento");
+console.log("Streaming adaptativo: 12 verificações aprovadas.");

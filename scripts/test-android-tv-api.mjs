@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createDeviceController } from "../server/device-controller.mjs";
-import { startServiceDiscovery } from "../server/service-discovery.mjs";
+import { isServiceDiscoveryQuery, startServiceDiscovery } from "../server/service-discovery.mjs";
 
 let payload;
 const sent = [];
@@ -49,4 +49,10 @@ assert.deepEqual(published.txt, { api: "1", pairing: "required" });assert.equal(
 await discovery.stop();
 assert.equal(stopped, true);
 assert.equal((await startServiceDiscovery({ enabled: false })).active, false);
+const dnsName = (value) => Buffer.concat([...value.split(".").map((label) => Buffer.concat([Buffer.from([Buffer.byteLength(label)]), Buffer.from(label)])), Buffer.from([0])]);
+const query = (value, type = 12, flags = 0) => { const header = Buffer.alloc(12);header.writeUInt16BE(flags, 2);header.writeUInt16BE(1, 4);const tail = Buffer.alloc(4);tail.writeUInt16BE(type, 0);tail.writeUInt16BE(1, 2);return Buffer.concat([header, dnsName(value), tail]); };
+assert.equal(isServiceDiscoveryQuery(query("_brasa._tcp.local")), true);
+assert.equal(isServiceDiscoveryQuery(query("_brasa._tcp.local", 12, 0x8400)), false);
+assert.equal(isServiceDiscoveryQuery(query("_outra._tcp.local")), false);
+assert.equal(isServiceDiscoveryQuery(Buffer.from("_brasa")), false);
 console.log("API Android TV: bootstrap, home, playback e descoberta aprovados.");
