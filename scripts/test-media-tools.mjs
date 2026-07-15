@@ -29,6 +29,8 @@ try {
     const queueSource = await fs.readFile(new URL("../server/media-queue.mjs", import.meta.url), "utf8");
     assert.match(queueSource, /-hwaccel", "cuda", "-hwaccel_output_format", "cuda"/);
     assert.match(queueSource, /scale_cuda=passthrough=0:format=yuv420p/);
+    assert.match(queueSource, /shouldUseAdaptiveHls\(item\.probe\)\.useHls/);
+    assert.match(queueSource, /restore:restoreAdaptive/);
     const driverFailure = async (_command, args) => {
         if (args.includes("-version")) return { code: 0, stdout: "ffmpeg version test", stderr: "" };
         if (args.includes("-encoders")) return { code: 0, stdout: " V....D h264_nvenc", stderr: "" };
