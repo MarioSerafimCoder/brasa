@@ -34,7 +34,8 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
         await persist(session);
         const hardware = tools.hardwareAcceleration || {};
         const initialEncoder = encoderFor(settings, hardware);
-        if (initialEncoder === "libx264" && session.ladder.length > 1) session.ladder = [session.ladder[0]];
+        // HDR ainda exige tone mapping na CPU neste build; uma variante inicial mantém produção em tempo real.
+        if ((initialEncoder === "libx264" || probe?.video?.hdr) && session.ladder.length > 1) session.ladder = [session.ladder[0]];
         try {
             await runEncoder(session, tools.ffmpegPath, input, probe, initialEncoder);
         } catch (error) {
@@ -60,6 +61,7 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
     function runEncoder(session, command, input, probe, encoder) {
         return new Promise((resolve, reject) => {
             const args = buildHlsArgs(input, session.directory, session.ladder, encoder, probe);
+            const pipeline = encoder === "h264_nvenc" ? (probe?.video?.hdr ? "NVDEC/CUDA scale + CPU HDR tone map + NVENC" : "NVDEC/CUDA + NVENC") : `software decode + ${encoder}`;
             const child = spawn(command, args, { windowsHide: true, shell: false });
             session.child = child;
             let out = "", stderr = "", lastSave = 0;
@@ -70,7 +72,7 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
                     const [name, value] = line.split("=");
                     if (name !== "out_time_ms") continue;
                     session.progress = Math.min(99, Math.max(0, Number(value) / 1e6 / Number(probe.duration || 1) * 100));
-                    if (Date.now() - lastSave > 1500) { lastSave = Date.now(); persist(session).catch(() => {}); store.update(session.mediaKey, { status: "processing", playbackStrategy: "hls", hlsSessionId: session.id, progress: Number(session.progress.toFixed(1)), encoder, ffmpegStderr: stderr.slice(-1200) }).catch(() => {}); }
+                    if (Date.now() - lastSave > 1500) { lastSave = Date.now(); persist(session).catch(() => {}); store.update(session.mediaKey, { status: "processing", playbackStrategy: "hls", hlsSessionId: session.id, progress: Number(session.progress.toFixed(1)), encoder, decoder: encoder === "h264_nvenc" ? "cuda" : "software", pipeline, ffmpegStderr: stderr.slice(-1200) }).catch(() => {}); }
                 }
             });
             child.stderr.on("data", (chunk) => { stderr = (stderr + chunk).slice(-6000); session.stderr = stderr; });
@@ -110,13 +112,27 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
 }
 
 export function buildHlsArgs(input, directory, ladder, encoder = "libx264", probe = {}) {
+    const cuda = encoder === "h264_nvenc";
     const filters = [`[0:v:0]split=${ladder.length}${ladder.map((_, index) => `[v${index}]`).join("")}`];
-    const hdrToSdr = probe?.video?.hdr ? "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv," : "";
-    ladder.forEach((quality, index) => filters.push(`[v${index}]${hdrToSdr}scale=w=${quality.width}:h=${quality.height}:force_original_aspect_ratio=decrease:force_divisible_by=2[v${index}o]`));
-    const args = ["-y", "-i", input, "-filter_complex", filters.join(";"), "-map_metadata", "-1"];
     ladder.forEach((quality, index) => {
-        args.push("-map", `[v${index}o]`, "-map", "0:a:0?", `-c:v:${index}`, encoder, `-b:v:${index}`, String(quality.bitrate), `-maxrate:v:${index}`, String(quality.maxrate), `-bufsize:v:${index}`, String(quality.buffer), `-pix_fmt:v:${index}`, "yuv420p", `-c:a:${index}`, "aac", `-b:a:${index}`, String(quality.audioBitrate), `-ac:a:${index}`, "2");
+        const size = `w=${quality.width}:h=${quality.height}:force_original_aspect_ratio=decrease:force_divisible_by=2`;
+        if (cuda && probe?.video?.hdr) {
+            // Este build não oferece tonemap_cuda: decodifica e reduz na GPU antes do tone mapping na CPU.
+            filters.push(`[v${index}]scale_cuda=${size}:format=p010le,hwdownload,format=p010le,zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p[v${index}o]`);
+        } else if (cuda) {
+            filters.push(`[v${index}]scale_cuda=${size}:format=yuv420p[v${index}o]`);
+        } else {
+            const hdrToSdr = probe?.video?.hdr ? "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv," : "";
+            filters.push(`[v${index}]${hdrToSdr}scale=${size}[v${index}o]`);
+        }
+    });
+    const args = ["-y", ...(cuda ? ["-hwaccel", "cuda", "-hwaccel_output_format", "cuda"] : []), "-i", input, "-filter_complex", filters.join(";"), "-map_metadata", "-1"];
+    ladder.forEach((quality, index) => {
+        args.push("-map", `[v${index}o]`, "-map", "0:a:0?", `-c:v:${index}`, encoder, `-b:v:${index}`, String(quality.bitrate), `-maxrate:v:${index}`, String(quality.maxrate), `-bufsize:v:${index}`, String(quality.buffer));
+        if (!cuda || probe?.video?.hdr) args.push(`-pix_fmt:v:${index}`, "yuv420p");
+        args.push(`-c:a:${index}`, "aac", `-b:a:${index}`, String(quality.audioBitrate), `-ac:a:${index}`, "2");
         if (encoder === "libx264") args.push(`-preset:v:${index}`, "superfast", `-profile:v:${index}`, "high");
+        if (encoder === "h264_nvenc") args.push(`-preset:v:${index}`, "p1", `-tune:v:${index}`, "ll", `-rc:v:${index}`, "vbr", `-cq:v:${index}`, "25", `-spatial-aq:v:${index}`, "1");
     });
     const map = ladder.map((quality, index) => `v:${index},a:${index},name:${quality.id}`).join(" ");
     return [...args, "-force_key_frames", `expr:gte(t,n_forced*${HLS_LIMITS.segmentSeconds})`, "-f", "hls", "-hls_time", String(HLS_LIMITS.segmentSeconds), "-hls_list_size", "0", "-hls_playlist_type", "event", "-hls_flags", "independent_segments+temp_file", "-master_pl_name", "master.m3u8", "-var_stream_map", map, "-hls_segment_filename", path.join(directory, "%v", "seg-%06d.ts"), path.join(directory, "%v", "index.m3u8"), "-progress", "pipe:1", "-nostats"];

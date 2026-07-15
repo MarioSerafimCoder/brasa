@@ -22,4 +22,10 @@ assert.ok(args.includes("independent_segments+temp_file"), "segmentos devem usar
 assert.ok(args.includes("master.m3u8"), "manifesto principal obrigatório");
 assert.ok(args.some((value) => value.includes("%v") && value.includes("seg-%06d.ts")), "segmentos variantes obrigatórios");
 assert.ok(args.includes("event"), "playlist deve permanecer disponível durante o processamento");
-console.log("Streaming adaptativo: 12 verificações aprovadas.");
+const cudaArgs = buildHlsArgs("movie.mkv", path.resolve("cache"), ladder1080, "h264_nvenc", probe());
+assert.deepEqual(cudaArgs.slice(0, 5), ["-y", "-hwaccel", "cuda", "-hwaccel_output_format", "cuda"]);
+assert.ok(cudaArgs.some((value) => value.includes("scale_cuda")), "NVENC deve manter redimensionamento na GPU");
+assert.ok(cudaArgs.includes("p1") && cudaArgs.includes("vbr"), "NVENC deve usar preset rápido e controle de taxa apropriados");
+const hdrArgs = buildHlsArgs("movie.mkv", path.resolve("cache"), ladder1080, "h264_nvenc", probe({ video: { codec: "hevc", width: 1920, height: 1080, hdr: true } }));
+assert.ok(hdrArgs.some((value) => value.includes("scale_cuda") && value.includes("hwdownload") && value.includes("tonemap")), "HDR deve reduzir na GPU antes do tone mapping compatível");
+console.log("Streaming adaptativo: CUDA/NVENC e geração HLS aprovados.");

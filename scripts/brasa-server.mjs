@@ -96,7 +96,7 @@ let syncStatus = {
 const syncCoordinator = createSyncCoordinator({ runSync: (reasons) => syncLibrary(`Biblioteca atualizada (${reasons.join(", ") || "automático"}).`, "A atualização falhou."), afterSync: () => scheduleAutomaticMediaAnalysis(), onStatusChange: (status) => { syncStatus = status; } });
 const adminAuth = createAdminAuthService({ rootDir });
 const adminLogs = createAdminLogService(rootDir);
-const getAdminTools=async()=>{const tools=await getMediaToolsStatus(rootDir);return{...tools,ffmpegPath:tools.ffmpegPath?path.basename(tools.ffmpegPath):"",ffprobePath:tools.ffprobePath?path.basename(tools.ffprobePath):""};};
+const getAdminTools=(options={})=>getMediaToolsStatus(rootDir,options);
 const adminServices = createAdminServices({ rootDir, mediaStore, mediaQueue, libraryHealth, libraryHealthStore, syncHistoryStore, syncCoordinator, getTools: getAdminTools, profileAdapter: { list: adminListProfiles, create: adminCreateProfile, update: adminUpdateProfile, remove: adminRemoveProfile, clear: adminClearProfile, relocate: adminRelocate }, collectionAdapter: { list: readUserCollections, create: adminCreateCollection, update: adminUpdateCollection, remove: adminRemoveCollection }, watcherStatus: () => ({ enabled: process.env.BRASA_WATCH_LIBRARY !== "0", active: Boolean(libraryWatcher), observedFiles: libraryWatcher?.getStates?.().length || 0 }) });
 const handleAdminApi = createAdminController({ auth: adminAuth, logs: adminLogs, services: adminServices, readBody: readJsonBody, send: sendJson, syncCoordinator, libraryHealth, mediaQueue, mediaStore, deviceAdmin: deviceController.admin, getPort: () => activePort, getHost: () => host });
 
@@ -163,7 +163,7 @@ const server = http.createServer(async (request, response) => {
             return;
         }
 
-        if (url.pathname === "/api/media-tools/status" || url.pathname === "/api/media/status" || url.pathname.startsWith("/api/media/")) {
+        if (url.pathname === "/api/media-tools/status" || url.pathname.startsWith("/api/media-tools/") || url.pathname === "/api/media/status" || url.pathname.startsWith("/api/media/")) {
             await handleMediaApi(request, response, url);
             return;
         }
@@ -372,7 +372,8 @@ async function handleCollectionsApi(request, response, url) {
 }
 
 async function handleMediaApi(request,response,url){const pathName=url.pathname;
-    if(request.method==="GET"&&pathName==="/api/media-tools/status"){const tools=await getMediaToolsStatus(rootDir);return sendJson(response,200,{...tools,ffmpegPath:tools.ffmpegPath?path.basename(tools.ffmpegPath):"",ffprobePath:tools.ffprobePath?path.basename(tools.ffprobePath):""});}
+    if(request.method==="GET"&&pathName==="/api/media-tools/status")return sendJson(response,200,await getMediaToolsStatus(rootDir));
+    if(request.method==="POST"&&pathName==="/api/media-tools/retest")return sendJson(response,200,await getMediaToolsStatus(rootDir,{refresh:true}));
     if(request.method==="GET"&&pathName==="/api/media/status")return sendJson(response,200,await mediaStore.all());
     if(request.method==="GET"&&pathName==="/api/media/queue")return sendJson(response,200,mediaQueue.snapshot());
     if(request.method==="GET"&&pathName==="/api/media/cache")return sendJson(response,200,{cache:await mediaCache.inspect()});
