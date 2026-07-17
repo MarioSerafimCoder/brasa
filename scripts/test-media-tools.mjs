@@ -31,7 +31,7 @@ try {
     assert.match(queueSource, /scale_cuda=passthrough=0:format=yuv420p/);
     assert.match(queueSource, /shouldUseAdaptiveHls\(item\.probe\)\.useHls/);
     assert.match(queueSource, /restore:restoreAdaptive/);
-    assert.match(queueSource, /Number\(probe\.schemaVersion\|\|0\)<2/);
+    assert.match(queueSource, /Number\(probe\.schemaVersion\|\|0\)<3/);
     const hlsSource = await fs.readFile(new URL("../server/hls-session.mjs", import.meta.url), "utf8");
     assert.match(hlsSource, /session\.state = "preparing";[\s\S]*fallbackReason = error\.message/);
     assert.match(hlsSource, /playbackStrategy: session\.mode === "remux" \? "hls-remux" : "hls"/);

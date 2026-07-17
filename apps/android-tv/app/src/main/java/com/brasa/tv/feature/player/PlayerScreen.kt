@@ -60,6 +60,7 @@ import com.brasa.tv.core.di.AppContainer
 import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.core.model.PlaybackInfo
 import com.brasa.tv.core.model.WatchProgress
+import com.brasa.tv.core.playback.PlaybackTimeline
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
@@ -154,9 +155,9 @@ private fun PlayerContent(
     var controlsVisible by remember { mutableStateOf(true) }
     var interaction by remember { mutableIntStateOf(0) }
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
-    var position by remember { mutableLongStateOf(player.currentPosition.coerceAtLeast(0)) }
-    var duration by remember { mutableLongStateOf(0L) }
-    var buffered by remember { mutableLongStateOf(player.bufferedPosition.coerceAtLeast(0)) }
+    var position by remember { mutableLongStateOf(PlaybackTimeline.absolutePosition(info, player.currentPosition)) }
+    var duration by remember { mutableLongStateOf(PlaybackTimeline.absoluteDuration(info, 0)) }
+    var buffered by remember { mutableLongStateOf(PlaybackTimeline.absolutePosition(info, player.bufferedPosition)) }
     var trackNotice by remember { mutableStateOf("") }
     var centerNotice by remember { mutableStateOf("") }
     var retryCount by remember { mutableIntStateOf(0) }
@@ -171,18 +172,11 @@ private fun PlayerContent(
     }
 
     fun save(completed: Boolean = false) {
-        val total = player.duration
-        if (total <= 0 || total == C.TIME_UNSET) return
+        val localDuration = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L
+        val progress = PlaybackTimeline.progress(info, player.currentPosition, localDuration, completed) ?: return
         onProgress(
             info.mediaKey,
-            WatchProgress(
-                mediaType = if (info.mediaKey.startsWith("episode:")) "episode" else "movie",
-                mediaId = info.mediaId,
-                currentTime = player.currentPosition / 1000.0,
-                duration = total / 1000.0,
-                percentage = player.currentPosition.toDouble() / total * 100,
-                completed = completed,
-            ),
+            progress,
         )
     }
     fun exit() {
@@ -197,7 +191,7 @@ private fun PlayerContent(
     fun seekBy(delta: Long) {
         val end = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: Long.MAX_VALUE
         player.seekTo((player.currentPosition + delta).coerceIn(0L, end))
-        position = player.currentPosition
+        position = PlaybackTimeline.absolutePosition(info, player.currentPosition)
         centerNotice = if (delta < 0) "↶ 10s" else "10s ↷"
         revealControls()
     }
@@ -274,9 +268,10 @@ private fun PlayerContent(
     }
     LaunchedEffect(player, controlsVisible) {
         while (true) {
-            position = player.currentPosition.coerceAtLeast(0)
-            duration = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L
-            buffered = player.bufferedPosition.coerceAtLeast(position)
+            val localDuration = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L
+            position = PlaybackTimeline.absolutePosition(info, player.currentPosition)
+            duration = PlaybackTimeline.absoluteDuration(info, localDuration)
+            buffered = PlaybackTimeline.absolutePosition(info, player.bufferedPosition).coerceAtLeast(position)
             delay(if (controlsVisible) 500 else 1_500)
         }
     }

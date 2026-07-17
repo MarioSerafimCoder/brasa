@@ -18,7 +18,7 @@ Após aprovação no computador, o token é entregue uma única vez. O Android o
 
 - `GET /api/v1/tv/home?profileId=:id`: linhas genéricas da Home.
 - `GET /api/tv/catalog?profileId=:id`: catálogo completo e fallback compatível.
-- `GET /api/v1/tv/playback/:mediaKey?profileId=:id`: URL relativa de stream, MIME, retomada, legendas e próximo episódio.
+- `GET /api/v1/tv/playback/:mediaKey?profileId=:id`: URL relativa de stream, MIME, retomada, `playbackOffset` da sessão HLS, legendas e próximo episódio.
 - `GET|HEAD /api/tv/stream/:mediaKey?profileId=:id`: mídia com suporte a Range.
 - `PUT /api/tv/profiles/:profileId/progress/:mediaKey`: progresso em segundos.
 - `PUT|DELETE /api/tv/profiles/:profileId/favorites/:mediaKey`: Minha lista.

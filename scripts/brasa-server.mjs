@@ -36,6 +36,7 @@ import { createDeviceController } from "../server/device-controller.mjs";
 import { startServiceDiscovery } from "../server/service-discovery.mjs";
 import { createAndroidTvUpdateService } from "../server/android-tv-update-service.mjs";
 import { createTvLibraryCache } from "../server/tv-library-cache.mjs";
+import { hlsTimeline } from "../server/playback-timeline.mjs";
 import { canAccessLegacyApi, isLoopbackAddress } from "../server/network-access.mjs";
 import { resolveByteRange } from "../server/http-range.mjs";
 import { ensureEnvFile } from "./setup-env.mjs";
@@ -469,7 +470,7 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
     const currentEpisodeIndex = seriesEpisodes.findIndex((episode) => episode.mediaKey === mediaKey), nextEpisode = currentEpisodeIndex >= 0 ? seriesEpisodes[currentEpisodeIndex + 1] || null : null;
     const base = {
         mediaId: item.id, mediaKey, playbackUrl: "", mimeType: "video/*", container: extension.replace(".", ""), videoCodec: "", audioCodec: "", supportsRange: true,
-        resumePosition: Math.max(0, Math.round(Number(item.progress?.currentTime || 0) * 1000)),
+        resumePosition: Math.max(0, Math.round(Number(item.progress?.currentTime || 0) * 1000)), playbackOffset: 0,
         subtitles: (item.subtitles || []).map((track) => ({ ...track, src: String(track.src || "").startsWith("/") ? track.src : `/${track.src}` })),
         audioTracks: [], nextEpisode, preparationStatus: "analyzing", preparationProgress: 0, playbackMode: "pending", qualities: [], quality: "Automática", errorType: "", errorMessage: ""
     };
@@ -479,9 +480,10 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
     const original = resolvePathInsideLibrary(rootDir, source.originalPath).path;
     const originalStat = await fs.stat(original).catch(() => null);
     const stale = mediaState?.fingerprint && originalStat && (mediaState.fingerprint.size !== originalStat.size || mediaState.fingerprint.mtimeMs !== Math.round(originalStat.mtimeMs));
-    const outdatedProbe = mediaState?.probe && Number(mediaState.probe.schemaVersion || 0) < 2;
+    const outdatedProbe = mediaState?.probe && Number(mediaState.probe.schemaVersion || 0) < 3;
     if (!mediaState?.probe || stale || outdatedProbe) {
         if (!mediaState || !["queued", "analyzing"].includes(mediaState.status)) mediaQueue.analyze(mediaKey, { prepare: false, priority: 100 }).catch(() => {});
+        if (["queued", "analyzing"].includes(mediaState?.status)) mediaQueue.prioritize(mediaKey, 100);
         return { ...base, preparationStatus: "analyzing", preparationProgress: Number(mediaState?.progress || 0) };
     }
     const probe = mediaState.probe;
@@ -493,15 +495,17 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
     if (clientPlan.mode === "direct") return { ...base, ...codecs, playbackUrl: originalStreamUrl(item.streamUrl, playbackRevision), mimeType: contentTypes[extension] || "video/*", preparationStatus: "ready", preparationProgress: 100, playbackMode: "direct", adaptiveReasons: clientPlan.reasons };
     if (mediaState.status === "failed") return { ...base, ...codecs, preparationStatus: "failed", errorType: "processing", errorMessage: mediaState.error || "A mídia não pôde ser preparada." };
     if (["remux", "transcode"].includes(clientPlan.mode)) {
-        const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings(), clientPlan);
-        if (session.state === "ready") return { ...base, ...codecs, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities, adaptiveReasons: clientPlan.reasons };
-        return { ...base, ...codecs, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: clientPlan.reasons };
+        const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings(), { ...clientPlan, startPositionMs: base.resumePosition });
+        const timeline = hlsTimeline(base.resumePosition, session.startPositionMs);
+        if (session.state === "ready") return { ...base, ...codecs, ...timeline, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities, adaptiveReasons: clientPlan.reasons };
+        return { ...base, ...codecs, ...timeline, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: clientPlan.reasons };
     }
     const adaptive = shouldUseAdaptiveHls(probe, { browserCompatible: true });
     if (adaptive.useHls) {
-        const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings());
-        if (session.state === "ready") return { ...base, ...codecs, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities };
-        return { ...base, ...codecs, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: adaptive.reasons };
+        const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings(), { startPositionMs: base.resumePosition });
+        const timeline = hlsTimeline(base.resumePosition, session.startPositionMs);
+        if (session.state === "ready") return { ...base, ...codecs, ...timeline, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities };
+        return { ...base, ...codecs, ...timeline, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: adaptive.reasons };
     }
     if (mediaState.strategy === "direct-play") return { ...base, ...codecs, playbackUrl: item.streamUrl, mimeType: contentTypes[extension] || "video/*", preparationStatus: "ready", preparationProgress: 100, playbackMode: "direct" };
     if (mediaState.status === "ready" && mediaState.preparedPath) return { ...base, ...codecs, playbackUrl: item.streamUrl, mimeType: "video/mp4", container: "mp4", preparationStatus: "ready", preparationProgress: 100, playbackMode: mediaState.strategy };
@@ -525,7 +529,7 @@ function tvEpisode(episode, series, profileId, state) { const mediaKey = `episod
 async function findLibraryCandidates(mediaKey){const media=await resolveMedia(mediaKey),files=[];for(const root of absoluteLibraryRoots(rootDir))for(const entry of await walkLibraryFiles(root.absolutePath)){const stat=await fs.stat(entry).catch(()=>null);if(!stat||!isProcessableVideo(entry,stat.size))continue;const relative=path.relative(rootDir,entry).replace(/\\/g,"/"),id=crypto.createHash("sha1").update(relative).digest("hex").slice(0,16),match=relocationScore(media,entry,root,stat);files.push({id,name:path.basename(entry),relativePath:relative,size:stat.size,...match});}return files.filter((item)=>item.confidence!=="low").sort((a,b)=>b.score-a.score).slice(0,50);}
 async function walkLibraryFiles(dir){const files=[];for(const entry of await fs.readdir(dir,{withFileTypes:true}).catch(()=>[])){const item=path.join(dir,entry.name);entry.isDirectory()?files.push(...await walkLibraryFiles(item)):files.push(item);}return files;}
 function relocationScore(media,file,root,stat){const normalized=(value)=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(),name=normalized(path.basename(file)),title=normalized(media?.title),tokens=title.split(/[^a-z0-9]+/).filter((token)=>token.length>2),reasons=[];let score=0;const matched=tokens.filter((token)=>name.includes(token));if(tokens.length&&matched.length===tokens.length){score+=50;reasons.push("título correspondente");}else if(matched.length){score+=Math.round(30*matched.length/tokens.length);reasons.push("título parcialmente correspondente");}const year=String(media?.year||"").match(/\d{4}/)?.[0];if(year&&name.includes(year)){score+=15;reasons.push("mesmo ano");}const expectedType=String(media?.mediaType||"");if((expectedType==="movie"&&root.type==="movie")||(expectedType==="episode"&&root.type==="series")){score+=15;reasons.push("mesmo tipo de mídia");}if(media?.audience&&media.audience===root.audience){score+=10;reasons.push("mesma audiência");}if(media?.originalPath&&path.extname(media.originalPath).toLowerCase()===path.extname(file).toLowerCase()){score+=5;reasons.push("mesma extensão");}if(media?.fileSize&&Math.abs(Number(media.fileSize)-stat.size)/Math.max(1,Number(media.fileSize))<.02){score+=5;reasons.push("tamanho semelhante");}return{score:Math.min(100,score),confidence:score>=80?"high":score>=55?"medium":"low",reasons};}
-async function scheduleAutomaticMediaAnalysis(){const tools=await getMediaToolsStatus(rootDir),settings=await mediaStore.settings();if(!settings.autoAnalyze||!tools.ffprobeAvailable)return;const moviesModule=await import(`${pathToFileURL(path.join(rootDir,"data","movies.js")).href}?t=${Date.now()}`),seriesModule=await import(`${pathToFileURL(path.join(rootDir,"data","series.js")).href}?t=${Date.now()}`);const keys=[...moviesModule.getMovies().filter((m)=>m.video&&m.playable!==false).map((m)=>`movie:${m.id}`),...seriesModule.getSeries().flatMap((s)=>(s.seasons||[]).flatMap((season)=>(season.episodes||[]).filter((e)=>e.video).map((e)=>`episode:${e.id}`)))];for(const key of keys){const item=await mediaStore.get(key),media=await resolveMedia(key);if(!media)continue;const source=resolvePathInsideLibrary(rootDir,media.originalPath).path,stat=await fs.stat(source).catch(()=>null);if(!stat)continue;if(Number(item?.probe?.schemaVersion||0)>=2&&item?.fingerprint&&item.fingerprint.size===stat.size&&item.fingerprint.mtimeMs===Math.round(stat.mtimeMs))continue;mediaQueue.analyze(key,{prepare:settings.autoPrepare,priority:0}).catch((error)=>console.error(`BRasa mídia ${key} analyze tentativa 1 ${new Date().toISOString()}:`,error.message));}}
+async function scheduleAutomaticMediaAnalysis(){const tools=await getMediaToolsStatus(rootDir),settings=await mediaStore.settings();if(!settings.autoAnalyze||!tools.ffprobeAvailable)return;const moviesModule=await import(`${pathToFileURL(path.join(rootDir,"data","movies.js")).href}?t=${Date.now()}`),seriesModule=await import(`${pathToFileURL(path.join(rootDir,"data","series.js")).href}?t=${Date.now()}`);const keys=[...moviesModule.getMovies().filter((m)=>m.video&&m.playable!==false).map((m)=>`movie:${m.id}`),...seriesModule.getSeries().flatMap((s)=>(s.seasons||[]).flatMap((season)=>(season.episodes||[]).filter((e)=>e.video).map((e)=>`episode:${e.id}`)))];for(const key of keys){const item=await mediaStore.get(key),media=await resolveMedia(key);if(!media)continue;const source=resolvePathInsideLibrary(rootDir,media.originalPath).path,stat=await fs.stat(source).catch(()=>null);if(!stat)continue;if(Number(item?.probe?.schemaVersion||0)>=3&&item?.fingerprint&&item.fingerprint.size===stat.size&&item.fingerprint.mtimeMs===Math.round(stat.mtimeMs))continue;mediaQueue.analyze(key,{prepare:settings.autoPrepare,priority:0}).catch((error)=>console.error(`BRasa mídia ${key} analyze tentativa 1 ${new Date().toISOString()}:`,error.message));}}
 
 async function readUserCollections() {
     await fs.mkdir(path.dirname(userCollectionsFile), { recursive: true });

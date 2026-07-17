@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.11 — 2026-07-16
+
+- Dolby Vision perfil 8.1 com camada base HDR10 passa por remux HLS, removendo apenas os metadados Dolby Vision incompatíveis e preservando vídeo HEVC Main10, HDR e resolução 4K.
+- O fallback de transcodificação de fontes HDR com 1080p ou mais deixa de usar 480p e passa a respeitar o mínimo Full HD.
+- A análise de mídia preserva derivados preparados quando a fonte não mudou, evitando recodificação e filas desnecessárias.
+- Selecionar um filme na TV promove imediatamente sua análise para o topo da fila.
+- O catálogo foi conferido contra a pasta local: Superman, Masters of the Universe, Ad Astra e CODA estão ativos.
+
+## 1.0.10 — 2026-07-15
+
+- Filmes HDR que exigem tone mapping começam em uma variante 480p, medida entre 1,10× e 1,20× no pipeline HLS completo do Superman nesta máquina.
+- Sessões HLS iniciam no segmento alinhado mais próximo da posição salva, evitando transcodificar novamente desde o começo.
+- O APK converte a linha do tempo local do HLS para posição, duração, buffer e progresso absolutos do filme.
+- Identidade das sessões HLS atualizada para invalidar playlists geradas pelo perfil anterior.
+- Testes de regressão cobrem qualidade inicial HDR, seek de entrada no FFmpeg e conversão da linha do tempo retomada.
+
 ## 1.0.9 — 2026-07-15
 
 - Direct play passa a considerar somente decoders de vídeo por hardware, com limites de resolução, bitrate e perfil por codec.

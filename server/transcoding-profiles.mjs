@@ -63,18 +63,19 @@ export function selectTvPlaybackPlan(probe, rawCapabilities = {}) {
     const bitDepth = Number(probe?.video?.bitDepth || 8);
     const hdrType = String(probe?.video?.hdrType || (probe?.video?.hdr ? "hdr10" : "")).toLowerCase();
     const dolbyVision = probe?.video?.dolbyVision === true || hdrType === "dolby-vision";
+    const hdr10Fallback = dolbyVision && probe?.video?.dolbyVisionHdr10Fallback === true && capabilities.hdrTypes.includes("hdr10");
     const dolbyVisionContainerSupported = !dolbyVision || container === "mp4";
     const containerSupported = capabilities.containers.includes(container) && dolbyVisionContainerSupported;
     const dimensionsSupported = (!capabilities.maxWidth || Number(probe?.video?.width || 0) <= capabilities.maxWidth) && (!capabilities.maxHeight || Number(probe?.video?.height || 0) <= capabilities.maxHeight);
     const baseVideoSupported = capabilities.videoCodecs.includes(video);
-    const codecCapability = capabilities.videoCapabilities.find((item) => item.codec === (dolbyVision ? "dolby-vision" : video));
+    const codecCapability = capabilities.videoCapabilities.find((item) => item.codec === (hdr10Fallback ? video : dolbyVision ? "dolby-vision" : video));
     const hardwareSupported = capabilities.videoCapabilities.length === 0 || Boolean(codecCapability?.hardware);
     const codecDimensionsSupported = !codecCapability || ((!codecCapability.maxWidth || Number(probe?.video?.width || 0) <= codecCapability.maxWidth) && (!codecCapability.maxHeight || Number(probe?.video?.height || 0) <= codecCapability.maxHeight));
     const codecBitrateSupported = !codecCapability?.maxBitrate || !Number(probe?.bitrate || 0) || Number(probe.bitrate) <= codecCapability.maxBitrate;
-    const main10Supported = dolbyVision || video !== "hevc" || bitDepth <= 8 || (codecCapability ? codecCapability.profiles.includes("main10") : capabilities.videoCodecs.includes("hevc-main10") || capabilities.videoCodecs.includes("dolby-vision"));
-    const hdrSupported = !hdrType || capabilities.hdrTypes.includes(hdrType) || (hdrType === "hdr10" && capabilities.hdrTypes.includes("hdr10-plus"));
-    const dolbyVisionSupported = !dolbyVision || ((codecCapability ? codecCapability.codec === "dolby-vision" : capabilities.videoCodecs.includes("dolby-vision")) && capabilities.hdrTypes.includes("dolby-vision"));
-    const videoSupported = baseVideoSupported && main10Supported && hdrSupported && dolbyVisionSupported && dolbyVisionContainerSupported && dimensionsSupported && hardwareSupported && codecDimensionsSupported && codecBitrateSupported;
+    const main10Supported = video !== "hevc" || bitDepth <= 8 || (codecCapability ? codecCapability.profiles.includes("main10") : capabilities.videoCodecs.includes("hevc-main10") || capabilities.videoCodecs.includes("dolby-vision"));
+    const hdrSupported = hdr10Fallback || !hdrType || capabilities.hdrTypes.includes(hdrType) || (hdrType === "hdr10" && capabilities.hdrTypes.includes("hdr10-plus"));
+    const dolbyVisionSupported = hdr10Fallback || !dolbyVision || ((codecCapability ? codecCapability.codec === "dolby-vision" : capabilities.videoCodecs.includes("dolby-vision")) && capabilities.hdrTypes.includes("dolby-vision"));
+    const videoSupported = baseVideoSupported && main10Supported && hdrSupported && dolbyVisionSupported && (dolbyVisionContainerSupported || hdr10Fallback) && dimensionsSupported && hardwareSupported && codecDimensionsSupported && codecBitrateSupported;
     const audioSupported = !audio || capabilities.audioCodecs.includes(audio);
     const reasons = [];
     if (!dolbyVisionContainerSupported) reasons.push("Dolby Vision fora de MP4 exige transcodificação");
@@ -82,7 +83,7 @@ export function selectTvPlaybackPlan(probe, rawCapabilities = {}) {
     if (!videoSupported) reasons.push(`vídeo ${video || "desconhecido"} incompatível`);
     if (!audioSupported) reasons.push(`áudio ${audio || "desconhecido"} incompatível`);
     if (containerSupported && videoSupported && audioSupported) return { mode: "direct", videoAction: "copy", audioAction: "copy", reasons: ["cliente suporta o arquivo original"], capabilities };
-    if (videoSupported) return { mode: "remux", videoAction: "copy", audioAction: audioSupported ? "copy" : "aac", reasons, capabilities };
+    if (videoSupported) return { mode: "remux", videoAction: "copy", audioAction: audioSupported ? "copy" : "aac", stripDolbyVision: hdr10Fallback, reasons: hdr10Fallback ? ["Dolby Vision convertido para a camada HDR10 compatível sem reduzir a resolução", ...reasons] : reasons, capabilities };
     return { mode: "transcode", videoAction: "h264", audioAction: "aac", reasons, capabilities };
 }
 
@@ -106,7 +107,6 @@ export function createQualityLadder(probe) {
 
 export function createStartupLadder(probe) {
     const ladder = createQualityLadder(probe);
-    if (probe?.video?.hdr) return [ladder[0]];
     return [ladder.find((quality) => quality.height >= 1080) || ladder.at(-1)];
 }
 

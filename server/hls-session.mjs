@@ -10,7 +10,7 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
 
     async function ensure(mediaKey, input, probe, settings = {}, plan = {}) {
         const mode = plan.mode === "remux" ? "remux" : "transcode";
-        const profileKey = `${mode}:${plan.audioAction || "aac"}`;
+        const profileKey = `v3:${mode}:${plan.audioAction || "aac"}:${plan.stripDolbyVision ? "hdr10" : "native"}`;
         const id = sessionId(mediaKey, probe?.fingerprint, profileKey);
         const directory = path.join(root, id);
         const master = path.join(directory, "master.m3u8");
@@ -20,7 +20,7 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
             const saved = await readState(directory);
             if (saved.state === "ready") {
                 await normalizePlaylists(directory);
-                return publicState({ ...saved, id, mediaKey, directory, state: "ready", progress: 100, ladder: saved.ladder || createQualityLadder(probe), error: "", stderr: "" });
+                return publicState({ ...saved, id, mediaKey, directory, state: "ready", progress: 100, ladder: saved.ladder || createQualityLadder(probe), startPositionMs: Number(saved.startPositionMs || 0), error: "", stderr: "" });
             }
         }
         const tools = await getTools();
@@ -30,10 +30,13 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
             : createStartupLadder(probe);
         const segmentSeconds = clamp(settings.hlsSegmentSeconds, 1, 6, HLS_LIMITS.segmentSeconds);
         const startBufferSeconds = clamp(settings.hlsStartBufferSeconds, segmentSeconds, 20, 4);
+        const startPositionMs = normalizeStartPosition(plan.startPositionMs, probe?.duration, segmentSeconds);
         const session = {
             id, mediaKey, directory, mode, ladder,
             audioAction: plan.audioAction || "aac",
+            stripDolbyVision: plan.stripDolbyVision === true,
             segmentSeconds,
+            startPositionMs,
             startSegments: Math.max(1, Math.ceil(startBufferSeconds / segmentSeconds)),
             state: "preparing", progress: 0, error: "", errorType: "", stderr: "", fallbackReason: "", child: null,
             startedAt: new Date().toISOString(), firstFrameAt: "", firstPlayableAt: "",
@@ -86,8 +89,8 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
     function runEncoder(session, command, input, probe, encoder) {
         return new Promise((resolve, reject) => {
             const args = session.mode === "remux"
-                ? buildRemuxHlsArgs(input, session.directory, probe, { audioAction: session.audioAction, segmentSeconds: session.segmentSeconds })
-                : buildHlsArgs(input, session.directory, session.ladder, encoder, probe, { segmentSeconds: session.segmentSeconds });
+                ? buildRemuxHlsArgs(input, session.directory, probe, { audioAction: session.audioAction, stripDolbyVision: session.stripDolbyVision, segmentSeconds: session.segmentSeconds, startPositionSeconds: session.startPositionMs / 1000 })
+                : buildHlsArgs(input, session.directory, session.ladder, encoder, probe, { segmentSeconds: session.segmentSeconds, startPositionSeconds: session.startPositionMs / 1000 });
             const pipeline = session.mode === "remux"
                 ? `video copy + audio ${session.audioAction}`
                 : encoder === "h264_nvenc"
@@ -120,7 +123,8 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
                         continue;
                     }
                     if (session.mode !== "remux" && !videoFrames) continue;
-                    session.progress = Math.min(99, Math.max(0, outputSeconds / Number(probe.duration || 1) * 100));
+                    const remainingDuration = Math.max(1, Number(probe.duration || 1) - session.startPositionMs / 1000);
+                    session.progress = Math.min(99, Math.max(0, outputSeconds / remainingDuration * 100));
                     if (Date.now() - lastSave > 1500) {
                         lastSave = Date.now();
                         persist(session).catch(() => {});
@@ -175,7 +179,8 @@ export function buildHlsArgs(input, directory, ladder, encoder = "libx264", prob
         }
     });
     const cudaDecoder = cuda && ["hevc", "h265"].includes(String(probe?.video?.codec || "").toLowerCase()) ? ["-c:v", "hevc_cuvid"] : [];
-    const args = ["-y", ...(cuda ? ["-hwaccel", "cuda", "-hwaccel_output_format", "cuda", ...cudaDecoder] : []), "-i", input, "-filter_complex", filters.join(";"), "-map_metadata", "-1"];
+    const seek = inputSeek(options.startPositionSeconds);
+    const args = ["-y", ...(cuda ? ["-hwaccel", "cuda", "-hwaccel_output_format", "cuda", ...cudaDecoder] : []), ...seek, "-i", input, "-filter_complex", filters.join(";"), "-map_metadata", "-1"];
     ladder.forEach((quality, index) => {
         args.push("-map", `[v${index}o]`, "-map", "0:a:0?", `-c:v:${index}`, encoder, `-b:v:${index}`, String(quality.bitrate), `-maxrate:v:${index}`, String(quality.maxrate), `-bufsize:v:${index}`, String(quality.buffer));
         const gop = String(Math.max(24, Math.round(Number(probe?.video?.frameRate || 24) * segmentSeconds)));
@@ -193,7 +198,7 @@ export function buildRemuxHlsArgs(input, directory, probe = {}, options = {}) {
     const segmentSeconds = clamp(options.segmentSeconds, 1, 6, HLS_LIMITS.segmentSeconds);
     const hasAudio = Boolean(probe?.audioTracks?.length);
     const audioAction = options.audioAction === "copy" ? "copy" : "aac";
-    const args = ["-y", "-i", input, "-map", "0:v:0", ...(hasAudio ? ["-map", "0:a:0"] : []), "-c:v", "copy"];
+    const args = ["-y", ...inputSeek(options.startPositionSeconds), "-i", input, "-map", "0:v:0", ...(hasAudio ? ["-map", "0:a:0"] : []), "-c:v", "copy", ...(options.stripDolbyVision ? ["-bsf:v", "dovi_rpu=strip=1"] : [])];
     if (hasAudio) args.push("-c:a", audioAction, ...(audioAction === "aac" ? ["-b:a", "192k", "-ac", "2"] : []));
     const map = hasAudio ? "v:0,a:0,name:original" : "v:0,name:original";
     return [...args, "-map_metadata", "-1", "-f", "hls", "-hls_time", String(segmentSeconds), "-hls_list_size", "0", "-hls_playlist_type", "event", "-hls_flags", "independent_segments+temp_file", "-master_pl_name", "master.m3u8", "-var_stream_map", map, "-hls_segment_filename", path.join(directory, "%v", "seg-%06d.ts"), path.join(directory, "%v", "index.m3u8"), "-progress", "pipe:1", "-nostats"];
@@ -205,7 +210,9 @@ async function hasStartBuffer(directory, ladder, minimumSegments = 2) { if (!awa
 async function normalizePlaylists(directory) { for(const file of [path.join(directory,"master.m3u8"),...await fs.readdir(directory,{withFileTypes:true}).then((entries)=>entries.filter((entry)=>entry.isDirectory()).map((entry)=>path.join(directory,entry.name,"index.m3u8"))).catch(()=>[])]){const text=await fs.readFile(file,"utf8").catch(()=>"");if(!text||!text.includes("\\"))continue;const temp=`${file}.${process.pid}.normalize.tmp`;await fs.writeFile(temp,text.replace(/\\/g,"/"));await fs.rename(temp,file);} }
 async function readState(directory) { return fs.readFile(path.join(directory, "session.json"), "utf8").then(JSON.parse).catch(() => ({})); }
 async function recreateDirectory(session) { await fs.rm(session.directory, { recursive: true, force: true });await fs.mkdir(session.directory, { recursive: true });for (const quality of session.ladder) await fs.mkdir(path.join(session.directory, quality.id), { recursive: true }); }
-async function persist(session) { const data = { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress.toFixed(1)), ladder: session.ladder, mode: session.mode, encoder: session.encoder || "", decoder: session.decoder || "", pipeline: session.pipeline || "", segmentSeconds: session.segmentSeconds, startSegments: session.startSegments, error: session.error, errorType: session.errorType, stderr: session.stderr?.slice(-1200) || "", fallbackReason: session.fallbackReason?.slice(-1200) || "", startedAt: session.startedAt, attemptStartedAt: session.attemptStartedAt || "", firstFrameAt: session.firstFrameAt || "", firstPlayableAt: session.firstPlayableAt || "", completedAt: session.completedAt || "", estimatedBytes: session.estimatedBytes || 0 }; const file = path.join(session.directory, "session.json"), temp = `${file}.${process.pid}.tmp`; await fs.writeFile(temp, `${JSON.stringify(data, null, 2)}\n`); await fs.rename(temp, file); }
-function publicState(session) { return { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress || 0), qualities: (session.ladder || []).map((item) => item.id), error: session.error || "", errorType: session.errorType || "", technical: session.state === "failed" ? { ffmpegStderr: session.stderr?.slice(-800) || "" } : undefined }; }
+async function persist(session) { const data = { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress.toFixed(1)), ladder: session.ladder, mode: session.mode, stripDolbyVision: session.stripDolbyVision === true, encoder: session.encoder || "", decoder: session.decoder || "", pipeline: session.pipeline || "", segmentSeconds: session.segmentSeconds, startSegments: session.startSegments, startPositionMs: Number(session.startPositionMs || 0), error: session.error, errorType: session.errorType, stderr: session.stderr?.slice(-1200) || "", fallbackReason: session.fallbackReason?.slice(-1200) || "", startedAt: session.startedAt, attemptStartedAt: session.attemptStartedAt || "", firstFrameAt: session.firstFrameAt || "", firstPlayableAt: session.firstPlayableAt || "", completedAt: session.completedAt || "", estimatedBytes: session.estimatedBytes || 0 }; const file = path.join(session.directory, "session.json"), temp = `${file}.${process.pid}.tmp`; await fs.writeFile(temp, `${JSON.stringify(data, null, 2)}\n`); await fs.rename(temp, file); }
+function publicState(session) { return { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress || 0), qualities: (session.ladder || []).map((item) => item.id), startPositionMs: Number(session.startPositionMs || 0), error: session.error || "", errorType: session.errorType || "", technical: session.state === "failed" ? { ffmpegStderr: session.stderr?.slice(-800) || "" } : undefined }; }
 function markPlayable(session) { if (!session.firstPlayableAt) { session.firstPlayableAt = new Date().toISOString();persist(session).catch(() => {}); }return publicState({ ...session, state: "ready" }); }
 function clamp(value, minimum, maximum, fallback) { const number=Number(value);return Number.isFinite(number)?Math.round(Math.min(maximum,Math.max(minimum,number))):fallback; }
+function inputSeek(value) { const seconds=Number(value);return Number.isFinite(seconds)&&seconds>0?["-ss",String(Number(seconds.toFixed(3)))]:[]; }
+function normalizeStartPosition(value, durationSeconds, segmentSeconds) { const requested=Math.max(0,Number(value)||0),durationMs=Math.max(0,Number(durationSeconds||0)*1000),segmentMs=Math.max(1000,Number(segmentSeconds||1)*1000),maximum=Math.max(0,durationMs-segmentMs);return Math.floor(Math.min(requested,maximum)/segmentMs)*segmentMs; }
