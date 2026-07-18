@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.12 — 2026-07-17
+
+- Campos de texto da Android TV passam a exigir OK explícito para iniciar edição e abrir o teclado do sistema.
+- Perda de foco, ação Concluir, tecla Voltar e mudança de rota ocultam o teclado, impedindo que ele cubra perfil, Home, detalhes e player.
+- Atualizações em cache, manuais ou retornadas pelo servidor só são exibidas quando o `versionCode` é superior ao APK instalado.
+- Instalações concluídas limpam cache, adiamento e horário da verificação anterior para evitar sugestões repetidas.
+- Configurações de exibição e reprodução de filmes permanecem inalteradas.
+
 ## 1.0.11 — 2026-07-16
 
 - Dolby Vision perfil 8.1 com camada base HDR10 passa por remux HLS, removendo apenas os metadados Dolby Vision incompatíveis e preservando vídeo HEVC Main10, HDR e resolução 4K.

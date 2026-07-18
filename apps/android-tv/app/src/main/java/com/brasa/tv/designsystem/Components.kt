@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +40,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,6 +55,8 @@ import coil3.compose.AsyncImage
 import com.brasa.tv.core.model.CatalogItem
 import java.util.Locale
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import android.view.KeyEvent
 
 enum class BrasaButtonStyle { Primary, Secondary, Ghost }
 enum class MediaCardFormat { Landscape, Poster }
@@ -274,18 +281,45 @@ fun BrasaTextField(
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     var focused by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf(false) }
     val keyboard = LocalSoftwareKeyboardController.current
+    val scope = rememberCoroutineScope()
     DisposableEffect(Unit) { onDispose { keyboard?.hide() } }
     androidx.compose.foundation.text.BasicTextField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
+        readOnly = !editing,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { editing = false; keyboard?.hide() }),
         visualTransformation = visualTransformation,
         textStyle = androidx.compose.ui.text.TextStyle(color = BrasaText, fontSize = BrasaType.body, fontWeight = FontWeight.Medium),
         modifier = modifier
             .background(BrasaSurfaceElevated, RoundedCornerShape(10.dp))
             .border(if (focused) 2.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, RoundedCornerShape(10.dp))
-            .onFocusChanged { focused = it.isFocused }
+            .onPreviewKeyEvent { event ->
+                if (event.nativeKeyEvent.action != KeyEvent.ACTION_DOWN) return@onPreviewKeyEvent false
+                when {
+                    editing && event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK -> {
+                        editing = false
+                        keyboard?.hide()
+                        true
+                    }
+                    !editing && event.nativeKeyEvent.keyCode in setOf(KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER) -> {
+                        editing = true
+                        scope.launch { delay(80); keyboard?.show() }
+                        true
+                    }
+                    else -> false
+                }
+            }
+            .onFocusChanged {
+                focused = it.isFocused
+                if (!it.isFocused) {
+                    editing = false
+                    keyboard?.hide()
+                }
+            }
             .padding(horizontal = 16.dp, vertical = 11.dp),
         decorationBox = { inner ->
             if (value.isEmpty()) Text(placeholder, color = BrasaTextMuted, fontSize = BrasaType.body)
