@@ -41,6 +41,14 @@ data/metadata-retry.json
 data/metadata-retry.backup.json
 data/series-overrides.json
 data/episode-overrides.json
+data/network-settings.json
+data/network-settings.backup.json
+data/network-settings.json.corrupt-*
+data/devices.json
+data/devices.backup.json
+data/devices.json.corrupt-*
+data/android-tv-updates/
+releases-local/
 
 # Logs
 *.log
@@ -71,3 +79,15 @@ assets/subtitles/
 # Arquivos temporários
 *.tmp
 *.bak
+
+# Android / Gradle
+apps/android-tv/.gradle/
+apps/android-tv/local.properties
+apps/android-tv/**/build/
+apps/android-tv/.idea/
+apps/android-tv/captures/
+apps/android-tv/.toolchain/
+*.jks
+*.keystore
+*.apk
+*.aab

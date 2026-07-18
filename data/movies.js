@@ -177,7 +177,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 25119571112,
         "fileModifiedAt": "2026-07-11T16:48:50.177Z",
-        "lastIndexedAt": "2026-07-11T22:28:24.426Z",
+        "lastIndexedAt": "2026-07-14T22:12:40.475Z",
         "subtitles": [
             {
                 "label": "English",
@@ -194,7 +194,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-11T22:28:22.125Z",
+        "lastMetadataAttemptAt": "2026-07-14T22:12:40.045Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -258,7 +258,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1478591394,
         "fileModifiedAt": "2026-07-11T15:54:50.372Z",
-        "lastIndexedAt": "2026-07-11T22:28:24.898Z",
+        "lastIndexedAt": "2026-07-14T22:12:40.937Z",
         "subtitles": [
             {
                 "label": "English",
@@ -275,7 +275,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-11T22:28:24.429Z",
+        "lastMetadataAttemptAt": "2026-07-14T22:12:40.479Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -307,7 +307,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2488901054,
         "fileModifiedAt": "2026-07-11T16:25:24.769Z",
-        "lastIndexedAt": "2026-07-11T22:28:26.459Z",
+        "lastIndexedAt": "2026-07-14T22:12:41.363Z",
         "subtitles": [
             {
                 "label": "English",
@@ -324,7 +324,57 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-11T22:28:24.901Z",
+        "lastMetadataAttemptAt": "2026-07-14T22:12:40.939Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 10,
+        "title": "CODA",
+        "originalTitle": "CODA",
+        "year": 2021,
+        "duration": "1h 51min",
+        "rating": 8,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Drama",
+            "Música",
+            "Romance"
+        ],
+        "overview": "Como CODA (Filhos de Adultos Surdos), Ruby é a única pessoa com audição em sua família. Quando o negócio de pesca da família é ameaçado, Ruby se vê dividida entre seguir seu amor pela música e seu medo de abandonar seus pais.",
+        "poster": "assets/posters/coda-2021-poster.jpg",
+        "backdrop": "assets/backdrops/coda-2021-backdrop.jpg",
+        "video": "assets/movies/CODA (2021) [tt10366460].mkv",
+        "audience": "general",
+        "addedAt": "2026-07-11T16:38:34.123Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt10366460",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 2929505612,
+        "fileModifiedAt": "2026-07-11T16:38:34.123Z",
+        "lastIndexedAt": "2026-07-14T22:12:41.795Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/no-ritmo-do-coracao-2021-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/no-ritmo-do-coracao-2021-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-07-14T22:12:41.365Z",
         "lastMetadataAttemptConfigured": true
     }
 ];

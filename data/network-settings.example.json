@@ -1,0 +1,7 @@
+{
+  "lanAccessEnabled": false,
+  "pairingRequired": true,
+  "allowNewDevices": true,
+  "serverName": "BRasa",
+  "maxAuthorizedDevices": 20
+}

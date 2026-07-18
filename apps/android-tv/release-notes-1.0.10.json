@@ -1,0 +1,6 @@
+[
+  "Superman e outros HDR pesados usam um perfil HLS sustentável em tempo real nesta máquina.",
+  "A transcodificação HLS começa na posição salva, sem processar novamente o filme desde o início.",
+  "Progresso, duração e barra do player continuam mostrando a posição absoluta do filme após a retomada.",
+  "Sessões antigas de HLS são invalidadas para aplicar o novo perfil de reprodução."
+]

@@ -1,0 +1,6 @@
+[
+  "Google TV informa codecs, HDR e resolução suportados para escolher o melhor fluxo.",
+  "Arquivos grandes compatíveis usam direct play com Range, sem transcodificação por tamanho.",
+  "Remux HLS copia o vídeo e converte somente o áudio quando necessário.",
+  "Segmentos de dois segundos, buffer inicial reduzido e fallback por CPU sem falso erro."
+]

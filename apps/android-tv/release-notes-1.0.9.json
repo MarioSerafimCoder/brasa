@@ -1,0 +1,6 @@
+[
+  "Direct play agora usa somente capacidades reais do decoder de vídeo por hardware da TV.",
+  "Dolby Vision em MKV é convertido para HLS compatível; Dolby Vision direto fica restrito a MP4.",
+  "Falhas de decoder acionam automaticamente uma versão HLS transcodificada.",
+  "Buffers para 4K e alto bitrate foram ampliados, com correções de cache e progresso de episódios."
+]
