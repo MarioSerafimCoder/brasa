@@ -49,6 +49,9 @@ data/devices.backup.json
 data/devices.json.corrupt-*
 data/android-tv-updates/
 releases-local/
+data/admin-password-backups/
+data/diagnostics/
+relatorio-arquivos-0-bytes.md
 
 # Logs
 *.log

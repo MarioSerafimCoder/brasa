@@ -18,7 +18,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -58,6 +61,9 @@ fun HomeScreen(
     onPlay: (CatalogItem) -> Unit,
     onPrefetch: (CatalogItem) -> Unit,
     onSearch: () -> Unit,
+    onMovies: () -> Unit,
+    onSeries: () -> Unit,
+    onCollections: () -> Unit,
     onProfiles: () -> Unit,
     onSettings: () -> Unit,
     onSeeMore: (HomeRow) -> Unit,
@@ -73,21 +79,35 @@ fun HomeScreen(
         )
         return
     }
-    val hero = remember(home) {
-        home.rows.firstOrNull { it.id.contains("continue", ignoreCase = true) }?.items?.firstOrNull()
-            ?: home.rows.firstNotNullOfOrNull { it.items.firstOrNull() }
+    if (state.profile?.kind == "kids") {
+        KidsHomeScreen(state, onItem, onPlay, onPrefetch, onSearch, onMovies, onSeries, onCollections, onProfiles, onSeeMore)
+        return
     }
+    val heroCandidates = remember(home, state.profile?.id) {
+        home.rows.flatMap(HomeRow::items)
+            .filter { it.backdrop.isNotBlank() || it.poster.isNotBlank() }
+            .distinctBy { it.mediaKey.ifBlank { it.id } }
+            .shuffled()
+    }
+    var heroIndex by remember(home, state.profile?.id) { mutableIntStateOf(0) }
+    val hero = heroCandidates.getOrNull(heroIndex % heroCandidates.size.coerceAtLeast(1))
     val heroFocus = remember { FocusRequester() }
     val listState = rememberLazyListState()
-    LaunchedEffect(hero?.mediaKey, state.profile?.id) {
+    LaunchedEffect(heroCandidates, state.profile?.id) {
+        if (heroCandidates.size > 1) while (true) {
+            delay(12_000)
+            heroIndex = (heroIndex + 1) % heroCandidates.size
+        }
+    }
+    LaunchedEffect(state.profile?.id, heroCandidates.isNotEmpty()) {
         listState.scrollToItem(0)
         if (hero != null) {
-            onPrefetch(hero)
             runCatching { heroFocus.requestFocus() }
             delay(80)
             listState.scrollToItem(0)
         }
     }
+    LaunchedEffect(hero?.mediaKey) { hero?.let(onPrefetch) }
 
     LazyColumn(
         Modifier.fillMaxSize().background(BrasaBackground),
@@ -119,6 +139,9 @@ fun HomeScreen(
                 BrasaTopBar(
                     modifier = Modifier.align(Alignment.TopCenter).padding(horizontal = BrasaSpacing.safe, vertical = BrasaSpacing.x2),
                     onHome = {},
+                    onMovies = onMovies,
+                    onSeries = onSeries,
+                    onCollections = onCollections,
                     onSearch = onSearch,
                     onProfiles = onProfiles,
                     onSettings = onSettings,

@@ -1,0 +1,5 @@
+[
+  "Títulos retomados agora recebem um fluxo com quadro inicial garantido no ponto salvo, mesmo quando o arquivo original parece compatível.",
+  "O player detecta automaticamente quando o buffer cresce sem exibir o primeiro quadro e troca para a reprodução segura.",
+  "A retomada pela rede foi validada com vídeo, áudio e legendas no ponto salvo do Avatar."
+]

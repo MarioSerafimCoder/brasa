@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/variables.css?v=streaming-20260709a">
     <link rel="stylesheet" href="../css/style.css?v=streaming-20260709a">
-    <link rel="stylesheet" href="../css/library.css?v=collections-20260711b">
+    <link rel="stylesheet" href="../css/library.css?v=series-20260719b">
 </head>
 <body>
     <div class="page-shell">
@@ -27,7 +27,7 @@
 
         <main class="page-main">
             <section class="library-page series-page">
-                <header class="library-header">
+                <header id="seriesHeader" class="library-header">
                     <div>
                         <p class="library-kicker">Series</p>
                         <h1 class="library-title">Temporadas locais</h1>
@@ -37,13 +37,13 @@
 
                 <div id="seriesGrid" class="series-grid"></div>
 
-                <section id="seriesDetail" class="series-detail"></section>
+                <section id="seriesDetail" class="series-detail" hidden></section>
             </section>
         </main>
     </div>
 
     <script src="https://unpkg.com/lucide@0.468.0" async onload="window.lucide?.createIcons?.()"></script>
-    <script type="module" src="../js/pages/series.js?v=streaming-20260709a"></script>
+    <script type="module" src="../js/pages/series.js?v=streaming-20260719d"></script>
 </body>
 </html>
 

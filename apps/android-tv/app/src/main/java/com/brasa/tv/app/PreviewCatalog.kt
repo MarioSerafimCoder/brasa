@@ -1,6 +1,8 @@
 package com.brasa.tv.app
 
 import com.brasa.tv.core.model.CatalogItem
+import com.brasa.tv.core.model.CatalogResponse
+import com.brasa.tv.core.model.Collection
 import com.brasa.tv.core.model.HomeResponse
 import com.brasa.tv.core.model.HomeRow
 import com.brasa.tv.core.model.PairingStatus
@@ -14,7 +16,7 @@ object PreviewCatalog {
     private val profiles = listOf(
         profile,
         Profile(id = "familia", name = "Família", initials = "FA"),
-        Profile(id = "kids", name = "Kids", initials = "KI", kind = "kids"),
+        Profile(id = "laura", name = "Laura", initials = "L", kind = "kids", maxContentRating = 10),
     )
 
     private fun movie(
@@ -53,6 +55,11 @@ object PreviewCatalog {
         movie("ad_astra", "Ad Astra", 2019, "2h 3min", 6.5, listOf("Ficção científica", "Drama"), "Um astronauta viaja aos limites do sistema solar para encontrar seu pai desaparecido."),
     )
 
+    private val collections = listOf(
+        Collection("ficcao", "Ficção científica", "Grandes viagens pelo espaço e pelo futuro.", movies.first().backdrop, movies.take(3)),
+        Collection("herois", "Heróis", "Aventura, coragem e mundos extraordinários.", movies[4].backdrop, movies.takeLast(2)),
+    )
+
     private val home = HomeResponse(
         profile = profile,
         rows = listOf(
@@ -68,6 +75,7 @@ object PreviewCatalog {
         profiles = profiles,
         profile = profile,
         home = home,
+        catalog = CatalogResponse(profile = profile, movies = movies, collections = collections),
         searchResults = movies,
         selected = movies.first().takeIf { page == "details" || page == "player" },
         playback = playback(movies.first()).takeIf { page == "player" },

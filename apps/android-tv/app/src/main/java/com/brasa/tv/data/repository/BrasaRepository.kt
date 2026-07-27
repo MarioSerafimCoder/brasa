@@ -106,19 +106,28 @@ class BrasaRepository(
     suspend fun catalog(profileId: String): CatalogResponse {
         val base = requireServer()
         val value = api.catalog(base, profileId)
-        return value.copy(movies = value.movies.map { it.withArtwork(base) }, series = value.series.map { it.withArtwork(base) })
+        return value.copy(
+            movies = value.movies.map { it.withArtwork(base) },
+            series = value.series.map { it.withArtwork(base) },
+            collections = value.collections.map { collection ->
+                collection.copy(
+                    banner = collection.banner.toLocalUrl(base),
+                    items = collection.items.map { it.withArtwork(base) },
+                )
+            },
+        )
     }
 
-    suspend fun playback(profileId: String, key: String, forceRefresh: Boolean = false, fallbackMode: String = ""): PlaybackInfo {
-        val cacheKey = "$profileId:$key:$fallbackMode"
+    suspend fun playback(profileId: String, key: String, forceRefresh: Boolean = false, fallbackMode: String = "", prepare: Boolean = true, positionMs: Long? = null): PlaybackInfo {
+        val cacheKey = "$profileId:$key:$fallbackMode:$prepare:${positionMs ?: "saved"}"
         val cached = playbackCache[cacheKey]
         if (!forceRefresh && cached != null && System.currentTimeMillis() - cached.first < PLAYBACK_CACHE_MS) return cached.second
-        val value = api.playback(requireServer(), profileId, key, fallbackMode)
+        val value = api.playback(requireServer(), profileId, key, fallbackMode, prepare, positionMs)
         if (value.preparationStatus == "ready") playbackCache[cacheKey] = System.currentTimeMillis() to value else playbackCache.remove(cacheKey)
         return value
     }
 
-    suspend fun prefetchPlayback(profileId: String, key: String) { runCatching { playback(profileId, key) } }
+    suspend fun prefetchPlayback(profileId: String, key: String) { runCatching { playback(profileId, key, prepare = false) } }
     suspend fun saveProgress(profileId: String, key: String, value: WatchProgress) = api.progress(requireServer(), profileId, key, value)
     suspend fun favorite(profileId: String, key: String, enabled: Boolean) = api.favorite(requireServer(), profileId, key, enabled)
     suspend fun verifyPin(profileId: String, pin: String) = api.verifyPin(requireServer(), profileId, pin).valid
@@ -158,12 +167,20 @@ class BrasaRepository(
 
     private fun catalogAsHome(catalog: CatalogResponse): HomeResponse {
         val allEpisodes = catalog.series.flatMap { it.seasons.flatMap(Season::episodes) }
-        val continuing = (catalog.movies + allEpisodes).filter { (it.progress?.percentage ?: 0.0) in 0.1..94.9 }
+        val recentSeries = catalog.series.mapNotNull { series ->
+            val latest = series.seasons.flatMap(Season::episodes)
+                .filter { (it.progress?.percentage ?: 0.0) > 0.0 }
+                .maxByOrNull { it.progress?.updatedAt.orEmpty() }
+            latest?.let { series.copy(progress = it.progress) }
+        }
+        val recentlyWatched = (catalog.movies + recentSeries)
+            .filter { (it.progress?.percentage ?: 0.0) > 0.0 }
+            .sortedByDescending { it.progress?.updatedAt.orEmpty() }
         val favorites = catalog.movies.filter(CatalogItem::favorite)
         return HomeResponse(
             catalog.profile,
             listOf(
-                HomeRow("continue", "Continuar assistindo", items = continuing),
+                HomeRow("recently-watched", "Assistidos recentemente", items = recentlyWatched),
                 HomeRow("movies", "Filmes", items = catalog.movies),
                 HomeRow("series", "Séries", items = catalog.series),
                 HomeRow("favorites", "Minha lista", items = favorites),

@@ -31,7 +31,7 @@ export default function HomePage() {
 }
 
 function renderKidsHome() {
-    const movies = filterContentByProfile(withFavoriteState(withProgressState(getMovies())));
+    const movies = filterContentByProfile(withFavoriteState(withProgressState(getAvailableMovies())));
     const continueWatching = getProgressContinueWatching(movies);
     const favorites = getFavoriteMovies(movies);
     const recentSeries = filterContentByProfile(getRecentlyAddedSeries(12));
@@ -120,7 +120,7 @@ function stopHeroSlider() {
 }
 
 function renderCarousels() {
-    const movies = filterContentByProfile(withFavoriteState(withProgressState(getMovies())));
+    const movies = filterContentByProfile(withFavoriteState(withProgressState(getAvailableMovies())));
     const availableMovies = filterContentByProfile(withFavoriteState(withProgressState(getAvailableMovies())));
     const continueWatching = withFavoriteState(getProgressContinueWatching(movies));
     const recentSeries = filterContentByProfile(getRecentlyAddedSeries(10));

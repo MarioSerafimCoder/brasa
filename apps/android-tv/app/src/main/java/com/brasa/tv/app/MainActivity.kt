@@ -19,6 +19,6 @@ class MainActivity : ComponentActivity() {
         val previewMode = BuildConfig.DEBUG && intent.getBooleanExtra("preview", false)
         val previewPage = intent.getStringExtra("previewPage").orEmpty()
         val container=(application as BrasaApplication).container
-        setContent { val settings by container.settings.values.collectAsState(initial=AppSettings());BrasaTheme(settings.uiScale,settings.density) { BrasaNavHost(container, previewMode, previewPage) } }
+        setContent { val settings by container.settings.values.collectAsState(initial=AppSettings());BrasaTheme(settings.uiScale,settings.density) { BrasaNavHost(container, previewMode, previewPage, onExit = ::finishAndRemoveTask) } }
     }
 }

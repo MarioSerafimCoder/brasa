@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,23 +36,29 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.tv.material3.Text
 import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.core.model.Profile
 import com.brasa.tv.designsystem.AmbientBackground
 import com.brasa.tv.designsystem.BrasaBorder
+import com.brasa.tv.designsystem.BrasaButton
+import com.brasa.tv.designsystem.BrasaButtonStyle
 import com.brasa.tv.designsystem.BrasaFocus
 import com.brasa.tv.designsystem.BrasaLogo
 import com.brasa.tv.designsystem.BrasaOrange
 import com.brasa.tv.designsystem.BrasaRed
 import com.brasa.tv.designsystem.BrasaSpacing
+import com.brasa.tv.designsystem.BrasaSurfaceElevated
 import com.brasa.tv.designsystem.BrasaText
 import com.brasa.tv.designsystem.BrasaTextMuted
 import com.brasa.tv.designsystem.BrasaType
 
 @Composable
-fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -> Unit) {
+fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -> Unit, onExit: () -> Unit) {
     val firstFocus = remember { FocusRequester() }
+    var confirmExit by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { onLoad() }
     LaunchedEffect(state.profiles) { if (state.profiles.isNotEmpty()) runCatching { firstFocus.requestFocus() } }
     AmbientBackground {
@@ -67,6 +75,32 @@ fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -
                 }
             }
             if (state.loading) { Spacer(Modifier.height(BrasaSpacing.x3)); Text("Carregando perfis…", color = BrasaTextMuted, fontSize = BrasaType.metadata) }
+            Spacer(Modifier.height(BrasaSpacing.x4))
+            BrasaButton("Encerrar aplicativo", { confirmExit = true }, style = BrasaButtonStyle.Ghost, leading = "⏻")
+        }
+    }
+    if (confirmExit) ExitConfirmationDialog(onDismiss = { confirmExit = false }, onConfirm = onExit)
+}
+
+@Composable
+private fun ExitConfirmationDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    val cancelFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { cancelFocus.requestFocus() } }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .74f)), contentAlignment = Alignment.Center) {
+            Column(
+                Modifier.width(520.dp).background(BrasaSurfaceElevated, RoundedCornerShape(22.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(22.dp)).padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text("Encerrar o BRasa?", color = Color.White, fontSize = BrasaType.section, fontWeight = FontWeight.ExtraBold)
+                Spacer(Modifier.height(BrasaSpacing.x2))
+                Text("A reprodução será encerrada e o aplicativo será fechado.", color = BrasaTextMuted, fontSize = BrasaType.body)
+                Spacer(Modifier.height(BrasaSpacing.x4))
+                Row(horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x2)) {
+                    BrasaButton("Cancelar", onDismiss, Modifier.focusRequester(cancelFocus))
+                    BrasaButton("Encerrar", onConfirm, style = BrasaButtonStyle.Primary)
+                }
+            }
         }
     }
 }

@@ -21,8 +21,8 @@ class PlaybackCapabilityDetector(private val context: Context) {
         val audio = linkedSetOf<String>()
         val videoCapabilities = mutableListOf<VideoCodecCapability>()
         val metrics = context.resources.displayMetrics
-        var maxWidth = metrics.widthPixels
-        var maxHeight = metrics.heightPixels
+        val screenWidth = maxOf(metrics.widthPixels, metrics.heightPixels)
+        val screenHeight = minOf(metrics.widthPixels, metrics.heightPixels)
         runCatching { MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos.toList() }.getOrDefault(emptyList())
             .filterNot(MediaCodecInfo::isEncoder)
             .forEach { codec ->
@@ -37,8 +37,6 @@ class PlaybackCapabilityDetector(private val context: Context) {
                         val profiles = codecCapabilities.profileLevels.mapNotNull { profileName(videoToken, it.profile) }.distinct()
                         video += videoToken
                         if ("main10" in profiles) video += "hevc-main10"
-                        maxWidth = maxOf(maxWidth, width)
-                        maxHeight = maxOf(maxHeight, height)
                         videoCapabilities += VideoCodecCapability(videoToken, width, height, bitrate, hardware = true, profiles = profiles)
                     }
                     when (type) {
@@ -63,15 +61,15 @@ class PlaybackCapabilityDetector(private val context: Context) {
         return ClientCapabilities(
             manufacturer = Build.MANUFACTURER.orEmpty(),
             model = Build.MODEL.orEmpty(),
-            screen = ScreenCapabilities(metrics.widthPixels, metrics.heightPixels),
+            screen = ScreenCapabilities(screenWidth, screenHeight),
             playback = PlaybackCapabilities(
                 containers = listOf("mp4", "matroska", "webm", "mpegts", "hls"),
                 videoCodecs = video.sorted(),
                 audioCodecs = audio.sorted(),
                 hdrTypes = hdrTypes.sorted(),
                 videoCapabilities = mergedVideoCapabilities,
-                maxWidth = maxWidth,
-                maxHeight = maxHeight,
+                maxWidth = screenWidth,
+                maxHeight = screenHeight,
             ),
         )
     }

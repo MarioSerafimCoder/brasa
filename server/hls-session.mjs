@@ -4,14 +4,17 @@ import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import { createQualityLadder, createStartupLadder, encoderFor, estimateHlsCacheBytes, HLS_LIMITS } from "./transcoding-profiles.mjs";
 
-export function createHlsSessionManager({ rootDir, store, getTools }) {
+export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess = spawn }) {
     const root = path.join(rootDir, "data", "prepared-media", "hls");
     const active = new Map();
 
     async function ensure(mediaKey, input, probe, settings = {}, plan = {}) {
         const mode = plan.mode === "remux" ? "remux" : "transcode";
         const profileKey = `v3:${mode}:${plan.audioAction || "aac"}:${plan.stripDolbyVision ? "hdr10" : "native"}`;
-        const id = sessionId(mediaKey, probe?.fingerprint, profileKey);
+        const segmentSeconds = clamp(settings.hlsSegmentSeconds, 1, 6, HLS_LIMITS.segmentSeconds);
+        const startPositionMs = normalizeStartPosition(plan.startPositionMs, probe?.duration, segmentSeconds);
+        const id = hlsSessionId(mediaKey, probe?.fingerprint, profileKey, startPositionMs);
+        cancelOtherSessions(id, mediaKey);
         const directory = path.join(root, id);
         const master = path.join(directory, "master.m3u8");
         const existing = active.get(id);
@@ -28,9 +31,8 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
         const ladder = mode === "remux"
             ? [{ id: "original", width: Number(probe?.video?.width || 0), height: Number(probe?.video?.height || 0), bitrate: Number(probe?.bitrate || 0), audioBitrate: 192_000 }]
             : createStartupLadder(probe);
-        const segmentSeconds = clamp(settings.hlsSegmentSeconds, 1, 6, HLS_LIMITS.segmentSeconds);
-        const startBufferSeconds = clamp(settings.hlsStartBufferSeconds, segmentSeconds, 20, 4);
-        const startPositionMs = normalizeStartPosition(plan.startPositionMs, probe?.duration, segmentSeconds);
+        const minimumStartBufferSeconds = mode === "remux" ? 8 : 12;
+        const startBufferSeconds = clamp(Math.max(Number(settings.hlsStartBufferSeconds || 0), minimumStartBufferSeconds), segmentSeconds, 30, minimumStartBufferSeconds);
         const session = {
             id, mediaKey, directory, mode, ladder,
             audioAction: plan.audioAction || "aac",
@@ -52,6 +54,7 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
         const initialEncoder = session.mode === "remux" ? "copy" : encoderFor(settings, tools.hardwareAcceleration || {});
         await store.update(session.mediaKey, { status: "processing", playbackStrategy: session.mode === "remux" ? "hls-remux" : "hls", hlsSessionId: session.id, progress: 0, error: "" });
         try {
+            if (session.cancelled) throw new Error("cancelled");
             try {
                 await runEncoder(session, tools.ffmpegPath, input, probe, initialEncoder);
             } catch (error) {
@@ -65,6 +68,7 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
                     await recreateDirectory(session);
                     await persist(session);
                     await store.update(session.mediaKey, { status: "processing", progress: 0, encoder: "libx264", decoder: "software", pipeline: "fallback por CPU", error: "" });
+                    if (session.cancelled) throw new Error("cancelled");
                     await runEncoder(session, tools.ffmpegPath, input, probe, "libx264");
                 } else throw error;
             }
@@ -76,6 +80,15 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
             await persist(session);
             await store.update(session.mediaKey, { status: "ready", progress: 100, playbackStrategy: session.mode === "remux" ? "hls-remux" : "hls", hlsSessionId: session.id, hlsQualities: session.ladder.map((item) => item.id), completedAt: session.completedAt, error: "" });
         } catch (error) {
+            if (session.cancelled) {
+                session.state = "cancelled";
+                session.progress = 0;
+                session.error = "";
+                session.errorType = "";
+                await persist(session).catch(() => {});
+                if (!hasReplacement(session)) await store.update(session.mediaKey, { status: "pending", progress: 0, error: "" }).catch(() => {});
+                return;
+            }
             session.state = "failed";
             session.errorType = "processing";
             session.error = "O servidor não conseguiu preparar o streaming adaptativo.";
@@ -101,7 +114,7 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
             session.pipeline = pipeline;
             session.attemptStartedAt = new Date().toISOString();
             persist(session).catch(() => {});
-            const child = spawn(command, args, { windowsHide: true, shell: false });
+            const child = spawnProcess(command, args, { windowsHide: true, shell: false });
             session.child = child;
             let out = "", stderr = "", lastSave = 0, videoFrames = 0, stoppedForNoVideo = false;
             child.stdout.on("data", (chunk) => {
@@ -160,9 +173,12 @@ export function createHlsSessionManager({ rootDir, store, getTools }) {
         return stat?.isFile() ? { file, stat, session: await status(id) } : null;
     }
 
-    async function remove(id) { const directory = safeDirectory(id); active.get(id)?.child?.kill("SIGKILL"); active.delete(id); await fs.rm(directory, { recursive: true, force: true }); }
+    async function remove(id) { const directory = safeDirectory(id);const session=active.get(id);if(session)cancelSession(session);await fs.rm(directory, { recursive: true, force: true }); }
+    function cancelOtherSessions(keepId, mediaKey) { for (const session of active.values()) if (session.id !== keepId && session.mediaKey === mediaKey) cancelSession(session); }
+    function cancelSession(session) { session.cancelled=true;session.child?.kill("SIGKILL"); }
+    function hasReplacement(session) { return [...active.values()].some((candidate) => candidate !== session && candidate.mediaKey === session.mediaKey && candidate.cancelled !== true); }
     function safeDirectory(id) { if (!/^[a-f0-9]{24}$/.test(id)) throw new Error("Sessão HLS inválida."); return path.join(root, id); }
-    return { ensure, status, resolve, remove, estimate: (probe) => estimateHlsCacheBytes(probe.duration, createQualityLadder(probe)) };
+    return { ensure, status, resolve, remove, estimate: (probe) => estimateHlsCacheBytes(probe.duration, createQualityLadder(probe)), snapshot:()=>[...active.values()].map((session)=>({id:session.id,mediaKey:session.mediaKey,state:session.state,progress:session.progress})) };
 }
 
 export function buildHlsArgs(input, directory, ladder, encoder = "libx264", probe = {}, options = {}) {
@@ -204,7 +220,10 @@ export function buildRemuxHlsArgs(input, directory, probe = {}, options = {}) {
     return [...args, "-map_metadata", "-1", "-f", "hls", "-hls_time", String(segmentSeconds), "-hls_list_size", "0", "-hls_playlist_type", "event", "-hls_flags", "independent_segments+temp_file", "-master_pl_name", "master.m3u8", "-var_stream_map", map, "-hls_segment_filename", path.join(directory, "%v", "seg-%06d.ts"), path.join(directory, "%v", "index.m3u8"), "-progress", "pipe:1", "-nostats"];
 }
 
-function sessionId(mediaKey, fingerprint = {}, profileKey = "transcode:aac") { return crypto.createHash("sha256").update(`${mediaKey}:${fingerprint.size || 0}:${fingerprint.mtimeMs || 0}:${profileKey}`).digest("hex").slice(0, 24); }
+export function hlsSessionId(mediaKey, fingerprint = {}, profileKey = "transcode:aac", startPositionMs = 0) {
+    const start = Math.max(0, Math.round(Number(startPositionMs) || 0));
+    return crypto.createHash("sha256").update(`${mediaKey}:${fingerprint.size || 0}:${fingerprint.mtimeMs || 0}:${profileKey}:${start}`).digest("hex").slice(0, 24);
+}
 async function isReady(master) { const text = await fs.readFile(master, "utf8").catch(() => ""); return text.includes("#EXTM3U"); }
 async function hasStartBuffer(directory, ladder, minimumSegments = 2) { if (!await isReady(path.join(directory, "master.m3u8"))) return false;for (const quality of ladder || []) { const files=await fs.readdir(path.join(directory,quality.id)).catch(()=>[]);if(!files.includes("index.m3u8")||files.filter((file)=>file.endsWith(".ts")).length<minimumSegments)return false;}await normalizePlaylists(directory);return true; }
 async function normalizePlaylists(directory) { for(const file of [path.join(directory,"master.m3u8"),...await fs.readdir(directory,{withFileTypes:true}).then((entries)=>entries.filter((entry)=>entry.isDirectory()).map((entry)=>path.join(directory,entry.name,"index.m3u8"))).catch(()=>[])]){const text=await fs.readFile(file,"utf8").catch(()=>"");if(!text||!text.includes("\\"))continue;const temp=`${file}.${process.pid}.normalize.tmp`;await fs.writeFile(temp,text.replace(/\\/g,"/"));await fs.rename(temp,file);} }

@@ -78,6 +78,10 @@ export function bindMovieGridNavigation(container) {
         const card = event.target.closest("[data-movie-id]");
 
         if (!card) return;
+        if (card.dataset.unavailable === "true") {
+            event.preventDefault();
+            return;
+        }
 
         navigateTo(`movie.html?id=${card.dataset.movieId}`);
     });
@@ -90,12 +94,14 @@ export function bindMovieGridNavigation(container) {
         if (!card) return;
 
         event.preventDefault();
+        if (card.dataset.unavailable === "true") return;
         navigateTo(`movie.html?id=${card.dataset.movieId}`);
     });
 }
 
 function movieCard(movie) {
     const progress = Number(movie.progress || 0);
+    const unavailable = movie.playable === false || movie.fileStatus === "empty-file" || movie.fileStatus === "missing-file";
     const fallbackPoster = `../${movie.poster}`;
     const poster = movieImageUrl(movie, {
         type: "poster",
@@ -104,9 +110,10 @@ function movieCard(movie) {
     });
 
     return `
-        <article class="movie-card-lite" data-movie-id="${escapeAttribute(movie.id)}" role="button" tabindex="0" aria-label="Abrir ${escapeAttribute(movie.title)}">
+        <article class="movie-card-lite${unavailable ? " is-unavailable" : ""}" data-movie-id="${escapeAttribute(movie.id)}" data-unavailable="${unavailable}" role="button" tabindex="0" aria-disabled="${unavailable}" aria-label="${unavailable ? "Indisponível" : "Abrir"} ${escapeAttribute(movie.title)}">
             <div class="movie-card-lite__poster">
                 <img src="${escapeAttribute(poster)}" alt="${escapeAttribute(movie.title)}" loading="lazy"${tmdbImageFallbackAttributes(fallbackPoster)}>
+                ${unavailable ? `<span class="library-media-badge is-empty">Arquivo vazio</span>` : ""}
             </div>
             <div class="movie-card-lite__body">
                 <h3>${escapeHtml(movie.title)}</h3>

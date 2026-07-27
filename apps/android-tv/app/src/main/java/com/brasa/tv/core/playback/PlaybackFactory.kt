@@ -83,7 +83,7 @@ class PlaybackFactory(
     fun playbackIdentity(baseUrl: String, info: PlaybackInfo) = cacheKey(baseUrl, info)
 
     private fun bufferProfile(info: PlaybackInfo): BufferProfile = when {
-        info.playbackMode == "hls" -> BufferProfile(12_000, 90_000, 3_000, 10_000)
+        info.playbackMode == "hls" -> BufferProfile(20_000, 120_000, 8_000, 15_000)
         info.bitrate >= 20_000_000L || info.height >= 2160 -> BufferProfile(20_000, 120_000, 5_000, 12_000)
         else -> BufferProfile(10_000, 90_000, 3_000, 8_000)
     }

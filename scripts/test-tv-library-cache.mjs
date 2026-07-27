@@ -13,7 +13,8 @@ try {
     await write("collections.js", "export const collections=[{id:'featured'}];\n");
     let clock = 1_000;
     let imports = 0;
-    const cache = createTvLibraryCache(root, { checkIntervalMs: 50, now: () => clock, importModule: (url) => { imports++; return import(url); } });
+    let failNextImport = false;
+    const cache = createTvLibraryCache(root, { checkIntervalMs: 50, now: () => clock, importModule: (url) => { imports++; if (failNextImport) { failNextImport = false; throw new Error("arquivo temporariamente bloqueado"); } return import(url); } });
     const first = await cache.load(), repeated = await cache.load();
     assert.equal(first, repeated);
     assert.equal(imports, 3);
@@ -21,9 +22,13 @@ try {
     assert.equal(first.episodeById.get("ep-one").series.id, "show");
     await write("movies.js", "export const getMovies=()=>[{id:'two',title:'Dois atualizado'}];\n");
     clock += 60;
+    failNextImport = true;
+    const protectedDuringWrite = await cache.load();
+    assert.equal(protectedDuringWrite, first);
+    clock += 60;
     const refreshed = await cache.load();
     assert.notEqual(refreshed, first);
-    assert.equal(imports, 6);
+    assert.equal(imports, 7);
     assert.equal(refreshed.movieById.get("two").title, "Dois atualizado");
     console.log("Cache da biblioteca TV: reutilização e invalidação aprovadas.");
 } finally { await fs.rm(root, { recursive: true, force: true }); }

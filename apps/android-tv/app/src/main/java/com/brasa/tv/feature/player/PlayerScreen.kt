@@ -9,6 +9,7 @@ import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -79,6 +81,8 @@ fun PlayerScreen(
     container: AppContainer,
     onProgress: (String, WatchProgress) -> Unit,
     onPlaybackFallback: (String) -> Unit,
+    onRemoteSeek: (String, Long) -> Unit,
+    onRetry: () -> Unit,
     onNext: (CatalogItem) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -90,18 +94,28 @@ fun PlayerScreen(
     val settings by container.settings.values.collectAsState(initial = AppSettings())
     if (info == null || settings.serverBaseUrl.isBlank()) {
         BackHandler(onBack = onBack)
+        Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Não foi possível carregar os dados de reprodução.", color = BrasaRed, fontSize = 20.sp)
+                Spacer(Modifier.height(18.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    BrasaButton("Tentar novamente", onRetry, style = BrasaButtonStyle.Primary)
+                    BrasaButton("Voltar", onBack)
+                }
+            }
+        }
     } else if (info.preparationStatus != "ready" || info.playbackUrl.isBlank()) {
-        PreparationScreen(info, onBack)
+        PreparationScreen(info, onRetry, onBack)
     } else {
         val identity = "${info.mediaKey}|${info.playbackMode}|${info.playbackRevision}|${info.playbackUrl}"
         key(identity) {
-            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, container, onProgress, onPlaybackFallback, onNext, onBack)
+            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, container, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onBack)
         }
     }
 }
 
 @Composable
-private fun PreparationScreen(info: PlaybackInfo, onBack: () -> Unit) {
+private fun PreparationScreen(info: PlaybackInfo, onRetry: () -> Unit, onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     val failed = info.preparationStatus == "failed"
     Box(Modifier.fillMaxSize().background(Color.Black).focusable(), contentAlignment = Alignment.Center) {
@@ -114,7 +128,10 @@ private fun PreparationScreen(info: PlaybackInfo, onBack: () -> Unit) {
                 Text(if (info.playbackMode == "hls") "Criando streaming adaptativo. A reprodução começa com os primeiros segmentos." else "Criando uma versão compatível com esta TV.", color = BrasaTextMuted, fontSize = 17.sp)
             } else Text(info.errorMessage.ifBlank { when (info.errorType) { "network" -> "Não foi possível receber os dados do servidor."; "decode" -> "O dispositivo não conseguiu decodificar este vídeo."; "codec" -> "O formato original não é compatível com este dispositivo."; else -> "O servidor não conseguiu processar esta mídia." } }, color = BrasaTextMuted, fontSize = 17.sp)
             Spacer(Modifier.height(20.dp))
-            BrasaButton("Voltar", onBack)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (failed) BrasaButton("Tentar novamente", onRetry, style = BrasaButtonStyle.Primary)
+                BrasaButton("Voltar", onBack)
+            }
         }
     }
 }
@@ -128,6 +145,7 @@ private fun PlayerContent(
     container: AppContainer,
     onProgress: (String, WatchProgress) -> Unit,
     onPlaybackFallback: (String) -> Unit,
+    onRemoteSeek: (String, Long) -> Unit,
     onNext: (CatalogItem) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -136,19 +154,36 @@ private fun PlayerContent(
     LaunchedEffect(Unit) { keyboard?.hide() }
     var acquiredPlayer by remember(playbackIdentity, serverBaseUrl) { mutableStateOf<ExoPlayer?>(null) }
     var loadError by remember(playbackIdentity, serverBaseUrl) { mutableStateOf("") }
-    LaunchedEffect(playbackIdentity, serverBaseUrl) {
-        runCatching { container.playback.acquire(serverBaseUrl, info) }
+    var loadAttempt by remember(playbackIdentity, serverBaseUrl) { mutableIntStateOf(0) }
+    var retryPositionOverride by remember(playbackIdentity, serverBaseUrl) { mutableLongStateOf(info.resumePosition) }
+    var retryCount by remember(playbackIdentity, serverBaseUrl) { mutableIntStateOf(0) }
+    var fallbackRequested by remember(playbackIdentity, serverBaseUrl) { mutableStateOf(false) }
+    LaunchedEffect(playbackIdentity, serverBaseUrl, loadAttempt) {
+        acquiredPlayer = null
+        loadError = ""
+        runCatching { container.playback.acquire(serverBaseUrl, info.copy(resumePosition = retryPositionOverride)) }
             .onSuccess { acquiredPlayer = it }
             .onFailure { loadError = it.message ?: "Não foi possível preparar o vídeo." }
     }
     val player = acquiredPlayer
     if (player == null) {
+        BackHandler(onBack = onBack)
         Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-            Text(loadError.ifBlank { "Preparando vídeo…" }, color = if (loadError.isBlank()) Color.White else BrasaRed, fontSize = 20.sp)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(loadError.ifBlank { "Preparando vídeo…" }, color = if (loadError.isBlank()) Color.White else BrasaRed, fontSize = 20.sp)
+                if (loadError.isNotBlank()) {
+                    Spacer(Modifier.height(18.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        BrasaButton("Tentar novamente", { loadAttempt++ }, style = BrasaButtonStyle.Primary)
+                        BrasaButton("Voltar", onBack)
+                    }
+                }
+            }
         }
         return
     }
     val session = remember(player) { MediaSession.Builder(context, player).build() }
+    var firstFrameRendered by remember(player) { mutableStateOf(false) }
     val rootFocus = remember { FocusRequester() }
     val playFocus = remember { FocusRequester() }
     var ended by remember { mutableStateOf(false) }
@@ -160,24 +195,42 @@ private fun PlayerContent(
     var buffered by remember { mutableLongStateOf(PlaybackTimeline.absolutePosition(info, player.bufferedPosition)) }
     var trackNotice by remember { mutableStateOf("") }
     var centerNotice by remember { mutableStateOf("") }
-    var retryCount by remember { mutableIntStateOf(0) }
-    var fallbackRequested by remember { mutableStateOf(false) }
     var selectedQuality by remember { mutableStateOf("Automática") }
+    var timelineFocused by remember(player) { mutableStateOf(false) }
+    var seekPreview by remember(player) { mutableLongStateOf(-1L) }
+    var remoteSeekTarget by remember(player) { mutableLongStateOf(-1L) }
+    var recoveryRequested by remember(player) { mutableStateOf(false) }
     val playbackScope = rememberCoroutineScope()
 
     fun retryPlayback() {
         loadError = ""
-        player.prepare()
-        player.playWhenReady = true
+        retryPositionOverride = maxOf(player.currentPosition, info.resumePosition)
+        container.playback.release(player)
+        acquiredPlayer = null
+        loadAttempt++
     }
 
-    fun save(completed: Boolean = false) {
+    fun saveAt(absolutePosition: Long, completed: Boolean = false) {
         val localDuration = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L
-        val progress = PlaybackTimeline.progress(info, player.currentPosition, localDuration, completed) ?: return
+        val total = PlaybackTimeline.absoluteDuration(info, localDuration)
+        if (total <= 0) return
+        val current = absolutePosition.coerceIn(0L, total)
         onProgress(
             info.mediaKey,
-            progress,
+            WatchProgress(
+                mediaType = if (info.mediaKey.startsWith("episode:")) "episode" else "movie",
+                mediaId = info.mediaId,
+                currentTime = current / 1000.0,
+                duration = total / 1000.0,
+                percentage = (current.toDouble() / total * 100).coerceIn(0.0, 100.0),
+                completed = completed,
+            ),
         )
+    }
+    fun save(completed: Boolean = false) {
+        val current = remoteSeekTarget.takeIf { it >= 0 }
+            ?: PlaybackTimeline.absolutePosition(info, player.currentPosition)
+        saveAt(current, completed)
     }
     fun exit() {
         save()
@@ -188,11 +241,29 @@ private fun PlayerContent(
         controlsVisible = true
         interaction++
     }
+    fun requestRemoteSeek(targetPosition: Long, recovery: Boolean = false) {
+        if (recoveryRequested) return
+        val total = duration.takeIf { it > 0 } ?: info.duration ?: Long.MAX_VALUE
+        val target = targetPosition.coerceIn(0L, (total - 1_000).coerceAtLeast(0))
+        recoveryRequested = true
+        remoteSeekTarget = target
+        saveAt(target)
+        player.pause()
+        centerNotice = if (recovery) "Reconectando em ${formatTime(target)}…" else "Carregando ${formatTime(target)}…"
+        onRemoteSeek(info.mediaKey, target)
+    }
     fun seekBy(delta: Long) {
-        val end = player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: Long.MAX_VALUE
-        player.seekTo((player.currentPosition + delta).coerceIn(0L, end))
-        position = PlaybackTimeline.absolutePosition(info, player.currentPosition)
-        centerNotice = if (delta < 0) "↶ 10s" else "10s ↷"
+        val target = (PlaybackTimeline.absolutePosition(info, player.currentPosition) + delta)
+            .coerceIn(0L, (duration.takeIf { it > 0 } ?: info.duration ?: Long.MAX_VALUE) - 1_000)
+        val localTarget = target - info.playbackOffset
+        val canSeekLocally = localTarget >= 0 && target <= buffered - 2_000
+        if (canSeekLocally) {
+            player.seekTo(localTarget)
+            position = target
+            centerNotice = if (delta < 0) "↶ 10s" else "10s ↷"
+        } else {
+            requestRemoteSeek(target)
+        }
         revealControls()
     }
 
@@ -220,11 +291,18 @@ private fun PlayerContent(
                 }
                 if (playbackState == Player.STATE_ENDED) { save(true); ended = true; controlsVisible = true }
             }
-            override fun onRenderedFirstFrame() { Log.i(TAG, "Primeiro frame ${info.mediaKey} em ${SystemClock.elapsedRealtime() - startedAt}ms") }
+            override fun onRenderedFirstFrame() {
+                firstFrameRendered = true
+                retryCount = 0
+                Log.i(TAG, "Primeiro frame ${info.mediaKey} em ${SystemClock.elapsedRealtime() - startedAt}ms")
+            }
             override fun onPlayerError(error: PlaybackException) {
                 val recoverable = error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
                     error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
-                    error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+                    error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ||
+                    error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ||
+                    error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ||
+                    error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW
                 if (info.playbackMode == "direct" && isCompatibilityError(error) && !fallbackRequested) {
                     fallbackRequested = true
                     loadError = ""
@@ -235,7 +313,7 @@ private fun PlayerContent(
                 } else if (recoverable && retryCount < 2) {
                     retryCount++
                     loadError = ""
-                    playbackScope.launch { delay(800L * retryCount); retryPlayback() }
+                    playbackScope.launch { delay(1_500L * retryCount); retryPlayback() }
                     Log.w(TAG, "Tentativa $retryCount para ${info.mediaKey}: ${error.errorCodeName}", error)
                 } else {
                     loadError = publicPlaybackError(error)
@@ -250,6 +328,46 @@ private fun PlayerContent(
             player.removeListener(listener)
             session.release()
             container.playback.release(player, completed = ended)
+        }
+    }
+    LaunchedEffect(player, info.playbackMode) {
+        delay(20_000)
+        if (!firstFrameRendered && player.playbackState == Player.STATE_BUFFERING) {
+            if (info.playbackMode == "direct" && !fallbackRequested) {
+                fallbackRequested = true
+                loadError = ""
+                save()
+                player.pause()
+                onPlaybackFallback(info.mediaKey)
+                Log.w(TAG, "Fallback HLS solicitado: buffer recebido sem primeiro quadro para ${info.mediaKey}")
+            } else if (retryCount < 2) {
+                retryCount++
+                retryPlayback()
+                Log.w(TAG, "Player recriado: buffer recebido sem primeiro quadro para ${info.mediaKey}")
+            } else {
+                loadError = "A TV recebeu o vídeo, mas não conseguiu exibir o primeiro quadro. Tente novamente."
+                player.pause()
+                Log.e(TAG, "Retomada sem primeiro quadro após $retryCount tentativas para ${info.mediaKey}")
+            }
+        }
+    }
+    LaunchedEffect(player, firstFrameRendered) {
+        if (!firstFrameRendered) return@LaunchedEffect
+        var previousPosition = player.currentPosition
+        var stalledFor = 0L
+        while (!recoveryRequested && !ended) {
+            delay(2_000)
+            val currentPosition = player.currentPosition
+            val shouldAdvance = player.playWhenReady && player.playbackState != Player.STATE_ENDED
+            val advanced = currentPosition > previousPosition + 250
+            stalledFor = if (shouldAdvance && !advanced && !player.isPlaying) stalledFor + 2_000 else 0
+            if (stalledFor >= 12_000) {
+                val absolute = PlaybackTimeline.absolutePosition(info, currentPosition)
+                Log.w(TAG, "Reprodução parou de avançar por ${stalledFor}ms em ${info.mediaKey}; retomando em $absolute")
+                requestRemoteSeek(absolute, recovery = true)
+                break
+            }
+            previousPosition = currentPosition
         }
     }
     LaunchedEffect(player) { while (true) { delay(12_000); if (player.isPlaying) save(); if (BuildConfig.DEBUG) Log.d(TAG, "Buffer ${info.mediaKey}: ${player.totalBufferedDuration}ms") } }
@@ -341,21 +459,61 @@ private fun PlayerContent(
                     Text(trackNotice, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(9.dp))
                 }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text(formatTime(position), color = BrasaText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                val visiblePosition = seekPreview.takeIf { it >= 0 } ?: position
+                val timelineModifier = Modifier
+                    .fillMaxWidth()
+                    .onFocusChanged {
+                        timelineFocused = it.isFocused
+                        if (!it.isFocused) seekPreview = -1L
+                    }
+                    .onPreviewKeyEvent { event ->
+                        if (event.nativeKeyEvent.action != KeyEvent.ACTION_DOWN) return@onPreviewKeyEvent false
+                        val step = when {
+                            event.nativeKeyEvent.repeatCount >= 8 -> 120_000L
+                            event.nativeKeyEvent.repeatCount >= 3 -> 30_000L
+                            else -> 10_000L
+                        }
+                        when (event.nativeKeyEvent.keyCode) {
+                            KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_MEDIA_REWIND -> {
+                                val current = seekPreview.takeIf { it >= 0 } ?: position
+                                seekPreview = (current - step).coerceAtLeast(0)
+                                true
+                            }
+                            KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
+                                val current = seekPreview.takeIf { it >= 0 } ?: position
+                                seekPreview = (current + step).coerceAtMost((duration - 1_000).coerceAtLeast(0))
+                                true
+                            }
+                            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                                requestRemoteSeek(seekPreview.takeIf { it >= 0 } ?: position)
+                                seekPreview = -1L
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+                    .focusable()
+                    .then(if (timelineFocused) Modifier.border(2.dp, BrasaOrange, RoundedCornerShape(10.dp)).padding(8.dp) else Modifier)
+                Row(timelineModifier, verticalAlignment = Alignment.CenterVertically) {
+                    Text(formatTime(visiblePosition), color = if (timelineFocused) BrasaOrange else BrasaText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.width(13.dp))
                     Box(Modifier.weight(1f).height(5.dp).background(Color.White.copy(alpha = .24f), RoundedCornerShape(50))) {
                         if (duration > 0) Box(
                             Modifier.fillMaxWidth((buffered.toFloat() / duration).coerceIn(0f, 1f)).fillMaxHeight().background(Color.White.copy(alpha = .45f), RoundedCornerShape(50)),
                         )
                         if (duration > 0) Box(
-                            Modifier.fillMaxWidth((position.toFloat() / duration).coerceIn(0f, 1f)).fillMaxHeight().background(BrasaOrange, RoundedCornerShape(50)),
+                            Modifier.fillMaxWidth((visiblePosition.toFloat() / duration).coerceIn(0f, 1f)).fillMaxHeight().background(BrasaOrange, RoundedCornerShape(50)),
                         )
                     }
                     Spacer(Modifier.width(13.dp))
                     Text(formatTime(duration), color = BrasaTextMuted, fontSize = 14.sp)
                 }
-                Text("Qualidade: $selectedQuality  •  Buffer: ${((buffered - position).coerceAtLeast(0) / 1000)}s", color = BrasaTextMuted, fontSize = 13.sp)
+                Text(
+                    if (timelineFocused) "← → escolha o ponto  •  OK para carregar"
+                    else "Qualidade: $selectedQuality  •  Buffer: ${((buffered - position).coerceAtLeast(0) / 1000)}s",
+                    color = if (timelineFocused) BrasaOrange else BrasaTextMuted,
+                    fontSize = 13.sp,
+                )
                 Spacer(Modifier.height(17.dp))
                 Row(
                     Modifier.fillMaxWidth(),

@@ -1,0 +1,8 @@
+[
+  "A biblioteca não trava mais quando um filme ainda não possui nota.",
+  "Anos, notas e números de episódios recebidos como texto agora são aceitos com segurança.",
+  "O servidor normaliza metadados incompletos antes de enviá-los para a TV.",
+  "Caches antigos incompatíveis são descartados automaticamente.",
+  "Erros técnicos de JSON não são mais exibidos na tela da TV.",
+  "Mantidas as correções de reprodução direta e adaptativa para filmes e séries."
+]

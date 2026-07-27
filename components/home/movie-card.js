@@ -33,6 +33,7 @@ export default function MovieCard({
         size: "w780",
         fallback: poster
     });
+    const showQuality = Boolean(quality) && String(quality).trim().toLowerCase() !== "local";
 
     return `
 
@@ -45,12 +46,19 @@ export default function MovieCard({
 
             <div class="movie-card__poster">
 
-                <img
-                    src="${escapeAttribute(posterImage)}"
-                    alt="${escapeAttribute(title)}"
-                    loading="lazy"
-                    ${tmdbImageFallbackAttributes(poster)}
-                >
+                <span class="movie-card__placeholder" aria-hidden="true">
+                    <i data-lucide="film"></i>
+                    <strong>${escapeHtml(title)}</strong>
+                </span>
+
+                ${posterImage ? `
+                    <img
+                        src="${escapeAttribute(posterImage)}"
+                        alt="${escapeAttribute(title)}"
+                        loading="lazy"
+                        ${tmdbImageFallbackAttributes(poster)}
+                    >
+                ` : ""}
 
                 <div class="movie-card__overlay">
 
@@ -83,7 +91,7 @@ export default function MovieCard({
 
                 </div>
 
-                ${quality
+                ${showQuality
                     ? `
                         <span class="movie-card__quality">
 

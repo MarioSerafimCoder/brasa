@@ -1,5 +1,6 @@
 ﻿import { getMovies } from "../../data/movies.js";
 import { applyPreferences } from "../utils/preferences.js";
+import { getAvailableMovies } from "../../data/movies.js";
 import { filterContentByProfile, initializeProfiles } from "../utils/profiles.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
 import { installPageTransitions } from "../utils/navigation.js";
@@ -38,7 +39,7 @@ async function init() {
 }
 
 function readMovies() {
-    return filterContentByProfile(getMovies());
+    return filterContentByProfile(getAvailableMovies());
 }
 
 function fillGenres() {
@@ -90,4 +91,3 @@ function formatSummary(visible, total) {
 
     return `${visibleLabel} exibidos de ${total}`;
 }
-

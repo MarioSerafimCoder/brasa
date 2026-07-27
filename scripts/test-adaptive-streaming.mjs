@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import path from "node:path";
-import { shouldUseAdaptiveHls, createQualityLadder, createStartupLadder, estimateHlsCacheBytes, selectTvPlaybackPlan } from "../server/transcoding-profiles.mjs";
-import { buildHlsArgs, buildRemuxHlsArgs } from "../server/hls-session.mjs";
+import { shouldUseAdaptiveHls, createQualityLadder, createStartupLadder, estimateHlsCacheBytes, selectTvPlaybackPlan, stabilizeTvPlaybackPlan } from "../server/transcoding-profiles.mjs";
+import { buildHlsArgs, buildRemuxHlsArgs, hlsSessionId } from "../server/hls-session.mjs";
 import { hlsTimeline } from "../server/playback-timeline.mjs";
 
 const probe = (overrides = {}) => ({ duration: 7200, size: 2 * 1024 ** 3, bitrate: 8_000_000, container: "mov", video: { codec: "h264", width: 1920, height: 1080, bitDepth: 8 }, audioTracks: [{ codec: "aac" }], ...overrides });
@@ -54,6 +54,12 @@ const hdr10Mkv = { ...superman, video: { ...superman.video, hdrType: "hdr10", do
 const remuxPlan = selectTvPlaybackPlan({ ...hdr10Mkv, audioTracks: [{ codec: "dts" }] }, googleTv);
 assert.equal(remuxPlan.mode, "remux", "áudio incompatível deve usar remux");
 assert.equal(remuxPlan.audioAction, "aac", "remux deve converter somente o áudio");
+const stableRemuxPlan = stabilizeTvPlaybackPlan(remuxPlan);
+assert.equal(stableRemuxPlan.mode, "transcode", "HLS para TV deve gerar quadros-chave regulares mesmo quando a fonte aceitaria remux");
+assert.equal(stableRemuxPlan.videoAction, "h264", "segmentação estável deve normalizar o vídeo para H.264");
+assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv)).mode, "direct", "direct play compatível não deve ser alterado");
+assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv), { resumePosition: 2_145_000 }).mode, "transcode", "retomada deve receber um quadro-chave seguro mesmo quando direct play seria compatível");
+assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv), { resumePosition: 0 }).mode, "direct", "reprodução desde o início deve preservar direct play compatível");
 assert.equal(selectTvPlaybackPlan(superman, { ...googleTv, videoCodecs: ["h264"], hdrTypes: [] }).mode, "transcode", "TV sem HEVC/HDR deve receber transcodificação");
 assert.equal(selectTvPlaybackPlan(hdr10Mkv, { ...googleTv, videoCapabilities: googleTv.videoCapabilities.map((item) => item.codec === "hevc" ? { ...item, maxWidth: 1920, maxHeight: 1080 } : item) }).mode, "transcode", "limite do decoder HEVC deve ser aplicado por codec");
 assert.equal(selectTvPlaybackPlan(hdr10Mkv, { ...googleTv, videoCapabilities: googleTv.videoCapabilities.filter((item) => item.codec !== "hevc") }).mode, "transcode", "codec sem decoder de hardware não deve usar direct play");
@@ -66,4 +72,15 @@ assert.equal(hdr10RemuxArgs[hdr10RemuxArgs.indexOf("-bsf:v") + 1], "dovi_rpu=str
 const resumedRemuxArgs = buildRemuxHlsArgs("movie.mkv", path.resolve("cache"), superman, { audioAction: "aac", startPositionSeconds: 120 });
 assert.ok(resumedRemuxArgs.indexOf("-ss") < resumedRemuxArgs.indexOf("-i"), "retomada também deve valer para remux HLS");
 assert.deepEqual(hlsTimeline(1_736_578, 1_736_000), { playbackOffset: 1_736_000, resumePosition: 578 }, "timeline HLS deve preservar a posição absoluta ao retomar");
+const fingerprint = { size: 2_745_961_573, mtimeMs: 1_785_021_476_204 };
+assert.notEqual(
+    hlsSessionId("movie:437", fingerprint, "v3:remux:aac:native", 0),
+    hlsSessionId("movie:437", fingerprint, "v3:remux:aac:native", 2_134_000),
+    "Pontos diferentes não podem reutilizar a mesma sessão HLS",
+);
+assert.equal(
+    hlsSessionId("movie:437", fingerprint, "v3:remux:aac:native", 2_134_000),
+    hlsSessionId("movie:437", fingerprint, "v3:remux:aac:native", 2_134_000),
+    "A mesma posição deve reutilizar a sessão em andamento",
+);
 console.log("Streaming adaptativo: capacidades da TV, direct play, remux e HLS aprovados.");

@@ -29,9 +29,9 @@ try {
     const queueSource = await fs.readFile(new URL("../server/media-queue.mjs", import.meta.url), "utf8");
     assert.match(queueSource, /-hwaccel", "cuda", "-hwaccel_output_format", "cuda"/);
     assert.match(queueSource, /scale_cuda=passthrough=0:format=yuv420p/);
-    assert.match(queueSource, /shouldUseAdaptiveHls\(item\.probe\)\.useHls/);
-    assert.match(queueSource, /restore:restoreAdaptive/);
-    assert.match(queueSource, /Number\(probe\.schemaVersion\|\|0\)<3/);
+    assert.match(queueSource, /requestedPrepare === false/);
+    assert.match(queueSource, /analyze\(item\.mediaKey, \{ prepare: false, priority: -100 \}\)/);
+    assert.match(queueSource, /Number\(probeData\.schemaVersion \|\| 0\) < 3/);
     const hlsSource = await fs.readFile(new URL("../server/hls-session.mjs", import.meta.url), "utf8");
     assert.match(hlsSource, /session\.state = "preparing";[\s\S]*fallbackReason = error\.message/);
     assert.match(hlsSource, /playbackStrategy: session\.mode === "remux" \? "hls-remux" : "hls"/);

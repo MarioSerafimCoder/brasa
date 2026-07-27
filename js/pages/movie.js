@@ -5,6 +5,7 @@
 
 import { getMovieById, getMovies } from "../../data/movies.js";
 import { getEpisodeById, getSeriesById } from "../../data/series.js";
+import { getAvailableMovies } from "../../data/movies.js";
 import { applyPreferences, getPreferences } from "../utils/preferences.js";
 import { isFavorite, toggleFavorite } from "../utils/favorites.js";
 import { filterContentByProfile, initializeProfiles } from "../utils/profiles.js";
@@ -261,7 +262,7 @@ function renderWatchNext(movie) {
     }
 
     const currentGenres = new Set(movie.genres || []);
-    const recommendations = filterContentByProfile(getMovies())
+    const recommendations = filterContentByProfile(getAvailableMovies())
         .filter((candidate) => candidate.id !== movie.id)
         .map((candidate) => ({
             ...candidate,

@@ -1,4 +1,4 @@
-import { getMovies } from "../../data/movies.js";
+import { getMovies } from "../../data/movies.js?v=collections-20260719a";
 import { applyPreferences } from "../utils/preferences.js";
 import { filterContentByProfile, getActiveProfile, initializeProfiles } from "../utils/profiles.js";
 import { escapeAttribute, escapeHtml } from "../utils/html.js";
@@ -40,7 +40,10 @@ async function init() {
     installTmdbImageFallbacks();
     installPageSidebar("collection");
     const profile = await initializeProfiles();
-    movies = filterContentByProfile(getMovies(), profile);
+    const catalog = getMovies();
+    const available = filterContentByProfile(catalog, profile);
+    const emptyFiles = catalog.filter((movie) => movie.fileStatus === "empty-file" && profile?.kind !== "kids");
+    movies = [...available, ...emptyFiles.filter((movie) => !available.some((item) => String(item.id) === String(movie.id)))];
     try { const mediaState = await getAllMediaStatus(); movies = movies.map((movie) => { const item = mediaState.items?.[`movie:${movie.id}`] || {}; return { ...movie, mediaStatus:item.status||"pending", mediaStrategy:item.strategy||"pending", videoCodec:item.probe?.video?.codec||"", audioCodec:item.probe?.audioTracks?.[0]?.codec||"", resolution:item.probe?.video?.height||0, hdr:Boolean(item.probe?.video?.hdr), directPlay:item.strategy==="direct-play", prepared:Boolean(item.preparedPath) }; }); } catch {}
     await reloadCollections();
     elements.showEmpty.checked = true;
@@ -125,6 +128,7 @@ function renderOverview() {
 
 function collectionCard(collection, items) {
     const empty = items.length === 0;
+    const availability = collectionAvailability(items);
     return `<article class="collection-card ${empty ? "is-empty" : ""}" data-collection-id="${escapeAttribute(collection.id)}" role="button" tabindex="0" aria-label="Abrir coleção ${escapeAttribute(collection.title)}">
         ${collectionArtwork(collection, items)}
         <div class="collection-card__shade"></div>
@@ -132,7 +136,7 @@ function collectionCard(collection, items) {
             <div class="collection-card__menu"><button type="button" data-menu="${escapeAttribute(collection.id)}" aria-label="Ações de ${escapeAttribute(collection.title)}" aria-expanded="${openMenuId === collection.id}"><i data-lucide="ellipsis"></i></button>
             <div class="collection-menu" ${openMenuId === collection.id ? "" : "hidden"} role="menu"><button role="menuitem" data-action="open" data-id="${escapeAttribute(collection.id)}">Abrir</button>${collection.source === "system" ? `<button role="menuitem" data-action="add-movies" data-id="${escapeAttribute(collection.id)}">Adicionar filmes</button>` : `<button role="menuitem" data-action="edit" data-id="${escapeAttribute(collection.id)}">Editar</button>`}<button role="menuitem" data-action="duplicate" data-id="${escapeAttribute(collection.id)}">Duplicar</button>${collection.source === "user" ? `<button class="is-danger" role="menuitem" data-action="delete" data-id="${escapeAttribute(collection.id)}">Excluir</button>` : ""}</div></div>
         </div>
-        <div class="collection-card__content"><h2>${escapeHtml(collection.title)}</h2><p>${escapeHtml(collection.description)}</p><div class="collection-card__meta"><span>${items.length} ${items.length === 1 ? "filme" : "filmes"}</span><span class="collection-card__action">Abrir <i data-lucide="arrow-up-right"></i></span></div></div>
+        <div class="collection-card__content"><h2>${escapeHtml(collection.title)}</h2><p>${escapeHtml(collection.description)}</p><div class="collection-card__meta"><span>${escapeHtml(availability)}</span><span class="collection-card__action">Abrir <i data-lucide="arrow-up-right"></i></span></div></div>
     </article>`;
 }
 
@@ -198,7 +202,7 @@ function openCollection(id, updateUrl = true) {
     elements.title.textContent = collection.title;
     elements.description.textContent = collection.description || "Sem descrição.";
     elements.kicker.innerHTML = `<span class="collection-type collection-type--${collection.source === "system" ? "system" : collection.type}">${typeLabel(collection)}</span>`;
-    elements.count.textContent = `${items.length} ${items.length === 1 ? "item" : "itens"}`;
+    elements.count.textContent = collectionAvailability(items);
     elements.updated.textContent = `Atualizada em ${formatDate(collection.updatedAt)}`;
     elements.actions.innerHTML = `${collection.source === "system" ? `<button class="is-primary" type="button" data-action="add-movies" data-id="${escapeAttribute(id)}"><i data-lucide="plus"></i>Adicionar filmes</button>` : `<button type="button" data-action="edit" data-id="${escapeAttribute(id)}"><i data-lucide="pencil"></i>Editar</button>${collection.type === "manual" ? `<button class="is-primary" type="button" data-action="edit" data-id="${escapeAttribute(id)}"><i data-lucide="plus"></i>Adicionar filmes</button>` : ""}`}<button type="button" data-action="duplicate" data-id="${escapeAttribute(id)}"><i data-lucide="copy"></i>Duplicar</button>`;
     elements.movieSort.value = collection.type === "manual" ? `${collection.sort?.field || "manual"}-${collection.sort?.direction || "asc"}` : `${collection.sort?.field || "title"}-${collection.sort?.direction || "asc"}`;
@@ -216,6 +220,13 @@ function renderDetailMovies() {
         emptyAction: "edit-collection"
     });
     elements.movies.querySelector("[data-empty-action]")?.addEventListener("click", () => openEditor(collection));
+}
+
+function collectionAvailability(items) {
+    const available = items.filter((movie) => movie.playable !== false && movie.fileStatus !== "empty-file").length;
+    const unavailable = items.length - available;
+    if (!unavailable) return `${available} ${available === 1 ? "filme disponível" : "filmes disponíveis"}`;
+    return `${available} ${available === 1 ? "disponível" : "disponíveis"} · ${unavailable} ${unavailable === 1 ? "arquivo vazio" : "arquivos vazios"}`;
 }
 
 function showOverview(updateUrl = true) {

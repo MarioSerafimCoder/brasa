@@ -15,7 +15,11 @@ class TvCacheStore(context: Context, private val json: Json) {
     private val file = File(context.filesDir, "tv-home-cache.json")
 
     suspend fun home(serverBaseUrl: String, profileId: String): HomeResponse? = withContext(Dispatchers.IO) {
-        val cached = runCatching { json.decodeFromString<CachedHome>(file.readText()) }.getOrNull() ?: return@withContext null
+        if (!file.isFile) return@withContext null
+        val cached = runCatching { json.decodeFromString<CachedHome>(file.readText()) }.getOrElse {
+            file.delete()
+            return@withContext null
+        }
         cached.value.takeIf { cached.serverBaseUrl == serverBaseUrl && cached.profileId == profileId && System.currentTimeMillis() - cached.savedAt < MAX_AGE_MS }
     }
 

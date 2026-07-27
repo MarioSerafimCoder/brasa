@@ -20,6 +20,8 @@ export function getSystemCollections() {
         banner: collection.banner || "",
         imdbIds: collection.imdbIds || [],
         titlePatterns: collection.titlePatterns || [],
+        excludePatterns: collection.excludePatterns || [],
+        genrePatterns: collection.genrePatterns || [],
         keywords: collection.keywords || [],
         movieIds: [],
         manualMovieIds: memberships[collection.id] || [],
@@ -27,7 +29,7 @@ export function getSystemCollections() {
             match: "any",
             items: (collection.keywords || []).map((value) => ({ field: "search", operator: "contains", value }))
         },
-        sort: { field: "title", direction: "asc" },
+        sort: collection.sort || { field: "title", direction: "asc" },
         createdAt: "2026-07-01T00:00:00.000Z",
         updatedAt: "2026-07-10T00:00:00.000Z"
     }));
@@ -79,7 +81,7 @@ export function getCollectionMovies(collection, movies) {
         result = [...result, ...manual.filter((movie) => !automaticIds.has(String(movie.id)))];
     }
 
-    return sortCollectionMovies(result, collection.sort);
+    return sortCollectionMovies(dedupeCollectionMovies(result), collection.sort);
 }
 
 export function saveSystemCollectionMovies(id, movieIds) {
@@ -97,9 +99,12 @@ function loadSystemMemberships() {
 function systemMembershipStorageKey() { return `${SYSTEM_MEMBERSHIP_KEY}:${getActiveProfileRecord()?.id || "mario"}`; }
 
 export function matchesSystemCollection(movie, collection) {
-    if ((collection.imdbIds || []).includes(movie.imdbId)) return true;
     const titles = normalize(`${movie.title || ""} ${movie.originalTitle || ""}`);
+    if ((collection.excludePatterns || []).some((pattern) => titles.includes(normalize(pattern)))) return false;
+    if ((collection.imdbIds || []).includes(movie.imdbId)) return true;
     if ((collection.titlePatterns || []).some((pattern) => titles.includes(normalize(pattern)))) return true;
+    const genres = (movie.genres || []).map(normalize);
+    if ((collection.genrePatterns || []).some((pattern) => genres.includes(normalize(pattern)))) return true;
     const safeKeywords = (collection.keywords || []).filter((keyword) => normalize(keyword).length >= 5 && !["fast", "classic", "oscar", "marvel"].includes(normalize(keyword)));
     const haystack = normalize(`${movie.title || ""} ${movie.originalTitle || ""} ${movie.overview || ""} ${(movie.genres || []).join(" ")}`);
     return safeKeywords.some((keyword) => haystack.includes(normalize(keyword)));
@@ -169,6 +174,28 @@ function sortCollectionMovies(movies, sort = {}) {
         if (field === "year" || field === "rating" || field === "progress") return (Number(a[field] || 0) - Number(b[field] || 0)) * direction;
         return String(a[field] || "").localeCompare(String(b[field] || ""), "pt-BR") * direction;
     });
+}
+
+function dedupeCollectionMovies(movies) {
+    const result = [];
+    for (const movie of movies) {
+        const imdbId = String(movie?.imdbId || "").toLowerCase();
+        const video = normalize(movie?.video);
+        const title = normalize(movie?.title);
+        const year = Number(movie?.year || 0);
+        const duplicate = result.some((existing) => {
+            const existingImdbId = String(existing?.imdbId || "").toLowerCase();
+            if (video && video === normalize(existing?.video)) return true;
+            if (imdbId && existingImdbId) return imdbId === existingImdbId;
+            const existingTitle = normalize(existing?.title);
+            const existingYear = Number(existing?.year || 0);
+            const sameYear = !year || !existingYear || year === existingYear;
+            return sameYear && title.length >= 5 && existingTitle.length >= 5
+                && (title.includes(existingTitle) || existingTitle.includes(title));
+        });
+        if (!duplicate) result.push(movie);
+    }
+    return result;
 }
 
 async function request(url, options = {}) {

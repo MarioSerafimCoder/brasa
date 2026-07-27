@@ -43,7 +43,10 @@ if (-not $state) {
     $pathValue = $env:Path
     [Environment]::SetEnvironmentVariable("PATH", $null, "Process")
     [Environment]::SetEnvironmentVariable("Path", $pathValue, "Process")
-    $env:BRASA_SKIP_STARTUP_SYNC = "1"
+    # A varredura ocorre em segundo plano depois que o servidor começa a responder.
+    # Não a ignore: arquivos adicionados enquanto o BRasa estava fechado também
+    # precisam entrar no catálogo da TV.
+    Remove-Item Env:BRASA_SKIP_STARTUP_SYNC -ErrorAction SilentlyContinue
     $stdout = Join-Path $Root "data\brasa-server.stdout.log"
     $stderr = Join-Path $Root "data\brasa-server.stderr.log"
     Start-Process $node -ArgumentList ('"{0}"' -f $ServerScript) -WorkingDirectory $Root -WindowStyle Hidden -RedirectStandardOutput $stdout -RedirectStandardError $stderr | Out-Null

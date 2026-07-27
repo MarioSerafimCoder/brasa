@@ -1,0 +1,6 @@
+[
+  "A linha do tempo agora permite escolher o ponto com esquerda e direita e carregar com OK.",
+  "O player detecta quando a reprodução para de avançar e reconstrói o streaming automaticamente no mesmo segundo.",
+  "Sessões de filmes diferentes ficam isoladas para que uma preparação em segundo plano não interrompa o título em reprodução.",
+  "A retomada do Avatar foi validada por 60 segundos contínuos e também em um novo ponto escolhido."
+]

@@ -87,6 +87,35 @@ export function selectTvPlaybackPlan(probe, rawCapabilities = {}) {
     return { mode: "transcode", videoAction: "h264", audioAction: "aac", reasons, capabilities };
 }
 
+export function stabilizeTvPlaybackPlan(plan = {}, context = {}) {
+    const resumePosition = Math.max(0, Number(context.resumePosition || 0));
+    if (plan.mode === "direct" && resumePosition >= 5_000) {
+        return {
+            ...plan,
+            mode: "transcode",
+            videoAction: "h264",
+            audioAction: "aac",
+            stripDolbyVision: false,
+            reasons: [
+                "retomada segura exige um novo quadro-chave no ponto salvo",
+                ...(Array.isArray(plan.reasons) ? plan.reasons : []),
+            ],
+        };
+    }
+    if (plan.mode !== "remux") return plan;
+    return {
+        ...plan,
+        mode: "transcode",
+        videoAction: "h264",
+        audioAction: "aac",
+        stripDolbyVision: false,
+        reasons: [
+            "segmentação HLS segura exige quadros-chave regulares",
+            ...(Array.isArray(plan.reasons) ? plan.reasons : []),
+        ],
+    };
+}
+
 export function createQualityLadder(probe) {
     const sourceHeight = Math.max(1, Number(probe?.video?.height || 720));
     const sourceWidth = Math.max(1, Number(probe?.video?.width || Math.round(sourceHeight * 16 / 9)));

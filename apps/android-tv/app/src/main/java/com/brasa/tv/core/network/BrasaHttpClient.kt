@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -30,7 +31,7 @@ class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json
     suspend fun <T> get(base:String,path:String,serializer:KSerializer<T>,authenticated:Boolean=true,headers:Map<String,String> = emptyMap())=execute(base,path,"GET",null,serializer,authenticated,headers)
     suspend fun <T> post(base:String,path:String,body:String,serializer:KSerializer<T>,authenticated:Boolean=true)=execute(base,path,"POST",body,serializer,authenticated)
     suspend fun <T> put(base:String,path:String,body:String,serializer:KSerializer<T>)=execute(base,path,"PUT",body,serializer,true)
-    suspend fun delete(base:String,path:String):Boolean=withContext(Dispatchers.IO){client.newCall(request(base,path,"DELETE",null,true)).execute().use{if(it.code==401)throw DeviceRevokedException();it.isSuccessful}}
+    suspend fun delete(base:String,path:String):Boolean=withContext(Dispatchers.IO){client.newCall(request(base,path,"DELETE",null,true)).execute().use{response->if(response.code==401)throw DeviceRevokedException();if(!response.isSuccessful)throw apiError(response);true}}
     fun authenticatedClient():OkHttpClient=client
     suspend fun measureDownload(base:String,path:String,onProgress:(Long,Long)->Unit):com.brasa.tv.core.model.NetworkTransferMeasurement=withContext(Dispatchers.IO){
         val started=android.os.SystemClock.elapsedRealtime();var bytes=0L;var failures=0;var sampleStarted=started;var sampleBytes=0L;val samples=mutableListOf<Double>()
@@ -51,10 +52,11 @@ class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json
         if(pairedOrigin.isBlank()||pairedOrigin!=normalized||token.isBlank())throw IOException("Credencial de mídia indisponível para este servidor.")
         return OkHttpDataSource.Factory(mediaClient).setDefaultRequestProperties(mapOf("X-BRasa-Device-Token" to token))
     }
-    private suspend fun <T> execute(base:String,path:String,method:String,body:String?,serializer:KSerializer<T>,authenticated:Boolean,headers:Map<String,String> = emptyMap()):T=withContext(Dispatchers.IO){client.newCall(request(base,path,method,body,authenticated,headers)).execute().use{response->val text=response.body?.string().orEmpty();if(response.code==401)throw DeviceRevokedException();if(!response.isSuccessful){val error=runCatching{json.decodeFromString(ApiEnvelope.serializer(ApiError.serializer()),text).data}.getOrNull();throw BrasaApiException(response.code,error?.message?:"Falha ao conectar ao BRasa.")};json.decodeFromString(ApiEnvelope.serializer(serializer),text).data?:throw BrasaApiException(response.code,"Resposta vazia do BRasa.")}}
+    private suspend fun <T> execute(base:String,path:String,method:String,body:String?,serializer:KSerializer<T>,authenticated:Boolean,headers:Map<String,String> = emptyMap()):T=withContext(Dispatchers.IO){client.newCall(request(base,path,method,body,authenticated,headers)).execute().use{response->val text=response.body?.string().orEmpty();if(response.code==401)throw DeviceRevokedException();if(!response.isSuccessful)throw apiError(response,text);val envelope=try{json.decodeFromString(ApiEnvelope.serializer(serializer),text)}catch(error:SerializationException){throw BrasaApiException(response.code,"O servidor enviou dados incompatíveis. Atualize o BRasa e tente novamente.",error)};envelope.data?:throw BrasaApiException(response.code,"Resposta vazia do BRasa.")}}
+    private fun apiError(response:Response,text:String=response.body?.string().orEmpty()):BrasaApiException{val envelope=runCatching{json.decodeFromString(ApiEnvelope.serializer(ApiError.serializer()),text)}.getOrNull();return BrasaApiException(response.code,envelope?.message?:envelope?.data?.message?:"Falha ao conectar ao BRasa.")}
     private fun request(base:String,path:String,method:String,body:String?,authenticated:Boolean,headers:Map<String,String> = emptyMap()):Request{val url=LocalServerAddress.resolve(base,path);val builder=Request.Builder().url(url).header("Accept","application/json").tag(AuthRequired::class.java,AuthRequired(authenticated));headers.forEach{(name,value)->if(value.isNotBlank())builder.header(name,value.take(if(name.equals("X-BRasa-Video-Capabilities",true))4096 else 512))};return builder.method(method,body?.toRequestBody("application/json; charset=utf-8".toMediaType())).build()}
 }
 data class AuthRequired(val enabled:Boolean)
 class HostBoundAuthInterceptor(private val credentials:()->Pair<String,String>):Interceptor{override fun intercept(chain:Interceptor.Chain):Response{val request=chain.request();if(request.tag(AuthRequired::class.java)?.enabled!=true)return chain.proceed(request);val(origin,token)=credentials();if(origin.isBlank()||token.isBlank()||!LocalServerAddress.sameOrigin(origin,request.url.toString()))throw IOException("Credencial bloqueada para host não pareado.");return chain.proceed(request.newBuilder().header("X-BRasa-Device-Token",token).build())}}
-class BrasaApiException(val status:Int,override val message:String):IOException(message)
+class BrasaApiException(val status:Int,override val message:String,cause:Throwable?=null):IOException(message,cause)
 class DeviceRevokedException:IOException("Este dispositivo foi revogado.")

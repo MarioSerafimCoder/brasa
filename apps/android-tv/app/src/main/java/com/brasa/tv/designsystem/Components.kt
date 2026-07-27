@@ -59,7 +59,7 @@ import kotlinx.coroutines.launch
 import android.view.KeyEvent
 
 enum class BrasaButtonStyle { Primary, Secondary, Ghost }
-enum class MediaCardFormat { Landscape, Poster }
+enum class MediaCardFormat { Landscape, Poster, CompactPoster }
 
 @Composable
 fun BrasaLogo(modifier: Modifier = Modifier) {
@@ -139,6 +139,9 @@ fun BrasaTopBar(
     modifier: Modifier = Modifier,
     active: String = "Início",
     onHome: (() -> Unit)? = null,
+    onMovies: (() -> Unit)? = null,
+    onSeries: (() -> Unit)? = null,
+    onCollections: (() -> Unit)? = null,
     onSearch: (() -> Unit)? = null,
     onProfiles: (() -> Unit)? = null,
     onSettings: (() -> Unit)? = null,
@@ -155,6 +158,9 @@ fun BrasaTopBar(
         BrasaLogo()
         Spacer(Modifier.width(26.dp))
         if (onHome != null) NavItem("Início", active == "Início", onHome)
+        if (onMovies != null) NavItem("Filmes", active == "Filmes", onMovies)
+        if (onSeries != null) NavItem("Séries", active == "Séries", onSeries)
+        if (onCollections != null) NavItem("Coleções", active == "Coleções", onCollections)
         Spacer(Modifier.weight(1f))
         if (onSearch != null) NavItem("⌕  Buscar", active == "Buscar", onSearch)
         if (onSettings != null) NavItem("⚙", active == "Configurações", onSettings)
@@ -192,12 +198,14 @@ fun MediaCard(
     var focused by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (focused) 1.04f else 1f, tween(165), label = "cardScale")
     val density = LocalCardDensity.current
-    val width = (if (format == MediaCardFormat.Poster) 164.dp else 278.dp) * density
-    val imageRatio = if (format == MediaCardFormat.Poster) 2f / 3f else 16f / 9f
+    val poster = format != MediaCardFormat.Landscape
+    val compact = format == MediaCardFormat.CompactPoster
+    val width = (if (poster) 164.dp else 278.dp) * density
+    val imageRatio = if (poster) 2f / 3f else 16f / 9f
     LaunchedEffect(focused, item.mediaKey) { if (focused) { delay(180); onFocused() } }
     Column(
         modifier
-            .width(width)
+            .then(if (compact) Modifier.fillMaxWidth() else Modifier.width(width))
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .shadow(if (focused) 10.dp else 1.dp, RoundedCornerShape(11.dp), ambientColor = Color.Black, spotColor = BrasaOrange)
             .background(BrasaSurface, RoundedCornerShape(11.dp))
@@ -215,7 +223,7 @@ fun MediaCard(
                 .border(if (focused) 3.dp else 1.dp, if (focused) BrasaOrange else BrasaBorder, RoundedCornerShape(11.dp)),
         ) {
             AsyncImage(
-                model = if (format == MediaCardFormat.Poster) item.poster.ifBlank { item.backdrop } else item.backdrop.ifBlank { item.poster },
+                model = if (poster) item.poster.ifBlank { item.backdrop } else item.backdrop.ifBlank { item.poster },
                 contentDescription = item.title,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
@@ -242,11 +250,11 @@ fun MediaCard(
                 }
             }
         }
-        if (format == MediaCardFormat.Poster) {
-            Column(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 11.dp, vertical = 8.dp)) {
-                Text(item.title, color = BrasaText, fontSize = 16.sp, lineHeight = 19.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Spacer(Modifier.height(3.dp))
-                Text(metadata(item), color = if (focused) BrasaText else BrasaTextMuted, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (poster) {
+            Column(Modifier.fillMaxWidth().heightIn(min = if (compact) 50.dp else 64.dp).padding(horizontal = if (compact) 7.dp else 11.dp, vertical = if (compact) 6.dp else 8.dp)) {
+                Text(item.title, color = BrasaText, fontSize = if (compact) 13.sp else 16.sp, lineHeight = if (compact) 15.sp else 19.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Spacer(Modifier.height(if (compact) 2.dp else 3.dp))
+                Text(metadata(item), color = if (focused) BrasaText else BrasaTextMuted, fontSize = if (compact) 11.sp else 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

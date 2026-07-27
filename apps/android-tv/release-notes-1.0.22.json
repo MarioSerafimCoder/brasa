@@ -1,0 +1,5 @@
+[
+  "A reprodução retomada agora usa segmentos HLS regulares, evitando blocos gigantes em arquivos com poucos quadros-chave.",
+  "Após uma falha temporária, o player é recriado por completo e preserva o ponto mais recente do filme.",
+  "A biblioteca continua visível quando uma unidade de mídia fica temporariamente indisponível."
+]
