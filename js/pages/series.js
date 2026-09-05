@@ -8,9 +8,10 @@ import { installTmdbImageFallbacks, seriesImageUrl, tmdbImageFallbackAttributes 
 
 const seriesGrid = document.getElementById("seriesGrid");
 const seriesDetail = document.getElementById("seriesDetail");
-const params = new URLSearchParams(window.location.search);
+const seriesHeader = document.getElementById("seriesHeader");
 
-let selectedSeriesId = params.get("id") || "";
+let selectedSeriesId = readSelectedSeriesId();
+let selectedSeasonNumber = readSelectedSeasonNumber();
 
 init();
 
@@ -26,12 +27,22 @@ async function init() {
         const card = event.target.closest("[data-series-id]");
         if (!card) return;
 
-        selectedSeriesId = card.dataset.seriesId;
-        renderPage();
-        history.replaceState(null, "", `series.html?id=${encodeURIComponent(selectedSeriesId)}`);
+        openSeries(card.dataset.seriesId);
     });
 
     seriesDetail.addEventListener("click", (event) => {
+        const back = event.target.closest("[data-series-back]");
+        if (back) {
+            showSeriesList();
+            return;
+        }
+
+        const seasonTab = event.target.closest("[data-season-number]");
+        if (seasonTab) {
+            selectSeason(Number(seasonTab.dataset.seasonNumber));
+            return;
+        }
+
         const episode = event.target.closest("[data-episode-id]");
         if (!episode) return;
 
@@ -39,6 +50,13 @@ async function init() {
     });
 
     document.addEventListener("keydown", (event) => {
+        const seasonTab = event.target.closest("[data-season-number]");
+        if (seasonTab && ["ArrowLeft", "ArrowRight"].includes(event.key)) {
+            event.preventDefault();
+            moveBetweenSeasons(seasonTab, event.key === "ArrowRight" ? 1 : -1);
+            return;
+        }
+
         if (event.key !== "Enter" && event.key !== " ") return;
 
         const seriesCard = event.target.closest("[data-series-id]");
@@ -46,9 +64,7 @@ async function init() {
 
         if (seriesCard) {
             event.preventDefault();
-            selectedSeriesId = seriesCard.dataset.seriesId;
-            renderPage();
-            history.replaceState(null, "", `series.html?id=${encodeURIComponent(selectedSeriesId)}`);
+            openSeries(seriesCard.dataset.seriesId);
         }
 
         if (episodeCard) {
@@ -56,12 +72,21 @@ async function init() {
             navigateTo(`movie.html?episode=${encodeURIComponent(episodeCard.dataset.episodeId)}`);
         }
     });
+
+    window.addEventListener("popstate", () => {
+        selectedSeriesId = readSelectedSeriesId();
+        selectedSeasonNumber = readSelectedSeasonNumber();
+        renderPage();
+    });
 }
 
 function renderPage() {
     const items = getVisibleSeries();
 
     if (!items.length) {
+        seriesHeader.hidden = false;
+        seriesGrid.hidden = false;
+        seriesDetail.hidden = false;
         seriesGrid.innerHTML = "";
         seriesDetail.innerHTML = `
             <div class="empty-state">
@@ -72,13 +97,71 @@ function renderPage() {
         return;
     }
 
-    if (!items.some((item) => item.id === selectedSeriesId)) {
-        selectedSeriesId = items[0].id;
+    const selectedItem = items.find((item) => item.id === selectedSeriesId);
+    const isDetailView = Boolean(selectedItem);
+
+    seriesHeader.hidden = isDetailView;
+    seriesGrid.hidden = isDetailView;
+    seriesDetail.hidden = !isDetailView;
+    seriesGrid.innerHTML = isDetailView ? "" : items.map(SeriesCard).join("");
+    seriesDetail.innerHTML = "";
+
+    if (selectedItem) {
+        renderSelectedSeries(selectedItem);
+    } else {
+        selectedSeriesId = "";
     }
 
-    seriesGrid.innerHTML = items.map(SeriesCard).join("");
-    renderSelectedSeries(items);
     refreshIcons();
+}
+
+function readSelectedSeriesId() {
+    return new URLSearchParams(window.location.search).get("id") || "";
+}
+
+function readSelectedSeasonNumber() {
+    return Number(new URLSearchParams(window.location.search).get("season")) || 0;
+}
+
+function openSeries(seriesId) {
+    selectedSeriesId = seriesId || "";
+    selectedSeasonNumber = 0;
+    const url = new URL(window.location.href);
+    url.searchParams.set("id", selectedSeriesId);
+    url.searchParams.delete("season");
+    history.pushState(null, "", url);
+    renderPage();
+    seriesDetail.querySelector("[data-series-back]")?.focus();
+}
+
+function showSeriesList() {
+    selectedSeriesId = "";
+    selectedSeasonNumber = 0;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("id");
+    history.pushState(null, "", url);
+    renderPage();
+    seriesGrid.querySelector("[data-series-id]")?.focus();
+}
+
+function selectSeason(seasonNumber) {
+    const item = getSeriesById(selectedSeriesId);
+    if (!item?.seasons?.some((season) => season.seasonNumber === seasonNumber)) return;
+    selectedSeasonNumber = seasonNumber;
+    const url = new URL(window.location.href);
+    url.searchParams.set("season", String(seasonNumber));
+    history.replaceState(null, "", url);
+    renderSelectedSeries(item);
+    refreshIcons();
+    seriesDetail.querySelector(`[data-season-number="${seasonNumber}"]`)?.focus();
+}
+
+function moveBetweenSeasons(currentTab, direction) {
+    const tabs = Array.from(seriesDetail.querySelectorAll("[data-season-number]"));
+    const currentIndex = tabs.indexOf(currentTab);
+    if (currentIndex < 0 || !tabs.length) return;
+    const next = tabs[(currentIndex + direction + tabs.length) % tabs.length];
+    selectSeason(Number(next.dataset.seasonNumber));
 }
 
 function getVisibleSeries() {
@@ -110,8 +193,11 @@ function SeriesCard(item) {
     `;
 }
 
-function renderSelectedSeries(items) {
-    const item = getSeriesById(selectedSeriesId) || items[0];
+function renderSelectedSeries(selectedItem) {
+    const item = getSeriesById(selectedItem.id) || selectedItem;
+    const seasons = item.seasons || [];
+    const selectedSeason = seasons.find((season) => season.seasonNumber === selectedSeasonNumber) || seasons[0];
+    selectedSeasonNumber = selectedSeason?.seasonNumber || 0;
     const image = item.backdrop || item.poster || "";
     const heroImage = seriesImageUrl(item, {
         type: "backdrop",
@@ -126,6 +212,11 @@ function renderSelectedSeries(items) {
     const style = heroLayers ? ` style="--series-hero-image:${heroLayers}"` : "";
 
     seriesDetail.innerHTML = `
+        <button class="series-detail__back" type="button" data-series-back>
+            <i data-lucide="arrow-left"></i>
+            Voltar para séries
+        </button>
+
         <div class="series-detail__hero"${style}>
             <div>
                 <p>Série local</p>
@@ -134,16 +225,31 @@ function renderSelectedSeries(items) {
             </div>
         </div>
 
-        <div class="season-stack">
-            ${(item.seasons || []).map(SeasonBlock).join("")}
+        <nav class="season-tabs" aria-label="Temporadas de ${escapeAttribute(item.title)}" role="tablist">
+            ${seasons.map((season) => SeasonTab(season, selectedSeasonNumber)).join("")}
+        </nav>
+
+        <div class="season-stack" role="tabpanel" aria-label="Episódios da temporada ${escapeAttribute(selectedSeasonNumber)}">
+            ${selectedSeason ? SeasonBlock(selectedSeason) : ""}
         </div>
+    `;
+}
+
+function SeasonTab(season, activeSeasonNumber) {
+    const active = season.seasonNumber === activeSeasonNumber;
+    const paddedNumber = String(season.seasonNumber).padStart(2, "0");
+    return `
+        <button class="season-tab${active ? " is-active" : ""}" type="button" role="tab" aria-selected="${active}" tabindex="${active ? "0" : "-1"}" data-season-number="${escapeAttribute(season.seasonNumber)}">
+            Temporada ${escapeHtml(paddedNumber)}
+            <span>${escapeHtml(pluralize(season.episodes?.length, "episódio", "episódios"))}</span>
+        </button>
     `;
 }
 
 function SeasonBlock(season) {
     return `
         <section class="season-block">
-            <h3>Temporada ${escapeHtml(season.seasonNumber)}</h3>
+            <h3>Episódios da temporada ${escapeHtml(String(season.seasonNumber).padStart(2, "0"))}</h3>
             <div class="episode-list">
                 ${(season.episodes || []).map(EpisodeCard).join("")}
             </div>
@@ -161,9 +267,10 @@ function EpisodeCard(episode) {
                 <span aria-hidden="true">${escapeHtml(episode.episodeNumber)}</span>
                 ${thumbnail ? `<img src="../${escapeAttribute(thumbnail)}" alt="${escapeAttribute(episode.title)}" loading="lazy"${tmdbImageFallbackAttributes(fallback ? `../${fallback}` : "")}>` : ""}
             </div>
-            <div>
+            <div class="episode-card__content">
+                <p class="episode-card__meta">Episódio ${escapeHtml(String(episode.episodeNumber).padStart(2, "0"))} · ${escapeHtml(episode.quality || "Local")}</p>
                 <h4>${escapeHtml(episode.title)}</h4>
-                <p>Temporada ${escapeHtml(episode.seasonNumber)} · ${escapeHtml(episode.quality || "Local")}</p>
+                <p class="episode-card__overview">${escapeHtml(episode.overview || "Resumo sem spoilers em preparação.")}</p>
             </div>
             <i data-lucide="play"></i>
         </article>
@@ -180,4 +287,3 @@ function refreshIcons() {
         window.lucide.createIcons();
     }
 }
-

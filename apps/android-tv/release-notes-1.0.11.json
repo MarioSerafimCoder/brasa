@@ -1,0 +1,6 @@
+[
+  "Superman mantém a resolução 4K original usando a camada HDR10 compatível do próprio arquivo.",
+  "O fallback de transcodificação nunca inicia abaixo de Full HD para fontes 1080p ou superiores.",
+  "Filmes já preparados voltam a ser usados imediatamente e não entram novamente na fila sem necessidade.",
+  "O filme escolhido na TV recebe prioridade sobre análises automáticas do restante da biblioteca."
+]

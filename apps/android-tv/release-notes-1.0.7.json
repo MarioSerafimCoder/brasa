@@ -1,0 +1,6 @@
+[
+  "Superman agora inicia assim que os primeiros segmentos HLS ficam disponíveis.",
+  "Decoder CUVID corrigido para arquivos HEVC com metadados Dolby Vision.",
+  "Segmentos de quatro segundos garantidos com quadros-chave periódicos.",
+  "Progresso não avança mais somente pelo áudio quando nenhum quadro de vídeo foi decodificado."
+]

@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { createMediaCache } from "../server/media-cache.mjs";
+const root=await fs.mkdtemp(path.join(os.tmpdir(),"brasa-cache-"));
+const hls=path.join(root,"data","prepared-media","hls","aaaaaaaaaaaaaaaaaaaaaaaa");await fs.mkdir(hls,{recursive:true});
+await fs.writeFile(path.join(hls,"segment.part"),Buffer.alloc(10));await fs.writeFile(path.join(hls,"segment.ts"),Buffer.alloc(20));
+const cache=createMediaCache({rootDir:root,store:{settings:async()=>({maxHlsGb:1})}});
+assert.equal((await cache.inspect()).partialFiles,1);const result=await cache.cleanup({maxBytes:1024});assert.ok(result.removed.some((item)=>item.endsWith("segment.part")));assert.equal((await cache.inspect()).partialFiles,0);
+await cache.clearHls();assert.equal((await cache.inspect()).sizeBytes,0);await fs.rm(root,{recursive:true,force:true});
+console.log("Cache de mídia: limpeza de parciais, limite e limpeza manual aprovados.");

@@ -1,7 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { absoluteLibraryRoots, isProcessableVideo, VIDEO_EXTENSIONS } from "../server/library-config.mjs";
+import { getMediaToolsStatus } from "../server/media-tools.mjs";
 import { ensureEnvFile } from "./setup-env.mjs";
 import { checkProviderHealth, saveProviderHealth } from "../server/provider-health.mjs";
 import { createMetadataRetryStore } from "../server/metadata-retry-store.mjs";
@@ -16,6 +18,7 @@ const moviesDir = movieSources.find((item) => item.audience === "general").dir;
 const postersDir = path.join(rootDir, "assets", "posters");
 const backdropsDir = path.join(rootDir, "assets", "backdrops");
 const seriesPostersDir = path.join(rootDir, "assets", "series-posters");
+const episodeThumbnailsDir = path.join(rootDir, "assets", "episode-thumbnails");
 const subtitlesDir = path.join(rootDir, "assets", "subtitles");
 const dataFile = path.join(rootDir, "data", "movies.js");
 const seriesDataFile = path.join(rootDir, "data", "series.js");
@@ -26,6 +29,8 @@ const videoExtensions = new Set(VIDEO_EXTENSIONS);
 const args = new Set(process.argv.slice(2));
 const isDryRun = args.has("--dry-run");
 const forceMetadataRefresh = args.has("--refresh-metadata");
+const seriesOnly = args.has("--series-only");
+let mediaToolsPromise;
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();
 
@@ -38,8 +43,8 @@ async function main() {
         openSubtitlesKey: getArgValue("--opensubtitles-api-key") || process.env.OPENSUBTITLES_API_KEY
     }));
     reportProviderHealth(providerHealth);
-    await syncMovies({ providerHealth, retryStore: createMetadataRetryStore(rootDir) });
-    await syncSeries();
+    if (!seriesOnly) await syncMovies({ providerHealth, retryStore: createMetadataRetryStore(rootDir) });
+    await syncSeries({ providerHealth });
 }
 
 async function syncMovies({ providerHealth, retryStore }) {
@@ -53,7 +58,9 @@ async function syncMovies({ providerHealth, retryStore }) {
         let overrideChanged=false;movies.forEach((movie)=>{const fields=adminOverrides[`movie:${movie.id}`]?.fields||{};if(Object.entries(fields).some(([key,value])=>JSON.stringify(movie[key])!==JSON.stringify(value)))overrideChanged=true;Object.assign(movie,fields);});
         movies.forEach((movie)=>{ movie.audience=getMovieAudience(movie); });
         const overrides = await loadOverrides();
-        const videoFiles = await listVideoFiles();
+        const sourceAvailability = await inspectMovieSources();
+        const videoFiles = await listVideoFiles(sourceAvailability);
+        const emptyVideoFiles = await listEmptyVideoFiles(sourceAvailability);
         const knownVideos = new Map(
             movies
                 .filter((movie) => movie.video)
@@ -63,14 +70,14 @@ async function syncMovies({ providerHealth, retryStore }) {
         let changed = overrideChanged;
         const added = [];
         const availablePaths = new Set(videoFiles.map((file) => normalizePath(file.assetPath)));
+        const emptyPaths = new Set(emptyVideoFiles.map((file) => normalizePath(file.assetPath)));
 
         for (const movie of movies) {
             if (!movie.video) continue;
-            const available = availablePaths.has(normalizePath(movie.video));
-            const nextStatus = available ? "available" : "missing-file";
-            if (movie.fileStatus !== nextStatus || movie.playable !== available) {
-                movie.fileStatus = nextStatus;
-                movie.playable = available;
+            const availability = resolveMovieAvailability(movie, { availablePaths, emptyPaths, sourceAvailability });
+            if (movie.fileStatus !== availability.fileStatus || movie.playable !== availability.playable) {
+                movie.fileStatus = availability.fileStatus;
+                movie.playable = availability.playable;
                 changed = true;
             }
         }
@@ -79,6 +86,7 @@ async function syncMovies({ providerHealth, retryStore }) {
             const videoPath = normalizePath(file.assetPath);
             return !knownVideos.has(videoPath);
         });
+        const newEmptyFiles = emptyVideoFiles.filter((file) => !knownVideos.has(normalizePath(file.assetPath)));
 
         const recoveredMetadataProvider = providerHealth.recovered.some((name) => name === "omdb" || name === "tmdb");
         const refreshed = await refreshIncompleteMovies({ movies, videoFiles, overrides, adminOverrides, omdbApiKey, tmdbCredentials, retryStore, force: forceMetadataRefresh || recoveredMetadataProvider });
@@ -152,7 +160,41 @@ async function syncMovies({ providerHealth, retryStore }) {
             }
         }
 
-        if (!newFiles.length) {
+        if (newEmptyFiles.length) {
+            let nextId = movies.reduce((max, movie) => Math.max(max, Number(movie.id) || 0), 0) + 1;
+            for (const file of newEmptyFiles) {
+                try {
+                    const parsed = parseMovieFileName(file.name);
+                    const fileImdbId = extractImdbId(file.name);
+                    const override = { ...(overrides[file.name] || {}), ...(fileImdbId ? { imdbId: fileImdbId } : {}) };
+                    let tmdb = null;
+                    if (tmdbCredentials.apiKey || tmdbCredentials.readToken) {
+                        tmdb = await findMovieOnTmdb({ credentials: tmdbCredentials, title: parsed.title, year: parsed.year, imdbId: fileImdbId }).catch(() => null);
+                    }
+                    const local = createLocalMovieMetadata(parsed, override, fileImdbId);
+                    const metadata = mergeMovieMetadata(local, tmdb, parsed);
+                    const artwork = await resolveMovieArtwork({ omdb: metadata, tmdb, fileName: file.name });
+                    const identification = assessMovieIdentification({ omdb: null, parsed, override, fileImdbId });
+                    const movie = buildMovie({
+                        id: nextId++, fileName: file.name, filePath: file.assetPath,
+                        audience: file.audience, addedAt: file.mtime?.toISOString?.() || new Date().toISOString(),
+                        omdb: metadata, parsed, override: { ...override, backdrop: artwork.backdrop },
+                        poster: artwork.poster, identification, file
+                    });
+                    movie.fileStatus = "empty-file";
+                    movie.playable = false;
+                    movie.identificationReason = "Nome identificado, mas o arquivo de vídeo está vazio (0 bytes).";
+                    movies.push(movie);
+                    added.push(movie);
+                    changed = true;
+                    console.log(`BRasa: arquivo vazio catalogado para conferência: "${movie.title}".`);
+                } catch (error) {
+                    console.log(`BRasa: nao consegui catalogar o arquivo vazio "${file.name}" (${error.message}).`);
+                }
+            }
+        }
+
+        if (!newFiles.length && !newEmptyFiles.length) {
             console.log("BRasa: nenhum filme novo encontrado.");
         }
 
@@ -197,6 +239,7 @@ async function syncMovies({ providerHealth, retryStore }) {
     } catch (error) {
         console.error("BRasa: erro ao sincronizar filmes.");
         console.error(error.message);
+        process.exitCode = 1;
     }
 }
 
@@ -512,10 +555,37 @@ async function loadOverrides() {
 
 async function loadAdminOverrides(){try{return JSON.parse(await fs.readFile(path.join(rootDir,"data","admin-overrides.json"),"utf8"));}catch{return {};}}
 
-async function listVideoFiles() {
+async function inspectMovieSources() {
+    const availability = new Map();
+    for (const source of movieSources) {
+        const key = normalizePath(toAssetPath(source.dir));
+        try {
+            const stat = await fs.stat(source.dir);
+            if (!stat.isDirectory()) throw new Error("a origem não é uma pasta");
+            await fs.readdir(source.dir);
+            availability.set(key, true);
+        } catch {
+            availability.set(key, false);
+            console.log(`BRasa: fonte de filmes indisponível (${toAssetPath(source.dir)}). O catálogo anterior será preservado.`);
+        }
+    }
+    return availability;
+}
+
+export function resolveMovieAvailability(movie, { availablePaths = new Set(), emptyPaths = new Set(), sourceAvailability = new Map() } = {}) {
+    const video = normalizePath(movie?.video || "");
+    const source = [...sourceAvailability.entries()].find(([prefix]) => video === prefix || video.startsWith(`${prefix}/`));
+    if (source?.[1] === false) return { fileStatus: "source-offline", playable: false };
+    const available = availablePaths.has(video);
+    const empty = emptyPaths.has(video);
+    return { fileStatus: available ? "available" : empty ? "empty-file" : "missing-file", playable: available };
+}
+
+async function listVideoFiles(sourceAvailability) {
     const withStats=[];
     for(const source of movieSources){
-        const entries=await fs.readdir(source.dir,{withFileTypes:true}).catch(()=>[]);
+        if (sourceAvailability.get(normalizePath(toAssetPath(source.dir))) === false) continue;
+        const entries=await fs.readdir(source.dir,{withFileTypes:true});
         for(const entry of entries){
             if(!entry.isFile())continue;
             const absolutePath=path.join(source.dir,entry.name),stats=await fs.stat(absolutePath);
@@ -528,6 +598,22 @@ async function listVideoFiles() {
         .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
+async function listEmptyVideoFiles(sourceAvailability) {
+    const found = [];
+    for (const source of movieSources) {
+        if (sourceAvailability.get(normalizePath(toAssetPath(source.dir))) === false) continue;
+        const entries = await fs.readdir(source.dir, { withFileTypes: true });
+        for (const entry of entries) {
+            if (!entry.isFile() || !videoExtensions.has(path.extname(entry.name).toLowerCase())) continue;
+            const absolutePath = path.join(source.dir, entry.name);
+            const stats = await fs.stat(absolutePath);
+            if (stats.size !== 0) continue;
+            found.push({ name: entry.name, mtime: stats.mtime, size: 0, assetPath: toAssetPath(absolutePath), audience: source.audience });
+        }
+    }
+    return found.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+}
+
 export function parseMovieFileName(fileName) {
     const baseName = path.basename(fileName, path.extname(fileName));
     const yearMatch = baseName.match(/(?:^|[\s[(._-])((?:19|20)\d{2})(?:[\s\])._-]|$)/);
@@ -536,7 +622,10 @@ export function parseMovieFileName(fileName) {
     const clean = baseName
         .replace(/[._]+/g, " ")
         .replace(/\[(?:19|20)\d{2}\]|\((?:19|20)\d{2}\)|(?:19|20)\d{2}/g, " ")
-        .replace(/\b(4k|uhd|2160p|1080p|720p|480p|bluray|blu-ray|brrip|webrip|web-rip|web-dl|webdl|remux|x264|x265|h264|h265|hevc|av1|dv|dolby\s*vision|hdr10\+?|hdr|sdr|dublado|dub|legendado|dual|multi|audio|aac|ac3|eac3|ddp?\+?|atmos|truehd|dts(?:-hd)?|5[._ ]1|7[._ ]1|10bit|mp4|mkv|avi|mov|webm|torrent|xbrfilmestorrent|seroes|zoiudo)\b/gi, " ")
+        .replace(/^\s*(?:comando\s*to|torrentdosfilmes\s*se)\s*[-–—]\s*/i, " ")
+        .replace(/\s+audio\s+encoder\s+by\s+.*$/i, " ")
+        .replace(/\b(4k|uhd|2160p|1080p|720p|480p|bluray|blu-ray|brrip|bdrip|webrip|web-rip|web-dl|webdl|remux|x264|x265|h264|h265|hevc|av1|dv|dolby\s*vision|hdr10\+?|hdr10plus|hdr|sdr|dublado|dub|legendado|dual|multi|audio|aac|ac3|eac3|ddp?\+?|atmos|truehd|dts(?:-hd)?|5[._ ]1|7[._ ]1|2[._ ]0|6ch|10bit|3d|hsbs|extended|fullscreen|repack|imax|full\s*hd|fullhd|hdtc|mp4|mkv|avi|mov|webm|torrent|xbrfilmestorrent|seroes|zoiudo)\b/gi, " ")
+        .replace(/\b(?:www\s*)?(?:bludv(?:\s*(?:tv|com))?|wolverdonfilmes(?:\s*com)?|torrentdosfilmes(?:\s*(?:se|com))?|comandotorrents(?:\s*com)?|starckfilmes|lapumia|ricksz|brshares|mld|ramontpb|johnl|sf)\b.*$/gi, " ")
         .replace(/\[[^\]]*]|\([^)]*\)/g, " ")
         .replace(/\s+-\s+$/g, " ")
         .replace(/\s+/g, " ")
@@ -762,7 +851,7 @@ function buildMovie({ id, fileName, filePath, audience, addedAt, omdb, parsed, o
         originalTitle: omdb.Title || parsed.title,
         year: Number(omdb.Year?.match(/\d{4}/)?.[0] || parsed.year || 0),
         duration: formatRuntime(omdb.Runtime),
-        rating: Number.parseFloat(omdb.imdbRating) || "",
+        rating: Number.parseFloat(omdb.imdbRating) || null,
         contentRating: override.contentRating || (omdb.Rated && omdb.Rated !== "N/A" ? omdb.Rated : ""),
         quality: inferQuality(fileName),
         genres: translateGenres(omdb.Genre),
@@ -841,6 +930,14 @@ async function writeMovies(movies) {
 
 const movies = ${JSON.stringify(movies, null, 4)};
 
+function isPlayableMovie(movie){
+
+    return Boolean(movie?.video)
+        && movie.playable !== false
+        && movie.fileStatus !== "missing-file";
+
+}
+
 /* ==========================================================
    GETTERS
 ========================================================== */
@@ -855,7 +952,7 @@ export function getFeaturedMovie(){
 
     return movies.find(
 
-        movie => movie.featured
+        movie => movie.featured && isPlayableMovie(movie)
 
     );
 
@@ -864,6 +961,7 @@ export function getFeaturedMovie(){
 export function getRecentlyAddedMovies(limit = 4){
 
     return [...movies]
+        .filter(isPlayableMovie)
         .sort((a, b) => {
             const dateA = a.addedAt ? new Date(a.addedAt).getTime() : 0;
             const dateB = b.addedAt ? new Date(b.addedAt).getTime() : 0;
@@ -878,7 +976,7 @@ export function getFavorites(){
 
     return movies.filter(
 
-        movie => movie.favorite
+        movie => movie.favorite && isPlayableMovie(movie)
 
     );
 
@@ -888,7 +986,7 @@ export function getContinueWatching(){
 
     return movies.filter(
 
-        movie => movie.progress > 0
+        movie => movie.progress > 0 && isPlayableMovie(movie)
 
     );
 
@@ -896,11 +994,7 @@ export function getContinueWatching(){
 
 export function getAvailableMovies(){
 
-    return movies.filter(
-
-        movie => movie.video
-
-    );
+    return movies.filter(isPlayableMovie);
 
 }
 
@@ -918,13 +1012,16 @@ export function getMovieById(id){
     await fs.writeFile(dataFile, content, "utf8");
 }
 
-async function syncSeries() {
+async function syncSeries({ providerHealth }) {
     try {
-        const omdbApiKey = getArgValue("--api-key") || process.env.OMDB_API_KEY;
+        const omdbApiKey = providerHealth.providers.omdb.available ? getArgValue("--api-key") || process.env.OMDB_API_KEY : "";
+        const tmdbCredentials = providerHealth.providers.tmdb.available
+            ? { apiKey: process.env.TMDB_API_KEY || "", readToken: process.env.TMDB_READ_TOKEN || "" }
+            : { apiKey: "", readToken: "" };
         const series = await buildSeriesLibrary();
-        const enriched = await hydrateSeriesMetadata(series, omdbApiKey);
+        const enriched = await hydrateSeriesMetadata(series, { omdbApiKey, tmdbCredentials });
         const adminOverrides = await loadAdminOverrides();
-        for(const item of enriched){Object.assign(item,adminOverrides[`series:${item.id}`]?.fields||{});for(const season of item.seasons||[])for(const episode of season.episodes||[])Object.assign(episode,adminOverrides[`episode:${episode.id}`]?.fields||{});}
+        for(const item of enriched){const seriesFields=adminOverrides[`series:${item.id}`]?.fields||{};Object.assign(item,seriesFields);for(const season of item.seasons||[])for(const episode of season.episodes||[])Object.assign(episode,seriesFields.audience?{audience:seriesFields.audience}:{},adminOverrides[`episode:${episode.id}`]?.fields||{});}
 
         if (isDryRun) {
             console.log(`BRasa: dry-run ativo; ${enriched.length} serie(s) detectada(s).`);
@@ -937,35 +1034,159 @@ async function syncSeries() {
     } catch (error) {
         console.error("BRasa: erro ao indexar series.");
         console.error(error.message);
+        process.exitCode = 1;
     }
 }
 
-async function hydrateSeriesMetadata(series, apiKey) {
+async function hydrateSeriesMetadata(series, { omdbApiKey, tmdbCredentials }) {
     if (!series.length) return series;
 
-    if (!apiKey) {
-        console.log("BRasa: OMDB_API_KEY ausente; capas e dados de series nao foram baixados.");
-        return series;
+    if (!omdbApiKey && !tmdbCredentials.apiKey && !tmdbCredentials.readToken) {
+        console.log("BRasa: provedores de metadados ausentes; usando miniaturas extraidas dos episodios.");
     }
 
     for (const item of series) {
         try {
-            const omdb = await findSeriesOnOmdb({ apiKey, title: item.title });
+            const omdb = omdbApiKey ? await findSeriesOnOmdb({ apiKey: omdbApiKey, title: item.title }) : null;
+            const tmdb = tmdbCredentials.apiKey || tmdbCredentials.readToken
+                ? await findSeriesOnTmdb({ credentials: tmdbCredentials, title: omdb?.Title || item.title, imdbId: omdb?.imdbID || "" })
+                : null;
 
-            if (!omdb) {
-                console.log(`BRasa: nao encontrei dados de serie na OMDb para "${item.title}".`);
-                continue;
+            if (omdb) {
+                const poster = await resolveSeriesPoster(omdb, item);
+                applySeriesMetadata(item, omdb, poster);
             }
 
-            const poster = await resolveSeriesPoster(omdb, item);
-            applySeriesMetadata(item, omdb, poster);
-            console.log(`BRasa: dados de serie atualizados para "${item.title}".`);
+            if (tmdb) {
+                await applyTmdbSeriesMetadata(item, tmdb, tmdbCredentials);
+                console.log(`BRasa: episodios e miniaturas atualizados para "${item.title}".`);
+            } else {
+                console.log(`BRasa: metadados de episodios nao encontrados para "${item.title}"; usando os arquivos locais.`);
+            }
+
+            await ensureLocalEpisodeMetadata(item);
         } catch (error) {
-            console.log(`BRasa: nao consegui baixar dados de serie para "${item.title}". ${error.message}`);
+            console.log(`BRasa: atualizacao parcial da serie "${item.title}". ${error.message}`);
+            await ensureLocalEpisodeMetadata(item);
         }
     }
 
     return series;
+}
+
+async function findSeriesOnTmdb({ credentials, title, imdbId }) {
+    let result = null;
+    if (imdbId) {
+        const found = await fetchTmdb(`/find/${encodeURIComponent(imdbId)}`, { external_source: "imdb_id", language: "pt-BR" }, credentials);
+        result = found.tv_results?.[0] || null;
+    }
+    if (!result && title) {
+        const found = await fetchTmdb("/search/tv", { query: title, language: "pt-BR", include_adult: "false" }, credentials);
+        result = found.results?.[0] || null;
+    }
+    if (!result?.id) return null;
+    const details = await fetchTmdb(`/tv/${result.id}`, { language: "pt-BR", append_to_response: "external_ids" }, credentials);
+    return { ...result, ...details };
+}
+
+async function applyTmdbSeriesMetadata(item, tmdb, credentials) {
+    item.tmdbId = tmdb.id;
+    item.imdbId = item.imdbId || tmdb.external_ids?.imdb_id || "";
+    item.title = tmdb.name || item.title;
+    item.originalTitle = tmdb.original_name || item.originalTitle || item.title;
+    item.year = Number(String(tmdb.first_air_date || "").slice(0, 4)) || Number(item.year) || null;
+    item.rating = Number(tmdb.vote_average) || Number(item.rating) || null;
+    item.genres = (tmdb.genres || []).map((genre) => genre.name).filter(Boolean);
+    item.overview = tmdb.overview || item.overview;
+    if (tmdb.poster_path) item.poster = await downloadTmdbImage(tmdb.poster_path, "poster", item.title, item.year) || item.poster;
+    if (tmdb.backdrop_path) item.backdrop = await downloadTmdbImage(tmdb.backdrop_path, "backdrop", item.title, item.year) || item.backdrop;
+
+    for (const season of item.seasons || []) {
+        const seasonPt = await fetchTmdb(`/tv/${tmdb.id}/season/${season.seasonNumber}`, { language: "pt-BR" }, credentials).catch(() => null);
+        const needsEnglish = !seasonPt || (seasonPt.episodes || []).some((episode) => !episode.overview);
+        const seasonEn = needsEnglish
+            ? await fetchTmdb(`/tv/${tmdb.id}/season/${season.seasonNumber}`, { language: "en-US" }, credentials).catch(() => null)
+            : null;
+
+        for (const episode of season.episodes || []) {
+            const matchPt = (seasonPt?.episodes || []).find((candidate) => candidate.episode_number === episode.episodeNumber);
+            const matchEn = (seasonEn?.episodes || []).find((candidate) => candidate.episode_number === episode.episodeNumber);
+            const metadata = matchPt || matchEn;
+            if (!metadata) continue;
+
+            episode.tmdbId = metadata.id;
+            episode.title = matchPt?.name || matchEn?.name || episode.title;
+            episode.overview = conciseEpisodeOverview(matchPt?.overview || matchEn?.overview, episode.title);
+            episode.durationMinutes = Number(metadata.runtime) || episode.durationMinutes || 0;
+            if (metadata.still_path) {
+                const target = episodeThumbnailPath(item, episode);
+                const downloaded = await downloadEpisodeThumbnail(metadata.still_path, target);
+                if (downloaded) {
+                    episode.thumbnail = downloaded;
+                    episode.backdrop = downloaded;
+                }
+            }
+        }
+    }
+}
+
+function conciseEpisodeOverview(value, title) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (!text) return `Uma nova etapa da história se desenvolve em “${title}”, sem revelar os momentos decisivos do episódio.`;
+    const firstSentence = text.match(/^.{40,240}?[.!?](?:\s|$)/)?.[0]?.trim() || text.slice(0, 237).trim().replace(/[,;:]?$/, "…");
+    return firstSentence.length <= 240 ? firstSentence : `${firstSentence.slice(0, 237).trim()}…`;
+}
+
+function episodeThumbnailPath(item, episode) {
+    return `assets/episode-thumbnails/${slugify(`${item.id}-s${episode.seasonNumber}-e${episode.episodeNumber}`)}.jpg`;
+}
+
+async function downloadEpisodeThumbnail(stillPath, relativePath) {
+    const absolutePath = path.join(rootDir, relativePath);
+    if (await fileExists(absolutePath)) return relativePath;
+    if (isDryRun) return relativePath;
+    const response = await fetch(`https://image.tmdb.org/t/p/w780${stillPath}`);
+    const mime = response.headers.get("content-type") || "";
+    if (!response.ok || !mime.startsWith("image/")) return "";
+    await fs.mkdir(episodeThumbnailsDir, { recursive: true });
+    await fs.writeFile(absolutePath, Buffer.from(await response.arrayBuffer()));
+    return relativePath;
+}
+
+async function ensureLocalEpisodeMetadata(item) {
+    for (const season of item.seasons || []) {
+        for (const episode of season.episodes || []) {
+            episode.overview = conciseEpisodeOverview(episode.overview, episode.title);
+            const expected = episodeThumbnailPath(item, episode);
+            const current = episode.thumbnail && await fileExists(path.join(rootDir, episode.thumbnail)) ? episode.thumbnail : "";
+            episode.thumbnail = current || await extractEpisodeThumbnail(episode, expected);
+            episode.backdrop = episode.thumbnail || episode.backdrop || item.backdrop || "";
+        }
+    }
+}
+
+async function extractEpisodeThumbnail(episode, relativePath) {
+    if (isDryRun) return relativePath;
+    mediaToolsPromise ||= getMediaToolsStatus(rootDir);
+    const tools = await mediaToolsPromise;
+    if (!tools.ffmpegAvailable || !episode.video) return "";
+    const input = path.resolve(rootDir, episode.video);
+    const output = path.join(rootDir, relativePath);
+    await fs.mkdir(path.dirname(output), { recursive: true });
+    const ok = await runTool(tools.ffmpegPath, [
+        "-y", "-ss", "45", "-i", input, "-frames:v", "1",
+        "-vf", "scale=640:360:force_original_aspect_ratio=decrease,pad=640:360:(ow-iw)/2:(oh-ih)/2",
+        "-q:v", "3", output
+    ]);
+    return ok ? relativePath : "";
+}
+
+function runTool(command, commandArgs) {
+    return new Promise((resolve) => {
+        const child = spawn(command, commandArgs, { windowsHide: true, shell: false, stdio: "ignore" });
+        child.on("error", () => resolve(false));
+        child.on("close", (code) => resolve(code === 0));
+    });
 }
 
 async function findSeriesOnOmdb({ apiKey, title }) {
@@ -995,8 +1216,8 @@ async function findSeriesOnOmdb({ apiKey, title }) {
 function applySeriesMetadata(item, omdb, poster) {
     item.title = omdb.Title && omdb.Title !== "N/A" ? omdb.Title : item.title;
     item.originalTitle = omdb.Title && omdb.Title !== "N/A" ? omdb.Title : item.title;
-    item.year = omdb.Year && omdb.Year !== "N/A" ? omdb.Year : "";
-    item.rating = Number.parseFloat(omdb.imdbRating) || "";
+    item.year = Number(String(omdb.Year || "").match(/\d{4}/)?.[0]) || Number(item.year) || null;
+    item.rating = Number.parseFloat(omdb.imdbRating) || Number(item.rating) || null;
     item.contentRating = omdb.Rated && omdb.Rated !== "N/A" ? omdb.Rated : item.contentRating;
     item.genres = translateGenres(omdb.Genre);
     item.overview = omdb.Plot && omdb.Plot !== "N/A" ? omdb.Plot : item.overview;
@@ -1029,9 +1250,11 @@ async function resolveSeriesPoster(omdb, item) {
 
 async function buildSeriesLibrary() {
     const groups = new Map();
+    const ignoredEmptyEpisodes = [];
 
     for (const source of seriesDirs) {
-        const files = await listSeriesVideoFiles(source.dir);
+        const { files, emptyFiles } = await listSeriesVideoFiles(source.dir);
+        ignoredEmptyEpisodes.push(...emptyFiles);
 
         for (const file of files) {
             const parsed = parseSeriesFile(file, source);
@@ -1098,13 +1321,20 @@ async function buildSeriesLibrary() {
             await importLocalSubtitles(episode, languages);
         }
     }
+    if (ignoredEmptyEpisodes.length) {
+        console.log(`BRasa: ${ignoredEmptyEpisodes.length} episodio(s) ignorado(s) porque o arquivo está vazio (0 bytes).`);
+        for (const file of ignoredEmptyEpisodes) {
+            console.log(`BRasa: substitua o arquivo incompleto para ele entrar automaticamente no catálogo: "${file.relativePath}".`);
+        }
+    }
     return series;
 }
 
 async function listSeriesVideoFiles(baseDir) {
-    if (!(await fileExists(baseDir))) return [];
+    if (!(await fileExists(baseDir))) return { files: [], emptyFiles: [] };
 
     const found = [];
+    const emptyFiles = [];
 
     async function walk(currentDir) {
         const entries = await fs.readdir(currentDir, { withFileTypes: true });
@@ -1120,6 +1350,14 @@ async function listSeriesVideoFiles(baseDir) {
             if (!entry.isFile()) continue;
 
             const stats = await fs.stat(fullPath);
+            if (videoExtensions.has(path.extname(entry.name).toLowerCase()) && stats.size === 0) {
+                emptyFiles.push({
+                    absolutePath: fullPath,
+                    relativePath: path.relative(baseDir, fullPath),
+                    name: entry.name
+                });
+                continue;
+            }
             if (!isProcessableVideo(entry.name, stats.size)) continue;
             found.push({
                 absolutePath: fullPath,
@@ -1131,7 +1369,10 @@ async function listSeriesVideoFiles(baseDir) {
     }
 
     await walk(baseDir);
-    return found.sort((a, b) => a.relativePath.localeCompare(b.relativePath, "pt-BR"));
+    return {
+        files: found.sort((a, b) => a.relativePath.localeCompare(b.relativePath, "pt-BR")),
+        emptyFiles: emptyFiles.sort((a, b) => a.relativePath.localeCompare(b.relativePath, "pt-BR"))
+    };
 }
 
 function parseSeriesFile(file, source) {

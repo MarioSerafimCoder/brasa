@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { checkProviderHealth, loadProviderHealth, saveProviderHealth } from "../server/provider-health.mjs";
 import { createMetadataRetryStore } from "../server/metadata-retry-store.mjs";
+import { resolveMovieAvailability } from "./sync-movies.mjs";
 
 const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), "brasa-recovery-"));
 let now = Date.parse("2026-07-11T12:00:00.000Z");
@@ -35,6 +36,25 @@ try {
     assert.equal(await retry.due("movie:1", "metadata"), true);
     await retry.success("movie:1", "metadata");
     assert.equal((await retry.summary()).pendingItems, 0);
+
+    assert.deepEqual(
+        resolveMovieAvailability(
+            { video: "assets/movies/filme.mkv" },
+            { sourceAvailability: new Map([["assets/movies", false]]) },
+        ),
+        { fileStatus: "source-offline", playable: false },
+        "uma unidade desconectada não pode transformar todo o catálogo em arquivos removidos",
+    );
+    assert.deepEqual(
+        resolveMovieAvailability(
+            { video: "assets/movies/filme.mkv" },
+            {
+                sourceAvailability: new Map([["assets/movies", true]]),
+                availablePaths: new Set(["assets/movies/filme.mkv"]),
+            },
+        ),
+        { fileStatus: "available", playable: true },
+    );
 
     console.log("Recuperação automática: 11 cenários aprovados.");
 } finally {

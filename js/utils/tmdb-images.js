@@ -52,10 +52,14 @@ export function installTmdbImageFallbacks(root = document) {
 
         const fallback = image.dataset.fallbackSrc;
 
-        if (!fallback || image.dataset.fallbackApplied === "true") return;
+        if (fallback && image.dataset.fallbackApplied !== "true") {
+            image.dataset.fallbackApplied = "true";
+            image.src = fallback;
+            return;
+        }
 
-        image.dataset.fallbackApplied = "true";
-        image.src = fallback;
+        image.classList.add("is-image-unavailable");
+        image.setAttribute("aria-hidden", "true");
     }, true);
 }
 

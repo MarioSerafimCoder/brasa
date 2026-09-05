@@ -13,7 +13,7 @@ function Stop-BrasaProcess {
 
     $Process = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
 
-    if (-not $Process) {
+    if (-not $Process -or $Process.ProcessName -ne "node") {
         return
     }
 
@@ -40,7 +40,7 @@ if (Test-Path -LiteralPath $StatePath) {
         return
     }
 
-    if ($Parts[1] -notmatch "^127\.0\.0\.1:(\d+)$") {
+    if ($Parts[1] -notmatch ":(\d+)$") {
         return
     }
 
