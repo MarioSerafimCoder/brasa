@@ -7,6 +7,7 @@ const movie = normalizeTvCatalogItem({
     id: 10,
     mediaKey: "movie:10",
     title: "Filme sem nota",
+    addedAt: "2026-08-02T23:12:41.399Z",
     year: "2025",
     rating: "",
     genres: ["Ação", ""],
@@ -15,6 +16,7 @@ const movie = normalizeTvCatalogItem({
 assert.equal(movie.id, "10");
 assert.equal(movie.year, 2025);
 assert.equal(movie.rating, null);
+assert.equal(movie.addedAt, "2026-08-02T23:12:41.399Z");
 assert.deepEqual(movie.genres, ["Ação"]);
 assert.equal(movie.progress.currentTime, 15.5);
 assert.equal(movie.progress.percentage, 12.5);

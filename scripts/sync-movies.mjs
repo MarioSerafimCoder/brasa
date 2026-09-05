@@ -30,6 +30,7 @@ const args = new Set(process.argv.slice(2));
 const isDryRun = args.has("--dry-run");
 const forceMetadataRefresh = args.has("--refresh-metadata");
 const seriesOnly = args.has("--series-only");
+let mediaToolsPromise;
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();
 
@@ -238,6 +239,7 @@ async function syncMovies({ providerHealth, retryStore }) {
     } catch (error) {
         console.error("BRasa: erro ao sincronizar filmes.");
         console.error(error.message);
+        process.exitCode = 1;
     }
 }
 
@@ -1032,6 +1034,7 @@ async function syncSeries({ providerHealth }) {
     } catch (error) {
         console.error("BRasa: erro ao indexar series.");
         console.error(error.message);
+        process.exitCode = 1;
     }
 }
 
@@ -1162,7 +1165,6 @@ async function ensureLocalEpisodeMetadata(item) {
     }
 }
 
-let mediaToolsPromise;
 async function extractEpisodeThumbnail(episode, relativePath) {
     if (isDryRun) return relativePath;
     mediaToolsPromise ||= getMediaToolsStatus(rootDir);

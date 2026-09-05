@@ -15,6 +15,7 @@ import com.brasa.tv.core.model.WatchProgress
 import com.brasa.tv.core.playback.PlaybackCoordinator
 import com.brasa.tv.data.repository.BrasaRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +38,8 @@ data class BrasaUiState(
     val cacheBytes: Long = 0,
     val paired: Boolean = false,
     val previewMode: Boolean = false,
+    val libraryScanning: Boolean = false,
+    val libraryScanMessage: String = "",
 )
 
 class BrasaViewModel(
@@ -46,6 +49,7 @@ class BrasaViewModel(
     private val mutable = MutableStateFlow(BrasaUiState())
     val state: StateFlow<BrasaUiState> = mutable.asStateFlow()
     private var pairingJob: Job? = null
+    private var libraryScanJob: Job? = null
     private var searchJob: Job? = null
     private var metadataPrefetchJob: Job? = null
     private var mediaPreloadJob: Job? = null
@@ -111,6 +115,38 @@ class BrasaViewModel(
         val profile = mutable.value.profile ?: return@launch
         val catalog = repository.catalog(profile.id)
         if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(catalog = catalog)
+    }
+
+    fun scanLibrary() {
+        if (libraryScanJob?.isActive == true || !mutable.value.paired || mutable.value.previewMode) return
+        libraryScanJob = viewModelScope.launch {
+            mutable.value = mutable.value.copy(libraryScanning = true, libraryScanMessage = "Solicitando busca ao computador…")
+            try {
+                repository.scanLibrary { status ->
+                    val progress = if (status.state == "syncing" && status.progress > 0) " (${status.progress.coerceIn(0, 99)}%)" else ""
+                    mutable.value = mutable.value.copy(libraryScanMessage = status.message + progress)
+                }
+                mutable.value = mutable.value.copy(libraryScanMessage = "Carregando catálogo atualizado…")
+                val profile = mutable.value.profile
+                if (profile != null) {
+                    val catalog = repository.catalog(profile.id)
+                    val home = repository.home(profile.id)
+                    if (mutable.value.profile?.id == profile.id) {
+                        val items = catalog.movies + catalog.series + catalog.series.flatMap { it.seasons.flatMap { season -> season.episodes } }
+                        mutable.value = mutable.value.copy(catalog = catalog, home = home,
+                            selected = items.find { it.mediaKey == mutable.value.selected?.mediaKey },
+                            selectedRow = null, searchResults = emptyList())
+                    }
+                }
+                mutable.value = mutable.value.copy(libraryScanMessage = "Busca concluída. Os títulos disponíveis já foram atualizados.")
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                mutable.value = mutable.value.copy(libraryScanMessage = error.message ?: "Não foi possível buscar novos títulos. Tente novamente.")
+            } finally {
+                mutable.value = mutable.value.copy(libraryScanning = false)
+            }
+        }
     }
 
     fun select(item: CatalogItem) {
@@ -281,7 +317,7 @@ class BrasaViewModel(
         mutable.value = mutable.value.copy(message = if (valid) "" else "PIN incorreto. Tente novamente.")
         onResult(valid)
     }
-    fun forget(onDone: () -> Unit) = launch { cancelPreload(); playbackCoordinator.clear(); repository.forget(); mutable.value = BrasaUiState(); onDone() }
+    fun forget(onDone: () -> Unit) = launch { libraryScanJob?.cancel(); cancelPreload(); playbackCoordinator.clear(); repository.forget(); mutable.value = BrasaUiState(); onDone() }
 
     override fun onCleared() {
         pairingJob?.cancel(); searchJob?.cancel(); metadataPrefetchJob?.cancel(); playbackPreparationJob?.cancel(); cancelPreload()

@@ -289,7 +289,19 @@ private fun PlayerContent(
                         rebufferStartedAt = 0L
                     }
                 }
-                if (playbackState == Player.STATE_ENDED) { save(true); ended = true; controlsVisible = true }
+                if (playbackState == Player.STATE_ENDED) {
+                    val absolute = PlaybackTimeline.absolutePosition(info, player.currentPosition)
+                    val total = PlaybackTimeline.absoluteDuration(info, player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L)
+                    val reachedRealEnd = total <= 0 || absolute >= total - 30_000 || absolute.toDouble() / total.coerceAtLeast(1L).toDouble() >= .98
+                    if (info.playbackMode == "hls" && !reachedRealEnd) {
+                        Log.w(TAG, "Playlist HLS terminou antes do filme em ${info.mediaKey}: $absolute/$total; solicitando continuação")
+                        requestRemoteSeek(absolute, recovery = true)
+                    } else {
+                        save(true)
+                        ended = true
+                        controlsVisible = true
+                    }
+                }
             }
             override fun onRenderedFirstFrame() {
                 firstFrameRendered = true

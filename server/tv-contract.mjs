@@ -80,6 +80,7 @@ export function normalizeTvCatalogItem(value) {
         overview: stringValue(item.overview),
         poster: stringValue(item.poster),
         backdrop: stringValue(item.backdrop),
+        addedAt: stringValue(item.addedAt),
         favorite: booleanValue(item.favorite),
         progress: normalizeTvProgress(item.progress),
         streamUrl: stringValue(item.streamUrl),

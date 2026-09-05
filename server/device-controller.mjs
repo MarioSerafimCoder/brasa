@@ -19,6 +19,8 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         const networkRoute = path.startsWith("/api/v1/network/");
         if (!path.startsWith("/api/tv/") && !path.startsWith("/api/v1/tv/")&&!androidUpdate&&!androidApk&&!networkRoute) throw new NotFoundError("Rota de dispositivo não encontrada.");
         const device = await auth.requireDevice(request);
+        if (path === "/api/v1/tv/library/scan" && method === "POST") return success(response, tvServices.scan(), 202);
+        if (path === "/api/v1/tv/library/scan" && method === "GET") return success(response, tvServices.scanStatus());
         if(androidUpdate&&method==="GET")return success(response,await updateService.check(request,device));
         if(androidApk&&["GET","HEAD"].includes(method))return updateService.download(request,response,device);
         if (path === "/api/v1/network/status" && method === "GET") return success(response, { server: await networkInspector.inspect(getPort()), firewall: await networkInspector.firewall(getPort()) });

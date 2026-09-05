@@ -177,7 +177,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 25119571112,
         "fileModifiedAt": "2026-07-11T16:48:50.177Z",
-        "lastIndexedAt": "2026-07-26T20:57:02.862Z",
+        "lastIndexedAt": "2026-08-17T01:06:11.312Z",
         "subtitles": [
             {
                 "label": "English",
@@ -194,7 +194,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:02.441Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:10.918Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -234,7 +234,7 @@ const movies = [
         "originalTitle": "Masters of the Universe",
         "year": 2026,
         "duration": "2h 20min",
-        "rating": 6.9,
+        "rating": 6.5,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -258,7 +258,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1478591394,
         "fileModifiedAt": "2026-07-11T15:54:50.372Z",
-        "lastIndexedAt": "2026-07-26T20:57:03.283Z",
+        "lastIndexedAt": "2026-08-17T01:06:11.774Z",
         "subtitles": [
             {
                 "label": "English",
@@ -275,7 +275,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:02.867Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:11.313Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -307,7 +307,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2488901054,
         "fileModifiedAt": "2026-07-11T16:25:24.769Z",
-        "lastIndexedAt": "2026-07-26T20:57:03.712Z",
+        "lastIndexedAt": "2026-08-17T01:06:12.212Z",
         "subtitles": [
             {
                 "label": "English",
@@ -324,7 +324,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:03.289Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:11.775Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -357,7 +357,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2929505612,
         "fileModifiedAt": "2026-07-11T16:38:34.123Z",
-        "lastIndexedAt": "2026-07-26T20:57:04.132Z",
+        "lastIndexedAt": "2026-08-17T01:06:12.648Z",
         "subtitles": [
             {
                 "label": "English",
@@ -374,7 +374,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:03.716Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:12.213Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -407,7 +407,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 11428527756,
         "fileModifiedAt": "2026-07-16T01:07:17.373Z",
-        "lastIndexedAt": "2026-07-26T20:57:04.560Z",
+        "lastIndexedAt": "2026-08-17T01:06:13.163Z",
         "subtitles": [
             {
                 "label": "English",
@@ -424,7 +424,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:04.136Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:12.649Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -456,7 +456,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3538536485,
         "fileModifiedAt": "2026-07-16T01:32:49.720Z",
-        "lastIndexedAt": "2026-07-26T20:57:04.957Z",
+        "lastIndexedAt": "2026-08-17T01:06:13.571Z",
         "subtitles": [
             {
                 "label": "English",
@@ -473,7 +473,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:04.565Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:13.164Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4166,7 +4166,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2660367745,
         "fileModifiedAt": "2026-07-19T00:04:32.510Z",
-        "lastIndexedAt": "2026-07-26T20:57:05.380Z",
+        "lastIndexedAt": "2026-08-17T01:06:14.065Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4183,7 +4183,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:04.962Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:13.572Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4216,7 +4216,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2921635762,
         "fileModifiedAt": "2026-07-18T23:55:18.306Z",
-        "lastIndexedAt": "2026-07-26T20:57:05.865Z",
+        "lastIndexedAt": "2026-08-17T01:06:14.486Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4233,7 +4233,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:05.384Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:14.066Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4267,7 +4267,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3187730308,
         "fileModifiedAt": "2026-07-19T00:04:32.513Z",
-        "lastIndexedAt": "2026-07-26T20:57:06.295Z",
+        "lastIndexedAt": "2026-08-17T01:06:14.898Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4284,7 +4284,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:05.869Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:14.487Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4317,7 +4317,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 24552994424,
         "fileModifiedAt": "2026-07-19T11:07:19.385Z",
-        "lastIndexedAt": "2026-07-26T20:57:06.711Z",
+        "lastIndexedAt": "2026-08-17T01:06:15.387Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4334,7 +4334,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:06.299Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:14.899Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4366,11 +4366,11 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3010175059,
         "fileModifiedAt": "2026-07-18T23:59:58.942Z",
-        "lastIndexedAt": "2026-07-26T20:57:07.130Z",
+        "lastIndexedAt": "2026-09-02T22:39:47.865Z",
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:06.715Z",
+        "lastMetadataAttemptAt": "2026-09-02T22:39:47.235Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -5064,7 +5064,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3405182400,
         "fileModifiedAt": "2026-07-19T03:41:27.640Z",
-        "lastIndexedAt": "2026-07-26T20:57:07.558Z",
+        "lastIndexedAt": "2026-08-17T01:06:16.294Z",
         "subtitles": [
             {
                 "label": "English",
@@ -5081,7 +5081,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:07.134Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:15.774Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6089,7 +6089,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2090640879,
         "fileModifiedAt": "2026-07-19T00:42:34.421Z",
-        "lastIndexedAt": "2026-07-26T20:57:07.967Z",
+        "lastIndexedAt": "2026-08-17T01:06:16.694Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6106,7 +6106,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:07.562Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:16.295Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6336,7 +6336,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2675810177,
         "fileModifiedAt": "2026-07-18T23:31:55.390Z",
-        "lastIndexedAt": "2026-07-26T20:57:08.400Z",
+        "lastIndexedAt": "2026-08-17T01:06:17.107Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6353,7 +6353,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:07.971Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:16.695Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6385,7 +6385,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2278226324,
         "fileModifiedAt": "2026-07-18T23:09:56.555Z",
-        "lastIndexedAt": "2026-07-26T20:57:08.831Z",
+        "lastIndexedAt": "2026-08-17T01:06:17.549Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6402,7 +6402,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:08.407Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:17.108Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6434,7 +6434,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2532785912,
         "fileModifiedAt": "2026-07-18T23:12:29.228Z",
-        "lastIndexedAt": "2026-07-26T20:57:09.256Z",
+        "lastIndexedAt": "2026-08-17T01:06:17.957Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6451,7 +6451,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:08.835Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:17.550Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6483,7 +6483,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2429280385,
         "fileModifiedAt": "2026-07-18T23:36:11.011Z",
-        "lastIndexedAt": "2026-07-26T20:57:09.681Z",
+        "lastIndexedAt": "2026-08-17T01:06:18.448Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6500,7 +6500,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:09.261Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:17.958Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6579,7 +6579,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2611865285,
         "fileModifiedAt": "2026-07-18T23:19:17.513Z",
-        "lastIndexedAt": "2026-07-26T20:57:10.095Z",
+        "lastIndexedAt": "2026-08-17T01:06:18.863Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6596,7 +6596,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:09.685Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:18.449Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6628,7 +6628,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2553905006,
         "fileModifiedAt": "2026-07-18T23:36:11.756Z",
-        "lastIndexedAt": "2026-07-26T20:57:10.508Z",
+        "lastIndexedAt": "2026-08-17T01:06:19.259Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6645,7 +6645,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:10.100Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:18.865Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6677,7 +6677,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2356690807,
         "fileModifiedAt": "2026-07-18T23:02:27.212Z",
-        "lastIndexedAt": "2026-07-26T20:57:10.923Z",
+        "lastIndexedAt": "2026-08-17T01:06:19.696Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6694,7 +6694,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:10.513Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:19.260Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -7191,7 +7191,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2322051207,
         "fileModifiedAt": "2026-07-19T00:33:03.697Z",
-        "lastIndexedAt": "2026-07-26T20:57:11.340Z",
+        "lastIndexedAt": "2026-08-17T01:06:20.111Z",
         "subtitles": [
             {
                 "label": "English",
@@ -7208,7 +7208,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:10.927Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:19.697Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -7374,7 +7374,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2990081586,
         "fileModifiedAt": "2026-07-18T20:41:57.601Z",
-        "lastIndexedAt": "2026-07-26T20:57:11.763Z",
+        "lastIndexedAt": "2026-08-17T01:06:20.568Z",
         "subtitles": [
             {
                 "label": "English",
@@ -7391,7 +7391,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:11.344Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:20.112Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -7457,7 +7457,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1573236012,
         "fileModifiedAt": "2026-07-19T02:51:14.924Z",
-        "lastIndexedAt": "2026-07-26T20:57:12.208Z",
+        "lastIndexedAt": "2026-08-17T01:06:21.046Z",
         "subtitles": [
             {
                 "label": "English",
@@ -7474,7 +7474,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:11.768Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:20.569Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8003,7 +8003,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2300232925,
         "fileModifiedAt": "2026-07-19T03:59:37.469Z",
-        "lastIndexedAt": "2026-07-26T20:57:12.635Z",
+        "lastIndexedAt": "2026-08-17T01:06:21.512Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8020,7 +8020,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:12.213Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:21.047Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8121,7 +8121,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1776371365,
         "fileModifiedAt": "2026-07-19T03:36:52.486Z",
-        "lastIndexedAt": "2026-07-26T20:57:13.037Z",
+        "lastIndexedAt": "2026-08-17T01:06:21.890Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8138,7 +8138,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:12.639Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:21.513Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8239,7 +8239,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2404957291,
         "fileModifiedAt": "2026-07-19T04:52:01.295Z",
-        "lastIndexedAt": "2026-07-26T20:57:13.471Z",
+        "lastIndexedAt": "2026-08-17T01:06:22.287Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8256,7 +8256,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:13.042Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:21.890Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8287,7 +8287,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2231183756,
         "fileModifiedAt": "2026-07-19T04:05:11.571Z",
-        "lastIndexedAt": "2026-07-26T20:57:13.866Z",
+        "lastIndexedAt": "2026-09-02T22:39:48.371Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8298,7 +8298,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:13.476Z",
+        "lastMetadataAttemptAt": "2026-09-02T22:39:47.903Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8364,7 +8364,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3049034903,
         "fileModifiedAt": "2026-07-19T03:43:29.620Z",
-        "lastIndexedAt": "2026-07-26T20:57:14.290Z",
+        "lastIndexedAt": "2026-08-17T01:06:23.105Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8381,7 +8381,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:13.872Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:22.706Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -10426,11 +10426,11 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2206124432,
         "fileModifiedAt": "2026-07-19T04:00:31.210Z",
-        "lastIndexedAt": "2026-07-26T20:57:14.727Z",
+        "lastIndexedAt": "2026-08-17T01:06:23.572Z",
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:14.294Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:23.107Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -10464,7 +10464,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2772334474,
         "fileModifiedAt": "2026-07-19T04:11:37.785Z",
-        "lastIndexedAt": "2026-07-26T20:57:15.152Z",
+        "lastIndexedAt": "2026-08-17T01:06:23.970Z",
         "subtitles": [
             {
                 "label": "English",
@@ -10481,7 +10481,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:14.731Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:23.576Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -10531,8 +10531,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:15.157Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -11326,7 +11326,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1481518785,
         "fileModifiedAt": "2026-07-19T02:49:59.539Z",
-        "lastIndexedAt": "2026-07-26T20:57:16.021Z",
+        "lastIndexedAt": "2026-08-17T01:06:24.373Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11343,7 +11343,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:15.586Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:23.971Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -11871,7 +11871,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 10605467724,
         "fileModifiedAt": "2026-07-19T11:31:15.838Z",
-        "lastIndexedAt": "2026-07-26T20:57:16.443Z",
+        "lastIndexedAt": "2026-08-17T01:06:24.829Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11888,7 +11888,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:16.025Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:24.374Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -11921,7 +11921,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 15364137605,
         "fileModifiedAt": "2026-07-11T16:37:18.629Z",
-        "lastIndexedAt": "2026-07-26T20:57:16.857Z",
+        "lastIndexedAt": "2026-08-17T01:06:25.243Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11938,7 +11938,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:16.448Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:24.830Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -11971,7 +11971,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1550826304,
         "fileModifiedAt": "2026-07-19T03:47:43.417Z",
-        "lastIndexedAt": "2026-07-26T20:57:17.253Z",
+        "lastIndexedAt": "2026-08-17T01:06:25.741Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11988,7 +11988,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:16.861Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:25.244Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12022,7 +12022,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 4533656162,
         "fileModifiedAt": "2026-07-19T01:12:12.977Z",
-        "lastIndexedAt": "2026-07-26T20:57:17.655Z",
+        "lastIndexedAt": "2026-08-17T01:06:26.147Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12039,7 +12039,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:17.258Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:25.742Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12074,7 +12074,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1829266346,
         "fileModifiedAt": "2026-07-19T01:16:23.950Z",
-        "lastIndexedAt": "2026-07-26T20:57:18.072Z",
+        "lastIndexedAt": "2026-08-17T01:06:26.656Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12091,7 +12091,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:17.660Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:26.148Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12126,7 +12126,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1937474303,
         "fileModifiedAt": "2026-07-19T01:13:02.634Z",
-        "lastIndexedAt": "2026-07-26T20:57:18.512Z",
+        "lastIndexedAt": "2026-08-17T01:06:27.083Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12143,7 +12143,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:18.076Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:26.657Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12178,7 +12178,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1711101745,
         "fileModifiedAt": "2026-07-19T02:22:48.986Z",
-        "lastIndexedAt": "2026-07-26T20:57:18.934Z",
+        "lastIndexedAt": "2026-08-17T01:06:27.595Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12195,7 +12195,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:18.517Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:27.084Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12229,7 +12229,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1571520781,
         "fileModifiedAt": "2026-07-19T02:06:36.593Z",
-        "lastIndexedAt": "2026-07-26T20:57:19.365Z",
+        "lastIndexedAt": "2026-08-17T01:06:28.061Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12246,7 +12246,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:18.940Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:27.596Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12295,8 +12295,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:19.374Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -12346,8 +12346,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:19.770Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -12382,7 +12382,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1379592156,
         "fileModifiedAt": "2026-07-19T02:36:08.239Z",
-        "lastIndexedAt": "2026-07-26T20:57:20.610Z",
+        "lastIndexedAt": "2026-08-17T01:06:28.467Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12399,7 +12399,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:20.212Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:28.062Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12432,7 +12432,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1977680329,
         "fileModifiedAt": "2026-07-18T23:39:57.393Z",
-        "lastIndexedAt": "2026-07-26T20:57:21.032Z",
+        "lastIndexedAt": "2026-08-17T01:06:28.986Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12449,7 +12449,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:20.614Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:28.468Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12497,8 +12497,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:21.037Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -12533,7 +12533,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 4565662504,
         "fileModifiedAt": "2026-07-19T05:12:35.720Z",
-        "lastIndexedAt": "2026-07-26T20:57:21.845Z",
+        "lastIndexedAt": "2026-08-17T01:06:29.386Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12550,7 +12550,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:21.448Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:28.987Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12634,7 +12634,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3211565689,
         "fileModifiedAt": "2026-07-18T21:59:43.919Z",
-        "lastIndexedAt": "2026-07-23T01:06:29.541Z",
+        "lastIndexedAt": "2026-08-17T01:06:29.893Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12649,9 +12649,9 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "missing-file",
-        "playable": false,
-        "lastMetadataAttemptAt": "2026-07-23T01:06:29.090Z",
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-08-17T01:06:29.387Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12686,7 +12686,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1818443009,
         "fileModifiedAt": "2026-07-19T03:16:59.597Z",
-        "lastIndexedAt": "2026-07-26T20:57:22.241Z",
+        "lastIndexedAt": "2026-08-17T01:06:30.287Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12703,7 +12703,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:21.849Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:29.894Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12738,7 +12738,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2093166744,
         "fileModifiedAt": "2026-07-19T11:42:07.691Z",
-        "lastIndexedAt": "2026-07-26T20:57:22.659Z",
+        "lastIndexedAt": "2026-08-17T01:06:30.780Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12755,7 +12755,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:22.245Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:30.288Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12787,7 +12787,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3762302567,
         "fileModifiedAt": "2026-07-19T00:41:24.359Z",
-        "lastIndexedAt": "2026-07-26T20:57:23.062Z",
+        "lastIndexedAt": "2026-08-17T01:06:31.182Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12804,7 +12804,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:22.663Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:30.781Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12838,7 +12838,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 5123469707,
         "fileModifiedAt": "2026-07-19T05:57:43.861Z",
-        "lastIndexedAt": "2026-07-26T20:57:23.482Z",
+        "lastIndexedAt": "2026-08-17T01:06:31.699Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12855,7 +12855,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:23.068Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:31.183Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12887,7 +12887,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2163358458,
         "fileModifiedAt": "2026-07-19T00:09:10.940Z",
-        "lastIndexedAt": "2026-07-26T20:57:23.895Z",
+        "lastIndexedAt": "2026-08-17T01:06:32.094Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12904,7 +12904,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:23.489Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:31.700Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12936,7 +12936,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 12403827155,
         "fileModifiedAt": "2026-07-19T11:48:51.383Z",
-        "lastIndexedAt": "2026-07-26T20:57:24.339Z",
+        "lastIndexedAt": "2026-08-17T01:06:32.497Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12953,7 +12953,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:23.899Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:32.095Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12985,7 +12985,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2462932336,
         "fileModifiedAt": "2026-07-18T23:20:14.153Z",
-        "lastIndexedAt": "2026-07-26T20:57:24.780Z",
+        "lastIndexedAt": "2026-08-17T01:06:32.899Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13002,7 +13002,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:24.343Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:32.498Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13038,7 +13038,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1966798588,
         "fileModifiedAt": "2026-07-19T03:34:37.183Z",
-        "lastIndexedAt": "2026-07-26T20:57:25.197Z",
+        "lastIndexedAt": "2026-08-17T01:06:33.319Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13055,7 +13055,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:24.785Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:32.901Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13089,7 +13089,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 11394552764,
         "fileModifiedAt": "2026-07-18T23:35:16.578Z",
-        "lastIndexedAt": "2026-07-26T20:57:25.641Z",
+        "lastIndexedAt": "2026-08-17T01:06:33.857Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13106,7 +13106,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:25.203Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:33.320Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13123,7 +13123,7 @@ const movies = [
             "Aventura",
             "Ficção científica"
         ],
-        "overview": "Depois de atuar ao lado dos Vingadores, chegou a hora do pequeno Peter Parker voltar para casa e para a sua vida, já não mais tão normal. Lutando diariamente contra pequenos crimes nas redondezas, ele pensa ter encontrado a missão de sua vida quando o terrível vilão Abutre surge amedrontando a cidade. O problema é que a tarefa não será tão fácil como ele imaginava.",
+        "overview": "Depois de atuar ao lado dos Vingadores, chegou a hora de Peter Parker voltar para casa e para a sua vida, já não mais tão normal.",
         "poster": "assets/posters/spider-man-homecoming-2017-poster.jpg",
         "backdrop": "assets/backdrops/spider-man-homecoming-2017-backdrop.jpg",
         "video": "assets/movies/Spider-Man Homecoming (2017) [tt2250912].mkv",
@@ -13139,7 +13139,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3079449877,
         "fileModifiedAt": "2026-07-18T18:55:18.516Z",
-        "lastIndexedAt": "2026-07-26T20:57:26.058Z",
+        "lastIndexedAt": "2026-08-17T01:06:34.281Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13156,7 +13156,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:25.645Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:33.859Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13189,7 +13189,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2948713489,
         "fileModifiedAt": "2026-07-18T19:03:32.370Z",
-        "lastIndexedAt": "2026-07-26T20:57:26.477Z",
+        "lastIndexedAt": "2026-08-17T01:06:34.840Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13206,7 +13206,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:26.062Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:34.283Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13239,7 +13239,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3966947193,
         "fileModifiedAt": "2026-07-18T19:21:36.406Z",
-        "lastIndexedAt": "2026-07-26T20:57:26.879Z",
+        "lastIndexedAt": "2026-08-17T01:06:35.239Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13256,7 +13256,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:26.481Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:34.841Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13288,7 +13288,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3058754005,
         "fileModifiedAt": "2026-07-18T20:07:38.148Z",
-        "lastIndexedAt": "2026-07-26T20:57:27.293Z",
+        "lastIndexedAt": "2026-08-17T01:06:35.681Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13305,7 +13305,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:26.882Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:35.240Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13338,7 +13338,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3232925780,
         "fileModifiedAt": "2026-07-18T20:07:38.401Z",
-        "lastIndexedAt": "2026-07-26T20:57:27.712Z",
+        "lastIndexedAt": "2026-08-17T01:06:36.253Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13355,7 +13355,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:27.300Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:35.682Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13388,7 +13388,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3512763616,
         "fileModifiedAt": "2026-07-18T19:50:33.609Z",
-        "lastIndexedAt": "2026-07-26T20:57:28.131Z",
+        "lastIndexedAt": "2026-08-17T01:06:36.669Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13405,7 +13405,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:27.716Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:36.254Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13439,7 +13439,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2745901943,
         "fileModifiedAt": "2026-07-18T18:51:10.309Z",
-        "lastIndexedAt": "2026-07-26T20:57:28.559Z",
+        "lastIndexedAt": "2026-08-17T01:06:37.227Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13456,7 +13456,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:28.135Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:36.670Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13489,7 +13489,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 7591639144,
         "fileModifiedAt": "2026-07-19T01:36:52.063Z",
-        "lastIndexedAt": "2026-07-26T20:57:28.978Z",
+        "lastIndexedAt": "2026-08-17T01:06:37.793Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13506,7 +13506,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:28.563Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:37.228Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13540,7 +13540,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1657122926,
         "fileModifiedAt": "2026-07-19T10:23:10.972Z",
-        "lastIndexedAt": "2026-07-26T20:57:29.397Z",
+        "lastIndexedAt": "2026-08-17T01:06:38.187Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13557,7 +13557,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:28.983Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:37.794Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13591,7 +13591,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1625340560,
         "fileModifiedAt": "2026-07-19T10:23:17.949Z",
-        "lastIndexedAt": "2026-07-26T20:57:29.817Z",
+        "lastIndexedAt": "2026-08-17T01:06:38.757Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13608,7 +13608,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:29.403Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:38.188Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13643,7 +13643,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1706209286,
         "fileModifiedAt": "2026-07-19T10:23:12.423Z",
-        "lastIndexedAt": "2026-07-26T20:57:30.249Z",
+        "lastIndexedAt": "2026-08-17T01:06:39.161Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13660,7 +13660,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:29.822Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:38.758Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13694,7 +13694,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2351269695,
         "fileModifiedAt": "2026-07-19T05:27:57.102Z",
-        "lastIndexedAt": "2026-07-26T20:57:30.680Z",
+        "lastIndexedAt": "2026-08-17T01:06:39.703Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13711,7 +13711,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:30.253Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:39.162Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13744,7 +13744,7 @@ const movies = [
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:30.684Z",
+        "lastMetadataAttemptAt": "2026-09-02T22:39:48.392Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13793,8 +13793,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:31.310Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -13843,8 +13843,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:31.731Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -13879,7 +13879,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2001324444,
         "fileModifiedAt": "2026-07-19T04:01:08.045Z",
-        "lastIndexedAt": "2026-07-26T20:57:32.560Z",
+        "lastIndexedAt": "2026-08-17T01:06:40.713Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13896,7 +13896,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:32.152Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:40.305Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13944,8 +13944,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:32.564Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -13979,7 +13979,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2396879912,
         "fileModifiedAt": "2026-07-19T03:09:54.880Z",
-        "lastIndexedAt": "2026-07-26T20:57:33.397Z",
+        "lastIndexedAt": "2026-08-17T01:06:41.277Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13996,7 +13996,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:32.984Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:40.714Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14029,7 +14029,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2075962840,
         "fileModifiedAt": "2026-07-19T03:32:03.573Z",
-        "lastIndexedAt": "2026-07-26T20:57:33.814Z",
+        "lastIndexedAt": "2026-08-17T01:06:41.679Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14046,7 +14046,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:33.401Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:41.278Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14095,8 +14095,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:33.819Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -14130,7 +14130,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2876282936,
         "fileModifiedAt": "2026-07-18T20:12:27.014Z",
-        "lastIndexedAt": "2026-07-26T20:57:34.651Z",
+        "lastIndexedAt": "2026-08-17T01:06:42.178Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14147,7 +14147,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:34.234Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:41.680Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14181,7 +14181,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 856282034,
         "fileModifiedAt": "2026-07-19T02:55:56.460Z",
-        "lastIndexedAt": "2026-07-26T20:57:35.082Z",
+        "lastIndexedAt": "2026-08-17T01:06:42.728Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14198,7 +14198,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:34.656Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:42.179Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14233,7 +14233,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1984261170,
         "fileModifiedAt": "2026-07-19T02:53:18.410Z",
-        "lastIndexedAt": "2026-07-26T20:57:35.545Z",
+        "lastIndexedAt": "2026-08-17T01:06:43.122Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14250,7 +14250,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:35.086Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:42.728Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14285,7 +14285,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2564297713,
         "fileModifiedAt": "2026-07-18T21:50:59.690Z",
-        "lastIndexedAt": "2026-07-26T20:57:35.961Z",
+        "lastIndexedAt": "2026-08-17T01:06:43.678Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14302,7 +14302,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:35.550Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:43.123Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14337,7 +14337,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2267325058,
         "fileModifiedAt": "2026-07-19T03:23:05.437Z",
-        "lastIndexedAt": "2026-07-26T20:57:36.365Z",
+        "lastIndexedAt": "2026-08-17T01:06:44.084Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14354,7 +14354,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:35.966Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:43.679Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14388,7 +14388,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 4270499186,
         "fileModifiedAt": "2026-07-19T03:56:54.562Z",
-        "lastIndexedAt": "2026-07-26T20:57:36.771Z",
+        "lastIndexedAt": "2026-08-17T01:06:44.493Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14405,7 +14405,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:36.369Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:44.085Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14436,7 +14436,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1829365704,
         "fileModifiedAt": "2026-07-18T23:28:59.164Z",
-        "lastIndexedAt": "2026-07-26T20:57:37.179Z",
+        "lastIndexedAt": "2026-08-17T01:06:45.069Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14453,7 +14453,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:36.775Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:44.494Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14487,7 +14487,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 306746439,
         "fileModifiedAt": "2026-07-19T02:40:14.154Z",
-        "lastIndexedAt": "2026-07-26T20:57:37.604Z",
+        "lastIndexedAt": "2026-08-17T01:06:45.469Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14504,7 +14504,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:37.184Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:45.070Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14537,7 +14537,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1711174384,
         "fileModifiedAt": "2026-07-19T03:11:47.092Z",
-        "lastIndexedAt": "2026-07-26T20:57:38.046Z",
+        "lastIndexedAt": "2026-08-17T01:06:46.038Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14554,7 +14554,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:37.608Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:45.470Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14587,7 +14587,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2875229088,
         "fileModifiedAt": "2026-07-19T05:29:36.495Z",
-        "lastIndexedAt": "2026-07-26T20:57:38.463Z",
+        "lastIndexedAt": "2026-08-17T01:06:46.436Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14604,7 +14604,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:38.050Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:46.039Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14637,7 +14637,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 14430077614,
         "fileModifiedAt": "2026-07-19T05:58:05.026Z",
-        "lastIndexedAt": "2026-07-26T20:57:38.882Z",
+        "lastIndexedAt": "2026-08-17T01:06:46.816Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14654,7 +14654,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:38.468Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:46.437Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14688,7 +14688,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1319574031,
         "fileModifiedAt": "2026-07-19T03:38:56.682Z",
-        "lastIndexedAt": "2026-07-26T20:57:39.298Z",
+        "lastIndexedAt": "2026-08-17T01:06:47.359Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14705,7 +14705,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:38.887Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:46.817Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14754,8 +14754,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T20:57:39.302Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -14791,7 +14791,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2830692095,
         "fileModifiedAt": "2026-07-19T00:14:08.162Z",
-        "lastIndexedAt": "2026-07-26T20:57:40.125Z",
+        "lastIndexedAt": "2026-08-17T01:06:47.774Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14808,7 +14808,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:39.723Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:47.360Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15014,7 +15014,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 0,
         "fileModifiedAt": "2026-07-18T23:04:02.400Z",
-        "lastIndexedAt": "2026-07-26T20:57:40.543Z",
+        "lastIndexedAt": "2026-08-17T01:06:48.342Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15031,7 +15031,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:40.129Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:47.775Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15166,7 +15166,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 0,
         "fileModifiedAt": "2026-07-18T23:20:12.212Z",
-        "lastIndexedAt": "2026-07-26T20:57:40.972Z",
+        "lastIndexedAt": "2026-08-17T01:06:48.741Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15183,7 +15183,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:40.548Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:48.343Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15247,7 +15247,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 0,
         "fileModifiedAt": "2026-07-18T22:20:12.637Z",
-        "lastIndexedAt": "2026-07-26T20:57:41.396Z",
+        "lastIndexedAt": "2026-08-17T01:06:49.292Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15264,7 +15264,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:40.977Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:48.742Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15295,7 +15295,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 0,
         "fileModifiedAt": "2026-07-18T23:18:55.017Z",
-        "lastIndexedAt": "2026-07-26T20:57:41.801Z",
+        "lastIndexedAt": "2026-08-17T01:06:49.721Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15312,7 +15312,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:41.400Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:49.293Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15555,7 +15555,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3054283841,
         "fileModifiedAt": "2026-07-19T14:46:05.763Z",
-        "lastIndexedAt": "2026-07-26T20:57:42.180Z",
+        "lastIndexedAt": "2026-08-17T01:06:50.284Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15572,7 +15572,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:41.806Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:49.722Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15603,7 +15603,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2752852193,
         "fileModifiedAt": "2026-07-19T14:46:25.008Z",
-        "lastIndexedAt": "2026-07-26T20:57:42.595Z",
+        "lastIndexedAt": "2026-08-17T01:06:50.706Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15620,7 +15620,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:42.184Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:50.285Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15651,7 +15651,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1733145276,
         "fileModifiedAt": "2026-07-19T14:46:20.209Z",
-        "lastIndexedAt": "2026-07-26T20:57:42.998Z",
+        "lastIndexedAt": "2026-08-17T01:06:51.110Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15668,7 +15668,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:42.599Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:50.707Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15699,7 +15699,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2837201881,
         "fileModifiedAt": "2026-07-19T14:51:00.452Z",
-        "lastIndexedAt": "2026-07-26T20:57:43.432Z",
+        "lastIndexedAt": "2026-08-17T01:06:51.689Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15716,7 +15716,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:43.002Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:51.111Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15747,7 +15747,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2178740215,
         "fileModifiedAt": "2026-07-19T14:45:57.040Z",
-        "lastIndexedAt": "2026-07-26T20:57:43.799Z",
+        "lastIndexedAt": "2026-08-17T01:06:52.082Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15764,7 +15764,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:43.436Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:51.690Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15795,7 +15795,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2618836831,
         "fileModifiedAt": "2026-07-19T14:45:54.517Z",
-        "lastIndexedAt": "2026-07-26T20:57:44.220Z",
+        "lastIndexedAt": "2026-08-17T01:06:52.657Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15812,7 +15812,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:43.803Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:52.083Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15843,7 +15843,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1850070478,
         "fileModifiedAt": "2026-07-19T14:46:00.324Z",
-        "lastIndexedAt": "2026-07-26T20:57:44.599Z",
+        "lastIndexedAt": "2026-08-17T01:06:53.046Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15860,7 +15860,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:44.225Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:52.658Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15891,7 +15891,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1531193624,
         "fileModifiedAt": "2026-07-19T14:57:56.017Z",
-        "lastIndexedAt": "2026-07-26T20:57:45.011Z",
+        "lastIndexedAt": "2026-08-17T01:06:53.469Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15902,7 +15902,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:44.604Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:53.047Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15936,7 +15936,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1536726838,
         "fileModifiedAt": "2026-07-19T14:57:43.024Z",
-        "lastIndexedAt": "2026-07-26T20:57:45.418Z",
+        "lastIndexedAt": "2026-08-17T01:06:54.005Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15953,7 +15953,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:45.015Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:53.470Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15986,7 +15986,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1640832288,
         "fileModifiedAt": "2026-07-19T14:57:51.724Z",
-        "lastIndexedAt": "2026-07-26T20:57:45.830Z",
+        "lastIndexedAt": "2026-08-17T01:06:54.403Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16003,7 +16003,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:45.423Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:54.006Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16036,7 +16036,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1842171476,
         "fileModifiedAt": "2026-07-19T14:57:36.014Z",
-        "lastIndexedAt": "2026-07-26T20:57:46.230Z",
+        "lastIndexedAt": "2026-08-17T01:06:55.001Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16053,7 +16053,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:45.834Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:54.404Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16086,7 +16086,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1670291842,
         "fileModifiedAt": "2026-07-19T14:57:51.711Z",
-        "lastIndexedAt": "2026-07-26T20:57:46.636Z",
+        "lastIndexedAt": "2026-08-17T01:06:55.409Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16103,7 +16103,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:46.234Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:55.002Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16136,7 +16136,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 1536685172,
         "fileModifiedAt": "2026-07-19T14:57:52.255Z",
-        "lastIndexedAt": "2026-07-26T20:57:47.049Z",
+        "lastIndexedAt": "2026-08-17T01:06:55.821Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16153,7 +16153,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:46.640Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:55.410Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16186,7 +16186,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2681238470,
         "fileModifiedAt": "2026-07-19T14:57:59.280Z",
-        "lastIndexedAt": "2026-07-26T20:57:47.446Z",
+        "lastIndexedAt": "2026-08-17T01:06:56.408Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16203,7 +16203,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:47.053Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:55.822Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16236,7 +16236,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 21453320067,
         "fileModifiedAt": "2026-07-19T14:43:00.190Z",
-        "lastIndexedAt": "2026-07-26T20:57:47.845Z",
+        "lastIndexedAt": "2026-08-17T01:06:56.804Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16253,7 +16253,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:47.450Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:56.409Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16287,7 +16287,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2745961573,
         "fileModifiedAt": "2026-07-25T23:17:56.204Z",
-        "lastIndexedAt": "2026-07-26T20:57:48.258Z",
+        "lastIndexedAt": "2026-08-17T01:06:57.279Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16304,7 +16304,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-07-26T20:57:47.849Z",
+        "lastMetadataAttemptAt": "2026-08-17T01:06:56.805Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16741,6 +16741,480 @@ const movies = [
         "playable": false,
         "lastMetadataAttemptAt": "2026-07-26T15:05:57.993Z",
         "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 447,
+        "title": "The Devil Wears Prada 2",
+        "originalTitle": "The Devil Wears Prada 2",
+        "year": 2026,
+        "duration": "1h 59min",
+        "rating": 6.4,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Comédia",
+            "Drama"
+        ],
+        "overview": "Miranda Priestly navega por sua carreira em meio ao declínio das publicações tradicionais de revistas. Ela se confronta com Emily Charlton, sua ex-assistente, agora uma influente executiva de um grupo de luxo, que detém verbas publicitárias de que Miranda Priestly precisa desesperadamente.",
+        "poster": "assets/posters/the-devil-wears-prada-2-2026-poster.jpg",
+        "backdrop": "assets/backdrops/the-devil-wears-prada-2-2026-backdrop.jpg",
+        "video": "assets/movies/The Devil Wears Prada 2 (2026) [tt33612209].mkv",
+        "audience": "general",
+        "addedAt": "2026-07-31T23:01:54.986Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt33612209",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 3887783372,
+        "fileModifiedAt": "2026-07-31T23:01:54.986Z",
+        "lastIndexedAt": "2026-08-17T01:06:57.674Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-devil-wears-prada-2-2026-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/the-devil-wears-prada-2-2026-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-08-17T01:06:57.280Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 448,
+        "title": "Supergirl",
+        "originalTitle": "Supergirl",
+        "year": 2026,
+        "duration": "1h 48min",
+        "rating": 5.9,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Aventura",
+            "Ficção científica"
+        ],
+        "overview": "Quando um adversário implacável atinge alguém muito próximo dela, Kara Zor-El relutantemente une forças com uma companheira improvável em uma épica jornada interestelar de vingança e justiça.",
+        "poster": "assets/posters/supergirl-2026-poster.jpg",
+        "backdrop": "assets/backdrops/supergirl-2026-backdrop.jpg",
+        "video": "assets/movies/Supergirl (2026) [tt8814476].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-02T23:04:12.671Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt8814476",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 7047830582,
+        "fileModifiedAt": "2026-08-02T23:04:12.671Z",
+        "lastIndexedAt": "2026-08-17T01:06:58.079Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/supergirl-2026-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/supergirl-2026-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-08-17T01:06:57.675Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 449,
+        "title": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
+        "originalTitle": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
+        "year": 2025,
+        "duration": "2h 35min",
+        "rating": 8.4,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Animação",
+            "Ação",
+            "Fantasia"
+        ],
+        "overview": "Enquanto os membros dos caçadores e os Hashira participavam de um rigoroso programa de fortalecimento coletivo, conhecido como Treinamento dos Hashira, em preparação para a batalha final contra os demônios, Muzan Kibutsuji aparece na Mansão Ubuyashiki. Com a vida do líder da organização em risco, Tanjiro e os Hashira correm até o quartel-general, mas acabam sendo lançados, pelas mãos de Muzan, em uma queda profunda rumo a um espaço misterioso para um confronto final, o Castelo Infinito.",
+        "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-poster.jpg",
+        "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-backdrop.jpg",
+        "video": "assets/movies/Demon Slayer Kimetsu no Yaiba Infinity Castle (2025) [tt32820897].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-02T23:08:06.431Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt32820897",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 9720487167,
+        "fileModifiedAt": "2026-08-02T23:08:06.431Z",
+        "lastIndexedAt": "2026-08-17T01:06:58.641Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-castelo-infinito-2025-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-castelo-infinito-2025-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-08-17T01:06:58.080Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 450,
+        "title": "Ghost Rider",
+        "originalTitle": "Ghost Rider",
+        "year": 2007,
+        "duration": "1h 50min",
+        "rating": 5.3,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Suspense",
+            "Ação",
+            "Fantasia"
+        ],
+        "overview": "Johnny Blaze trabalha como dublê e piloto de motocicleta. Há muito tempo, ele fez um pacto com Mefisto para proteger as duas pessoas que mais amava: seu pai, Barton, e sua namorada de adolescência, Roxanne Simpson. Em troca, Johnny se transforma no Motoqueiro Fantasma, o justiceiro de alguns demônios bastante cruéis. Forçado a obedecer Mefisto, Johnny decide enfrentá-lo de forma a usar sua maldição para proteger pessoas inocentes.",
+        "poster": "assets/posters/ghost-rider-2007-poster.jpg",
+        "backdrop": "assets/backdrops/ghost-rider-2007-backdrop.jpg",
+        "video": "assets/movies/Ghost Rider (2007) [tt0259324].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-02T23:12:41.399Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0259324",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 2369660207,
+        "fileModifiedAt": "2026-08-02T23:12:41.399Z",
+        "lastIndexedAt": "2026-08-17T01:06:59.220Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/motoqueiro-fantasma-2007-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/motoqueiro-fantasma-2007-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-08-17T01:06:58.642Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 451,
+        "title": "The Expendables 4",
+        "originalTitle": "The Expendables 4",
+        "year": 2023,
+        "duration": "1h 43min",
+        "rating": 4.8,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Aventura",
+            "Suspense"
+        ],
+        "overview": "A equipe enfrenta um traficante de armas que comanda um enorme exército privado. Munidos com todas as armas inimagináveis, os Mercenários são a última linha de defesa do mundo.",
+        "poster": "assets/posters/the-expendables-4-2023-poster.jpg",
+        "backdrop": "assets/backdrops/the-expendables-4-2023-backdrop.jpg",
+        "video": "assets/movies/The Expendables 4 (2023) [tt3291150].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-23T00:50:14.165Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt3291150",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 3028575823,
+        "fileModifiedAt": "2026-08-23T00:50:14.165Z",
+        "lastIndexedAt": "2026-08-23T01:13:22.680Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/os-mercenarios-4-2023-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/os-mercenarios-4-2023-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-08-23T01:13:21.231Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 452,
+        "title": "The Expendables",
+        "originalTitle": "The Expendables",
+        "year": 2010,
+        "duration": "1h 43min",
+        "rating": 6.4,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Suspense",
+            "Aventura",
+            "Ação"
+        ],
+        "overview": "Um grupo de mercenários, liderado por Barney Ross, e seus homens de confiança aceitam uma missão que parece ser rotineira: uma operação secreta, a mando da Igreja, para invadir o país sul-americano de Vilena e derrubar seu ditador. Não demora muito para o grupo perceber que a missão é uma operação suicida. Presos em uma perigosa teia de traições, mas sabendo que um inocente está em perigo, Barney e seus homens decidem finalizar o trabalho.",
+        "poster": "assets/posters/the-expendables-2010-poster.jpg",
+        "backdrop": "assets/backdrops/the-expendables-2010-backdrop.jpg",
+        "video": "assets/movies/The Expendables (2010) [tt1320253].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-23T00:52:09.038Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt1320253",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 1803476656,
+        "fileModifiedAt": "2026-08-23T00:52:09.038Z",
+        "lastIndexedAt": "2026-08-23T01:04:23.585Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-expendables-2010-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/the-expendables-2010-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 453,
+        "title": "The Expendables 2",
+        "originalTitle": "The Expendables 2",
+        "year": 2012,
+        "duration": "1h 43min",
+        "rating": 6.6,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Aventura",
+            "Suspense"
+        ],
+        "overview": "O grupo de mercenários se unem para evitar que um criminoso roube uma grande quantidade de plutônio, que possibilitaria a produção de armas nucleares. Após o assassinato de um amigo e o sumiço do mapa que leva ao plutônio, o grupo sai em busca de vingança.",
+        "poster": "assets/posters/the-expendables-2-2012-poster.jpg",
+        "backdrop": "assets/backdrops/the-expendables-2-2012-backdrop.jpg",
+        "video": "assets/movies/The Expendables 2 (2012) [tt1764651].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-23T00:50:12.724Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt1764651",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 2274694038,
+        "fileModifiedAt": "2026-08-23T00:50:12.724Z",
+        "lastIndexedAt": "2026-08-23T01:04:24.526Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-expendables-2-2012-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/the-expendables-2-2012-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 454,
+        "title": "The Expendables 3",
+        "originalTitle": "The Expendables 3",
+        "year": 2014,
+        "duration": "2h 06min",
+        "rating": 6.1,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Aventura",
+            "Suspense"
+        ],
+        "overview": "Barney e sua trupe de mercenários resgatam Doc, um dos integrantes do grupo, que estava preso há oito anos. Ao participarem de uma missão, os mercenários são surpreendidos quando reencontram Conrad, um comerciante de armas impiedoso, que Barney pensava ter matado. Novos membros, mais jovens e mais rápidos, entram para equipe e um novo duelo começa.",
+        "poster": "assets/posters/the-expendables-3-2014-poster.jpg",
+        "backdrop": "assets/backdrops/the-expendables-3-2014-backdrop.jpg",
+        "video": "assets/movies/The Expendables 3 (2014) [tt2333784].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-23T00:39:09.307Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt2333784",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 2514710984,
+        "fileModifiedAt": "2026-08-23T00:39:09.307Z",
+        "lastIndexedAt": "2026-08-23T01:04:25.477Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-expendables-3-2014-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/the-expendables-3-2014-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 455,
+        "title": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
+        "originalTitle": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
+        "year": 2025,
+        "duration": "2h 35min",
+        "rating": 8.4,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Animação",
+            "Ação",
+            "Fantasia"
+        ],
+        "overview": "Enquanto os membros dos caçadores e os Hashira participavam de um rigoroso programa de fortalecimento coletivo, conhecido como Treinamento dos Hashira, em preparação para a batalha final contra os demônios, Muzan Kibutsuji aparece na Mansão Ubuyashiki. Com a vida do líder da organização em risco, Tanjiro e os Hashira correm até o quartel-general, mas acabam sendo lançados, pelas mãos de Muzan, em uma queda profunda rumo a um espaço misterioso para um confronto final, o Castelo Infinito.",
+        "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-poster.jpg",
+        "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-backdrop.jpg",
+        "video": "assets/movies/Demon Slayer Kimetsu no Yaiba Infinity Castle (2025) [tt32820897] (2).mkv",
+        "audience": "general",
+        "addedAt": "2026-08-23T01:05:16.385Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt32820897",
+        "identificationConfidence": "high",
+        "identificationReason": "Metadados confirmados pela OMDb.",
+        "metadataStatus": "complete",
+        "fileSize": 9720487167,
+        "fileModifiedAt": "2026-08-23T01:05:16.385Z",
+        "lastIndexedAt": "2026-08-23T19:56:19.917Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-castelo-infinito-2025-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-castelo-infinito-2025-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-08-23T19:56:19.534Z",
+        "lastMetadataAttemptConfigured": true
+    },
+    {
+        "id": 456,
+        "title": "Lanternas S01E02",
+        "originalTitle": "Lanternas S01E02",
+        "year": 0,
+        "duration": "",
+        "rating": null,
+        "contentRating": "",
+        "quality": "1080p",
+        "genres": [],
+        "overview": "",
+        "poster": "",
+        "backdrop": "",
+        "video": "assets/movies/Lanternas.S01E02.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+        "audience": "general",
+        "addedAt": "2026-08-28T23:22:47.202Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "",
+        "identificationConfidence": "unidentified",
+        "identificationReason": "Nao foi possivel confirmar titulo e ano.",
+        "metadataStatus": "incomplete",
+        "fileSize": 1614025717,
+        "fileModifiedAt": "2026-08-28T23:01:26.732Z",
+        "lastIndexedAt": "2026-08-28T23:23:20.627Z",
+        "subtitles": [],
+        "fileStatus": "missing-file",
+        "playable": false
     }
 ];
 

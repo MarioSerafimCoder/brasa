@@ -95,6 +95,17 @@ class BrasaRepository(
         return cache.home(base, profileId)
     }
 
+    suspend fun scanLibrary(onStatus: (com.brasa.tv.core.model.LibraryScanStatus) -> Unit) {
+        val base = requireServer()
+        try {
+            awaitLibraryScan({ api.scanLibrary(base) }, { api.libraryScanStatus(base) }, onStatus)
+            playbackCache.clear()
+        } catch (failure: com.brasa.tv.core.network.BrasaApiException) {
+            if (failure.status == 404) error("Atualize e reinicie o servidor BRasa no computador para usar a busca pela TV.")
+            throw failure
+        }
+    }
+
     suspend fun home(profileId: String): HomeResponse {
         val base = requireServer()
         val response = runCatching { api.home(base, profileId) }.getOrElse { catalogAsHome(api.catalog(base, profileId)) }
@@ -176,11 +187,16 @@ class BrasaRepository(
         val recentlyWatched = (catalog.movies + recentSeries)
             .filter { (it.progress?.percentage ?: 0.0) > 0.0 }
             .sortedByDescending { it.progress?.updatedAt.orEmpty() }
+        val recentlyAdded = (catalog.movies + catalog.series)
+            .filter { it.addedAt.isNotBlank() }
+            .sortedByDescending(CatalogItem::addedAt)
+            .take(36)
         val favorites = catalog.movies.filter(CatalogItem::favorite)
         return HomeResponse(
             catalog.profile,
             listOf(
                 HomeRow("recently-watched", "Assistidos recentemente", items = recentlyWatched),
+                HomeRow("recently-added", "Recém-adicionados", items = recentlyAdded),
                 HomeRow("movies", "Filmes", items = catalog.movies),
                 HomeRow("series", "Séries", items = catalog.series),
                 HomeRow("favorites", "Minha lista", items = favorites),

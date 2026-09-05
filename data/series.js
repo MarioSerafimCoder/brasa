@@ -6,6 +6,277 @@
 
 const seriesData = [
     {
+        "id": "lanternas",
+        "title": "Lanternas",
+        "type": "series",
+        "kids": false,
+        "audience": "general",
+        "genres": [
+            "Drama",
+            "Mistério",
+            "Sci-Fi & Fantasy"
+        ],
+        "contentRating": "",
+        "poster": "assets/posters/lanternas-2026-poster.jpg",
+        "backdrop": "assets/backdrops/lanternas-2026-backdrop.jpg",
+        "overview": "Dois policiais intergalácticos, o recruta novato John Stewart e o lendário Lanterna Verde Hal Jordan, se veem envolvidos em um mistério sombrio que se passa na Terra enquanto investigam um assassinato no coração dos Estados Unidos.",
+        "addedAt": "2026-09-01T23:08:30.065Z",
+        "seasons": [
+            {
+                "seasonNumber": 1,
+                "episodes": [
+                    {
+                        "id": "series-lanternas-s1-e1-lanternas-s01e01-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "seriesId": "lanternas",
+                        "seasonNumber": 1,
+                        "episodeNumber": 1,
+                        "title": "Piloto",
+                        "video": "assets/series/Lanternas/Lanternas.S01E01.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:33:07.027Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e1.jpg",
+                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e1.jpg",
+                        "nextEpisodeId": "series-lanternas-s1-e2-lanternas-s01e02-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "tmdbId": 4988115,
+                        "overview": "Após um tiroteio fatal, o Lanterna Verde Hal Jordan e o novo recruta John Stewart partem para provar que se tratou de um evento extraterrestre.",
+                        "durationMinutes": 57
+                    },
+                    {
+                        "id": "series-lanternas-s1-e2-lanternas-s01e02-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "seriesId": "lanternas",
+                        "seasonNumber": 1,
+                        "episodeNumber": 2,
+                        "title": "Salto no Escuro",
+                        "video": "assets/series/Lanternas/Lanternas.S01E02.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-28T23:01:26.732Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e2.jpg",
+                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e2.jpg",
+                        "nextEpisodeId": "series-lanternas-s1-e3-lanternas-s01e03-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "tmdbId": 7007714,
+                        "overview": "Enquanto a missão insignificante de John acaba sendo crucial, Hal causa alvoroço em Rushville, o que o leva a investigar mais a fundo.",
+                        "durationMinutes": 52
+                    },
+                    {
+                        "id": "series-lanternas-s1-e3-lanternas-s01e03-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "seriesId": "lanternas",
+                        "seasonNumber": 1,
+                        "episodeNumber": 3,
+                        "title": "Isolado",
+                        "video": "assets/series/Lanternas/Lanternas.S01E03.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-09-01T23:08:30.065Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e3.jpg",
+                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e3.jpg",
+                        "nextEpisodeId": "",
+                        "tmdbId": 7179884,
+                        "overview": "Após uma vida inteira de preparação, John finalmente tem a oportunidade de ser entrevistado pelos Guardiões.",
+                        "durationMinutes": 54
+                    }
+                ]
+            }
+        ],
+        "seasonCount": 1,
+        "episodeCount": 3,
+        "tmdbId": 95350,
+        "imdbId": "tt26545992",
+        "originalTitle": "Lanterns",
+        "year": 2026,
+        "rating": 8.3
+    },
+    {
+        "id": "star-wars-visions-apresenta-a-nona-jedi",
+        "title": "Star Wars: Visions Apresenta — A Nona Jedi",
+        "type": "series",
+        "kids": false,
+        "audience": "general",
+        "genres": [
+            "Animação",
+            "Sci-Fi & Fantasy",
+            "Action & Adventure"
+        ],
+        "contentRating": "",
+        "poster": "assets/posters/star-wars-visions-apresenta-a-nona-jedi-2026-poster.jpg",
+        "backdrop": "assets/backdrops/star-wars-visions-apresenta-a-nona-jedi-2026-backdrop.jpg",
+        "overview": "Kara e sua equipe heterogenia Jedi partem em busca de mais Jedi dignos para lutar contra um senhor da guerra cada vez mais poderoso.",
+        "addedAt": "2026-08-23T00:56:13.885Z",
+        "seasons": [
+            {
+                "seasonNumber": 1,
+                "episodes": [
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e1-star-wars-visions-apresenta-a-nona-jedi-s01e01-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 1,
+                        "title": "Episódio 1",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E01 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:56:13.885Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e1.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e1.jpg",
+                        "nextEpisodeId": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e2-star-wars-visions-apresenta-a-nona-jedi-s01e02-web-dl-1080p-x264-dual-5-1",
+                        "tmdbId": 6145148,
+                        "overview": "Pursued by Nawaam's army, Juro seeks aid from an old friend while Kara learns her father is alive.",
+                        "durationMinutes": 31
+                    },
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e2-star-wars-visions-apresenta-a-nona-jedi-s01e02-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 2,
+                        "title": "Episódio 2",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E02 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:55:56.050Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e2.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e2.jpg",
+                        "nextEpisodeId": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e3-star-wars-visions-apresenta-a-nona-jedi-s01e03-web-dl-1080p-x264-dual-5-1",
+                        "tmdbId": 7463959,
+                        "overview": "Desperate for allies, Kara and the Jedi rally a colony of asteroid miners to fight a common enemy.",
+                        "durationMinutes": 30
+                    },
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e3-star-wars-visions-apresenta-a-nona-jedi-s01e03-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 3,
+                        "title": "Episódio 3",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E03 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:54:12.214Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e3.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e3.jpg",
+                        "nextEpisodeId": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e4-star-wars-visions-apresenta-a-nona-jedi-s01e04-web-dl-1080p-x264-dual-5-1",
+                        "tmdbId": 7463960,
+                        "overview": "While rescuing civilians from Nawaam's attack, Kara uncovers the truth about her father's dark past.",
+                        "durationMinutes": 29
+                    },
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e4-star-wars-visions-apresenta-a-nona-jedi-s01e04-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 4,
+                        "title": "Episódio 4",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E04 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:54:17.537Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e4.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e4.jpg",
+                        "nextEpisodeId": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e5-star-wars-visions-apresenta-a-nona-jedi-s01e05-web-dl-1080p-x264-dual-5-1",
+                        "tmdbId": 7463963,
+                        "overview": "Kara finally faces off against Nawaam, who reveals why he kidnapped her father.",
+                        "durationMinutes": 30
+                    },
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e5-star-wars-visions-apresenta-a-nona-jedi-s01e05-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 5,
+                        "title": "Episódio 5",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E05 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:54:08.232Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e5.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e5.jpg",
+                        "nextEpisodeId": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e6-star-wars-visions-apresenta-a-nona-jedi-s01e06-web-dl-1080p-x264-dual-5-1",
+                        "tmdbId": 7463964,
+                        "overview": "After a tragic loss, Kara questions her future as a Jedi, as Nawaam's grip on the galaxy tightens.",
+                        "durationMinutes": 30
+                    },
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e6-star-wars-visions-apresenta-a-nona-jedi-s01e06-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 6,
+                        "title": "Episódio 6",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E06 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:54:04.013Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e6.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e6.jpg",
+                        "nextEpisodeId": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e7-star-wars-visions-apresenta-a-nona-jedi-s01e07-web-dl-1080p-x264-dual-5-1",
+                        "tmdbId": 7463965,
+                        "overview": "Taken prisoner by Nawaam's forces, Kara must team with an unlikely ally to escape.",
+                        "durationMinutes": 25
+                    },
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e7-star-wars-visions-apresenta-a-nona-jedi-s01e07-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 7,
+                        "title": "Episódio 7",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E07 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:54:11.575Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e7.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e7.jpg",
+                        "nextEpisodeId": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e8-star-wars-visions-apresenta-a-nona-jedi-s01e08-web-dl-1080p-x264-dual-5-1",
+                        "tmdbId": 7463968,
+                        "overview": "Kara and the Jedi rally together in an effort to destroy Nawaam's ultimate weapon.",
+                        "durationMinutes": 23
+                    },
+                    {
+                        "id": "series-star-wars-visions-apresenta-a-nona-jedi-s1-e8-star-wars-visions-apresenta-a-nona-jedi-s01e08-web-dl-1080p-x264-dual-5-1",
+                        "seriesId": "star-wars-visions-apresenta-a-nona-jedi",
+                        "seasonNumber": 1,
+                        "episodeNumber": 8,
+                        "title": "Episódio 8",
+                        "video": "assets/series/Star Wars - Visions Apresenta - A Nona Jedi/Star Wars - Visions Apresenta — A Nona Jedi S01E08 WEB-DL 1080p x264 DUAL 5.1.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:55:05.890Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e8.jpg",
+                        "backdrop": "assets/episode-thumbnails/star-wars-visions-apresenta-a-nona-jedi-s1-e8.jpg",
+                        "nextEpisodeId": "",
+                        "tmdbId": 7463970,
+                        "overview": "Kara's belief in the ways of the Jedi are tested as she battles Nawaam for the fate of the galaxy.",
+                        "durationMinutes": 33
+                    }
+                ]
+            }
+        ],
+        "seasonCount": 1,
+        "episodeCount": 8,
+        "tmdbId": 289324,
+        "imdbId": "tt43337681",
+        "originalTitle": "スター・ウォーズ：ビジョンズ／九人目のジェダイ",
+        "year": 2026,
+        "rating": 7.672
+    },
+    {
         "id": "x-men-97",
         "title": "X-Men '97",
         "type": "series",
@@ -20,7 +291,7 @@ const seriesData = [
         "poster": "assets/posters/x-men-97-2024-poster.jpg",
         "backdrop": "assets/backdrops/x-men-97-2024-backdrop.jpg",
         "overview": "X-Men ’97 revisita a era icônica dos anos 1990, quando os X-Men, um grupo de mutantes que usam seus dons extraordinários para proteger um mundo que os odeia e teme, são desafiados como nunca antes, forçados a enfrentar um novo futuro perigoso e inesperado.",
-        "addedAt": "2026-07-27T00:35:46.096Z",
+        "addedAt": "2026-08-23T00:34:17.196Z",
         "seasons": [
             {
                 "seasonNumber": 2,
@@ -72,7 +343,7 @@ const seriesData = [
                         "video": "assets/series/X-Men '97/Temporada 02/X-Men '97 - S02E03.mkv",
                         "quality": "Local",
                         "audience": "general",
-                        "addedAt": "2026-07-27T00:35:46.096Z",
+                        "addedAt": "2026-07-27T00:38:00.793Z",
                         "progress": 0,
                         "subtitles": [],
                         "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e3.jpg",
@@ -134,19 +405,57 @@ const seriesData = [
                         "subtitles": [],
                         "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e6.jpg",
                         "backdrop": "assets/episode-thumbnails/x-men-97-s2-e6.jpg",
-                        "nextEpisodeId": "",
+                        "nextEpisodeId": "series-x-men-97-s2-e7-x-men-97-s02e07",
                         "tmdbId": 7383316,
                         "overview": "A Mansão X está funcionando novamente, oferecendo a jovens mutantes um novo lugar para chamar de lar.",
                         "durationMinutes": 34
+                    },
+                    {
+                        "id": "series-x-men-97-s2-e7-x-men-97-s02e07",
+                        "seriesId": "x-men-97",
+                        "seasonNumber": 2,
+                        "episodeNumber": 7,
+                        "title": "Terra Estranha, Coração Selvagem",
+                        "video": "assets/series/X-Men '97/Temporada 02/X-Men '97 - S02E07.mkv",
+                        "quality": "Local",
+                        "audience": "general",
+                        "addedAt": "2026-08-02T22:52:54.469Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e7.jpg",
+                        "backdrop": "assets/episode-thumbnails/x-men-97-s2-e7.jpg",
+                        "nextEpisodeId": "series-x-men-97-s2-e9-x-men-97-s02e09",
+                        "tmdbId": 7383317,
+                        "overview": "Os X-Men viajam para a Terra Selvagem para negociar a libertação de um refém de um grupo extremista, onde se surpreendem ao encontrar um rosto familiar.",
+                        "durationMinutes": 30
+                    },
+                    {
+                        "id": "series-x-men-97-s2-e9-x-men-97-s02e09",
+                        "seriesId": "x-men-97",
+                        "seasonNumber": 2,
+                        "episodeNumber": 9,
+                        "title": "Sobrevivência do mais apto",
+                        "video": "assets/series/X-Men '97/Temporada 02/X-Men '97 - S02E09.mkv",
+                        "quality": "Local",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:34:17.196Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e9.jpg",
+                        "backdrop": "assets/episode-thumbnails/x-men-97-s2-e9.jpg",
+                        "nextEpisodeId": "",
+                        "tmdbId": 7383319,
+                        "overview": "Os X-Men são levados ao limite quando seu passado volta para assombrá-los.",
+                        "durationMinutes": 32
                     }
                 ]
             }
         ],
         "seasonCount": 1,
-        "episodeCount": 6,
+        "episodeCount": 8,
         "originalTitle": "X-Men '97",
         "year": 2024,
-        "rating": 8.646,
+        "rating": 8.689,
         "imdbId": "tt16026746",
         "tmdbId": 138502
     },
@@ -1106,7 +1415,7 @@ const seriesData = [
         "imdbId": "tt0273855",
         "originalTitle": "My Wife and Kids",
         "year": 2001,
-        "rating": 7.413
+        "rating": 7.43
     },
     {
         "id": "yellowstone",
@@ -1481,7 +1790,7 @@ const seriesData = [
         "episodeCount": 18,
         "originalTitle": "Yellowstone",
         "year": 2018,
-        "rating": 8.269,
+        "rating": 8.27,
         "imdbId": "tt4236770",
         "tmdbId": 73586
     },
@@ -1744,7 +2053,7 @@ const seriesData = [
         "imdbId": "tt28521741",
         "originalTitle": "Tales of the Teenage Mutant Ninja Turtles",
         "year": 2024,
-        "rating": 7.7
+        "rating": 7.75
     },
     {
         "id": "demon-slayer-kimetsu-no-yaiba",
@@ -1970,28 +2279,9 @@ const seriesData = [
                         "subtitles": [],
                         "thumbnail": "assets/episode-thumbnails/demon-slayer-kimetsu-no-yaiba-s1-e11.jpg",
                         "backdrop": "assets/episode-thumbnails/demon-slayer-kimetsu-no-yaiba-s1-e11.jpg",
-                        "nextEpisodeId": "series-demon-slayer-kimetsu-no-yaiba-s1-e12-demon-slayer-kimetsu-no-yaiba-s01e12",
+                        "nextEpisodeId": "series-demon-slayer-kimetsu-no-yaiba-s1-e13-demon-slayer-kimetsu-no-yaiba-s01e13",
                         "tmdbId": 1732623,
                         "overview": "Tanjiro reencontra-se com Zenitsu Agatsuma, um dos sobreviventes da Seleção Final.",
-                        "durationMinutes": 23
-                    },
-                    {
-                        "id": "series-demon-slayer-kimetsu-no-yaiba-s1-e12-demon-slayer-kimetsu-no-yaiba-s01e12",
-                        "seriesId": "demon-slayer-kimetsu-no-yaiba",
-                        "seasonNumber": 1,
-                        "episodeNumber": 12,
-                        "title": "O Javali mostra suas presas, Zenitsu dorme",
-                        "video": "assets/series/Demon Slayer - Kimetsu no Yaiba/Temporada 01/Demon Slayer - Kimetsu no Yaiba - S01E12.mkv",
-                        "quality": "Local",
-                        "audience": "general",
-                        "addedAt": "2026-07-19T05:57:48.366Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/demon-slayer-kimetsu-no-yaiba-s1-e12.jpg",
-                        "backdrop": "assets/episode-thumbnails/demon-slayer-kimetsu-no-yaiba-s1-e12.jpg",
-                        "nextEpisodeId": "series-demon-slayer-kimetsu-no-yaiba-s1-e13-demon-slayer-kimetsu-no-yaiba-s01e13",
-                        "tmdbId": 1732624,
-                        "overview": "Tanjiro, Zenitsu e as crianças ainda estão presos na mansão, e situação se complica quando um homem com cabeça de javali aparece armado até os dentes - inclusive os dentes.",
                         "durationMinutes": 23
                     },
                     {
@@ -2264,7 +2554,7 @@ const seriesData = [
             }
         ],
         "seasonCount": 1,
-        "episodeCount": 26,
+        "episodeCount": 25,
         "originalTitle": "鬼滅の刃",
         "year": 2019,
         "rating": 8.638,
@@ -3469,7 +3759,7 @@ const seriesData = [
         "imdbId": "tt0417299",
         "originalTitle": "Avatar: The Last Airbender",
         "year": 2005,
-        "rating": 8.773
+        "rating": 8.8
     },
     {
         "id": "o-urso",
@@ -3618,7 +3908,7 @@ const seriesData = [
         "imdbId": "tt14452776",
         "originalTitle": "The Bear",
         "year": 2022,
-        "rating": 8.141
+        "rating": 8.1
     },
     {
         "id": "as-aventuras-de-jackie-chan",
@@ -5475,7 +5765,7 @@ const seriesData = [
         "imdbId": "tt0259141",
         "originalTitle": "Jackie Chan Adventures",
         "year": 2000,
-        "rating": 8.162
+        "rating": 8.159
     }
 ];
 

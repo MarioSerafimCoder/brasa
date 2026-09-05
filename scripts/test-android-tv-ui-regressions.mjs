@@ -49,6 +49,7 @@ assert.match(player, /onPlaybackFallback\(info\.mediaKey\)/);
 assert.match(player, /playbackRevision/);
 assert.match(player, /retryPositionOverride = maxOf\(player\.currentPosition, info\.resumePosition\)[\s\S]*?container\.playback\.release\(player\)[\s\S]*?acquiredPlayer = null[\s\S]*?loadAttempt\+\+/);
 assert.match(player, /container\.playback\.acquire\(serverBaseUrl, info\.copy\(resumePosition = retryPositionOverride\)\)/);
+assert.match(player, /Player\.STATE_ENDED[\s\S]*?reachedRealEnd[\s\S]*?info\.playbackMode == "hls" && !reachedRealEnd[\s\S]*?requestRemoteSeek\(absolute, recovery = true\)/, "fim prematuro da playlist HLS deve continuar o filme, não marcá-lo como concluído");
 assert.doesNotMatch(player, /player\.setMediaItem\(mediaItem/);
 assert.match(player, /ERROR_CODE_BEHIND_LIVE_WINDOW/);
 assert.match(player, /delay\(20_000\)[\s\S]*?!firstFrameRendered[\s\S]*?Player\.STATE_BUFFERING/);

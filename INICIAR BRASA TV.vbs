@@ -25,7 +25,7 @@ command = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File " & Quote(lau
 exitCode = shell.Run(command, 0, True)
 
 If exitCode <> 0 Then
-    Finish "Nao foi possivel iniciar o servidor da TV. Consulte data\brasa-server.stderr.log.", 16, exitCode
+    Finish "Nao foi possivel iniciar o servidor ou a busca de titulos. Consulte data\brasa-launcher.log.", 16, exitCode
 End If
 
 port = ReadStateNumber(statePath, "port")
@@ -41,6 +41,8 @@ address = GetLanAddress()
 If address = "" Then address = "IP deste computador"
 
 message = "Servidor do BRasa TV pronto." & vbCrLf & vbCrLf & _
+          "Busca de novos titulos iniciada em segundo plano." & vbCrLf & _
+          "Na TV, Configuracoes > Buscar novos titulos permite buscar e atualizar o catalogo." & vbCrLf & vbCrLf & _
           "Agora abra o aplicativo BRasa na TV." & vbCrLf & _
           "Endereco: http://" & address & ":" & port & vbCrLf & vbCrLf & _
           "Mantenha este computador ligado enquanto estiver assistindo."
@@ -104,7 +106,7 @@ Function GetLanAddress()
         For Each adapter In adapters
             If Not IsNull(adapter.IPAddress) Then
                 For Each candidate In adapter.IPAddress
-                    If InStr(candidate, ".") > 0 And Left(candidate, 4) <> "127." And Left(candidate, 8) <> "169.254." Then
+                    If IsLanAddress(candidate) Then
                         GetLanAddress = candidate
                         Exit Function
                     End If
@@ -115,6 +117,13 @@ Function GetLanAddress()
 
     Err.Clear
     On Error GoTo 0
+End Function
+
+Function IsLanAddress(value)
+    Dim expression
+    Set expression = New RegExp
+    expression.Pattern = "^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)"
+    IsLanAddress = expression.Test(CStr(value))
 End Function
 
 Function ElapsedSeconds(startValue)

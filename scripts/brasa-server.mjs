@@ -16,6 +16,7 @@ import { createSyncHistory } from "../server/sync-history.mjs";
 import { createLibraryHealth } from "../server/library-health.mjs";
 import { startLibraryWatcher } from "../server/library-watcher.mjs";
 import { createSyncCoordinator } from "../server/sync-coordinator.mjs";
+import { createLibraryScan } from "../server/library-scan.mjs";
 import { absoluteLibraryRoots, isProcessableVideo, resolvePathInsideLibrary } from "../server/library-config.mjs";
 import { AppError, ForbiddenError, NotFoundError, PayloadTooLargeError, ValidationError } from "../server/app-errors.mjs";
 import { validateLocalWriteRequest } from "../server/local-security.mjs";
@@ -40,6 +41,7 @@ import { normalizeTvCatalogItem, normalizeTvProfile, normalizeTvProgressMap } fr
 import { resolveTvCollectionMovies } from "../server/tv-collections.mjs";
 import { hlsTimeline } from "../server/playback-timeline.mjs";
 import { preserveWatchTimestamp, sortRecentlyWatched } from "../server/recently-watched.mjs";
+import { sortRecentlyAdded } from "../server/recently-added.mjs";
 import { canAccessLegacyApi, isLoopbackAddress } from "../server/network-access.mjs";
 import { resolveByteRange } from "../server/http-range.mjs";
 import { ensureEnvFile } from "./setup-env.mjs";
@@ -87,7 +89,7 @@ const deviceAuth = createDeviceAuth(deviceStore);
 const androidTvUpdateService=createAndroidTvUpdateService({updatesRoot:androidTvUpdatesRoot,deviceStore,serveFile:serveMediaFile});
 const networkDiagnostics = createNetworkDiagnostics();
 const networkInspector = createWindowsNetworkInspector();
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls, scan: () => libraryScan.request("tv"), scanStatus: () => libraryScan.status() },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -98,6 +100,7 @@ let syncStatus = {
     output: ""
 };
 const syncCoordinator = createSyncCoordinator({ runSync: (reasons) => syncLibrary(`Biblioteca atualizada (${reasons.join(", ") || "automático"}).`, "A atualização falhou."), afterSync: () => scheduleAutomaticMediaAnalysis(), onStatusChange: (status) => { syncStatus = status; } });
+const libraryScan = createLibraryScan({ coordinator: syncCoordinator, getProgress: () => syncStatus });
 const adminAuth = createAdminAuthService({ rootDir });
 const adminLogs = createAdminLogService(rootDir);
 const getAdminTools=(options={})=>getMediaToolsStatus(rootDir,options);
@@ -143,6 +146,12 @@ const server = http.createServer(async (request, response) => {
 
         if (request.method === "GET" && url.pathname === "/api/sync/status") {
             sendJson(response, 200, syncStatus);
+            return;
+        }
+
+        if (url.pathname === "/api/library/scan" && ["GET", "POST"].includes(request.method)) {
+            const data = request.method === "POST" ? libraryScan.request("launcher") : libraryScan.status();
+            sendJson(response, request.method === "POST" ? 202 : 200, { ok: true, data });
             return;
         }
 
@@ -474,10 +483,10 @@ async function tvHome(device, profileId) {
     }).filter(Boolean);
     const recentlyWatched = sortRecentlyWatched([...catalog.movies, ...recentlyWatchedSeries]);
     const favorites = [...catalog.movies, ...episodes].filter((item) => item.favorite || catalog.favorites.includes(item.mediaKey));
-    const recentMovies = [...catalog.movies].sort((a, b) => Number(b.year || 0) - Number(a.year || 0));
+    const recentlyAdded = sortRecentlyAdded([...catalog.movies, ...catalog.series]);
     const rows = [
         { id: "recently-watched", title: "Assistidos recentemente", type: "continue", items: recentlyWatched },
-        { id: "recent", title: "Adicionados recentemente", type: "catalog", items: recentMovies },
+        { id: "recently-added", title: "Recém-adicionados", type: "catalog", items: recentlyAdded },
         { id: "movies", title: "Filmes", type: "catalog", items: catalog.movies },
         { id: "series", title: "Séries", type: "catalog", items: catalog.series },
         { id: "favorites", title: "Minha lista", type: "favorites", items: favorites }
@@ -583,10 +592,10 @@ async function tvHls(request, response, device, sessionId, requested) { const re
 async function getTvMediaItem(mediaKey) { const [type, id] = String(mediaKey).split(":"), library = await tvLibraryCache.load(); if (type === "movie") return library.movieById.get(id) || null; if (type === "episode") return library.episodeById.get(id)?.episode || null; return null; }
 function canTvAccess(item, profile) { const sourceOffline=item?.fileStatus==="source-offline";if (!item || (!sourceOffline && (item.playable === false || item.fileStatus === "missing-file")) || (!Array.isArray(item.seasons) && !item.video)) return false; if (profile.kind !== "kids") return item.audience !== "adult" || profile.kind === "adult"; const audience = item.audience || (item.kids ? "kids" : "general"); if (audience === "kids") return true; if (audience === "adult") return false; const level = tvRatingLevel(item.contentRating); return level !== null && level <= Number(profile.maxContentRating ?? 10); }
 function tvRatingLevel(value) { const key = String(value || "").trim().toUpperCase().replace(/\s+/g, ""), levels = { L:0,LIVRE:0,G:0,"TV-Y":0,"TV-Y7":7,"TV-G":0,10:10,"10ANOS":10,12:12,14:14,16:16,18:18,PG:12,"PG-13":13,R:17,"TV-PG":12,"TV-14":14,"TV-MA":18 }; return Object.prototype.hasOwnProperty.call(levels, key) ? levels[key] : null; }
-function tvMovie(item, profileId, state) { const mediaKey = `movie:${item.id}`; return normalizeTvCatalogItem({ id: String(item.id), mediaKey, type: "movie", title: item.title, originalTitle: item.originalTitle, year: item.year, duration: item.duration, rating: item.rating, contentRating: item.contentRating, genres: item.genres || [], overview: item.overview || "", poster: item.poster || "", backdrop: item.backdrop || item.poster || "", subtitles: item.subtitles || [], favorite: state.favorites.includes(mediaKey) || state.favorites.includes(String(item.id)), progress: state.progress[mediaKey] || null, streamUrl: `/api/tv/stream/${encodeURIComponent(mediaKey)}?profileId=${encodeURIComponent(profileId)}` }); }
+function tvMovie(item, profileId, state) { const mediaKey = `movie:${item.id}`; return normalizeTvCatalogItem({ id: String(item.id), mediaKey, type: "movie", title: item.title, originalTitle: item.originalTitle, year: item.year, duration: item.duration, rating: item.rating, contentRating: item.contentRating, genres: item.genres || [], overview: item.overview || "", poster: item.poster || "", backdrop: item.backdrop || item.poster || "", addedAt: item.addedAt || item.fileModifiedAt || item.lastIndexedAt || "", subtitles: item.subtitles || [], favorite: state.favorites.includes(mediaKey) || state.favorites.includes(String(item.id)), progress: state.progress[mediaKey] || null, streamUrl: `/api/tv/stream/${encodeURIComponent(mediaKey)}?profileId=${encodeURIComponent(profileId)}` }); }
 function originalStreamUrl(value, revision = "") { return `${value}${String(value).includes("?") ? "&" : "?"}source=original${revision ? `&revision=${encodeURIComponent(revision)}` : ""}`; }
-function tvSeries(item, profileId, profile, state) { return normalizeTvCatalogItem({ id: String(item.id), mediaKey: `series:${item.id}`, type: "series", title: item.title, originalTitle: item.originalTitle, year: item.year, rating: item.rating, contentRating: item.contentRating, genres: item.genres || [], overview: item.overview || "", poster: item.poster || "", backdrop: item.backdrop || item.poster || "", seasons: (item.seasons || []).map((season) => ({ seasonNumber: season.seasonNumber, episodes: (season.episodes || []).filter((episode) => canTvAccess(episode, profile)).map((episode) => tvEpisode(episode, item, profileId, state)) })) }); }
-function tvEpisode(episode, series, profileId, state) { const mediaKey = `episode:${episode.id}`; return normalizeTvCatalogItem({ id: String(episode.id), mediaKey, type: "episode", seriesId: String(series.id), title: episode.title, seasonNumber: episode.seasonNumber, episodeNumber: episode.episodeNumber, duration: episode.duration, overview: episode.overview || "", poster: episode.thumbnail || series.poster || "", backdrop: episode.backdrop || series.backdrop || "", subtitles: episode.subtitles || [], progress: state.progress[mediaKey] || null, streamUrl: `/api/tv/stream/${encodeURIComponent(mediaKey)}?profileId=${encodeURIComponent(profileId)}` }); }
+function tvSeries(item, profileId, profile, state) { return normalizeTvCatalogItem({ id: String(item.id), mediaKey: `series:${item.id}`, type: "series", title: item.title, originalTitle: item.originalTitle, year: item.year, rating: item.rating, contentRating: item.contentRating, genres: item.genres || [], overview: item.overview || "", poster: item.poster || "", backdrop: item.backdrop || item.poster || "", addedAt: item.addedAt || "", seasons: (item.seasons || []).map((season) => ({ seasonNumber: season.seasonNumber, episodes: (season.episodes || []).filter((episode) => canTvAccess(episode, profile)).map((episode) => tvEpisode(episode, item, profileId, state)) })) }); }
+function tvEpisode(episode, series, profileId, state) { const mediaKey = `episode:${episode.id}`; return normalizeTvCatalogItem({ id: String(episode.id), mediaKey, type: "episode", seriesId: String(series.id), title: episode.title, seasonNumber: episode.seasonNumber, episodeNumber: episode.episodeNumber, duration: episode.duration, overview: episode.overview || "", poster: episode.thumbnail || series.poster || "", backdrop: episode.backdrop || series.backdrop || "", addedAt: episode.addedAt || "", subtitles: episode.subtitles || [], progress: state.progress[mediaKey] || null, streamUrl: `/api/tv/stream/${encodeURIComponent(mediaKey)}?profileId=${encodeURIComponent(profileId)}` }); }
 async function findLibraryCandidates(mediaKey){const media=await resolveMedia(mediaKey),files=[];for(const root of absoluteLibraryRoots(rootDir))for(const entry of await walkLibraryFiles(root.absolutePath)){const stat=await fs.stat(entry).catch(()=>null);if(!stat||!isProcessableVideo(entry,stat.size))continue;const relative=path.relative(rootDir,entry).replace(/\\/g,"/"),id=crypto.createHash("sha1").update(relative).digest("hex").slice(0,16),match=relocationScore(media,entry,root,stat);files.push({id,name:path.basename(entry),relativePath:relative,size:stat.size,...match});}return files.filter((item)=>item.confidence!=="low").sort((a,b)=>b.score-a.score).slice(0,50);}
 async function walkLibraryFiles(dir){const files=[];for(const entry of await fs.readdir(dir,{withFileTypes:true}).catch(()=>[])){const item=path.join(dir,entry.name);entry.isDirectory()?files.push(...await walkLibraryFiles(item)):files.push(item);}return files;}
 function relocationScore(media,file,root,stat){const normalized=(value)=>String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(),name=normalized(path.basename(file)),title=normalized(media?.title),tokens=title.split(/[^a-z0-9]+/).filter((token)=>token.length>2),reasons=[];let score=0;const matched=tokens.filter((token)=>name.includes(token));if(tokens.length&&matched.length===tokens.length){score+=50;reasons.push("título correspondente");}else if(matched.length){score+=Math.round(30*matched.length/tokens.length);reasons.push("título parcialmente correspondente");}const year=String(media?.year||"").match(/\d{4}/)?.[0];if(year&&name.includes(year)){score+=15;reasons.push("mesmo ano");}const expectedType=String(media?.mediaType||"");if((expectedType==="movie"&&root.type==="movie")||(expectedType==="episode"&&root.type==="series")){score+=15;reasons.push("mesmo tipo de mídia");}if(media?.audience&&media.audience===root.audience){score+=10;reasons.push("mesma audiência");}if(media?.originalPath&&path.extname(media.originalPath).toLowerCase()===path.extname(file).toLowerCase()){score+=5;reasons.push("mesma extensão");}if(media?.fileSize&&Math.abs(Number(media.fileSize)-stat.size)/Math.max(1,Number(media.fileSize))<.02){score+=5;reasons.push("tamanho semelhante");}return{score:Math.min(100,score),confidence:score>=80?"high":score>=55?"medium":"low",reasons};}
@@ -939,6 +948,11 @@ async function syncLibrary(successMessage, failureMessage) {
     try {
         const result = await runSync();
         const ok = result.code === 0;
+
+        if (ok) {
+            tvLibraryCache.invalidate();
+            await tvLibraryCache.load();
+        }
 
         if (result.output) {
             console.log(result.output);

@@ -52,6 +52,21 @@ Antes do primeiro release, crie e proteja a chave permanente com:
 
 Depois, aumente a versão, gere o APK e publique-o localmente usando os scripts em `apps/android-tv/scripts`. O procedimento completo, incluindo a migração inicial do APK debug, backup da chave, reversão e recuperação de falhas, está em [`docs/android-tv-local-updates.md`](../../docs/android-tv-local-updates.md).
 
+## Buscar novos títulos
+
+O atalho **INICIAR BRASA TV** solicita uma busca em segundo plano em toda abertura,
+mesmo quando o servidor já está ligado. Coloque episódios dentro da pasta da série
+em `assets/series` (por exemplo, `assets/series/Lanternas/...S01E03.mkv`).
+
+No APK 1.0.28 ou posterior, use **Configurações → Biblioteca → Buscar novos títulos**.
+A TV pareada solicita a varredura no computador, acompanha seu andamento e recarrega
+o catálogo e a página inicial ao concluir. O computador precisa estar ligado.
+Buscas simultâneas compartilham a mesma operação. Uma falha permite tentar novamente;
+fechar a tela não cancela a varredura no servidor.
+
+As rotas `POST/GET /api/v1/tv/library/scan` exigem autorização da TV.
+O inicializador usa `POST /api/library/scan` somente pelo endereço local.
+
 ## Diagnóstico de rede
 
 Em **Configurações → Diagnóstico de rede**, o APK identifica Ethernet, Wi-Fi ou rede móvel e, quando o Android disponibiliza a informação, mostra a faixa Wi-Fi de 2,4, 5 ou 6 GHz. O teste de convivência usa tráfego sintético autenticado e controlado pelo servidor; ele não abre um filme nem tenta ocupar toda a rede. Escolha 1080p (12 Mbps), 4K equilibrado (25 Mbps) ou 4K alto (40 Mbps), use outros aparelhos durante os 60 segundos e confira a recomendação de bitrate ao final.

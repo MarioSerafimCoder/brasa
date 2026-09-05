@@ -54,6 +54,7 @@ fun SettingsScreen(
     lastUpdateCheckAt: Long,
     onUpdates: () -> Unit,
     onNetworkDiagnostics: () -> Unit,
+    onScanLibrary: () -> Unit,
     onProfiles: () -> Unit,
     onClearCache: () -> Unit,
     onLoadCache: () -> Unit,
@@ -76,6 +77,17 @@ fun SettingsScreen(
                 StatusLine("Status", if (state.paired) "● Conectado" else "● Offline", if (state.paired) BrasaSuccess else BrasaRed)
             }
             BrasaButton("Diagnóstico de rede", onNetworkDiagnostics, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Primary)
+            Spacer(Modifier.height(BrasaSpacing.x2))
+            SettingsSection("Biblioteca") {
+                Text("Procura novos filmes e episódios nas pastas do computador e atualiza o catálogo desta TV.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                Spacer(Modifier.height(BrasaSpacing.x1))
+                BrasaButton(if (state.libraryScanning) "Buscando novos títulos…" else "Buscar novos títulos", onScanLibrary,
+                    Modifier.fillMaxWidth(), enabled = state.paired && !state.previewMode && !state.libraryScanning, style = BrasaButtonStyle.Primary)
+                if (state.libraryScanMessage.isNotBlank()) {
+                    Spacer(Modifier.height(BrasaSpacing.x1))
+                    Text(state.libraryScanMessage, color = BrasaText, fontSize = BrasaType.metadata)
+                }
+            }
             Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Reprodução") {
                 StatusLine("Cache utilizado", formatBytes(state.cacheBytes))
