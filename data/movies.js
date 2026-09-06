@@ -4366,11 +4366,11 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3010175059,
         "fileModifiedAt": "2026-07-18T23:59:58.942Z",
-        "lastIndexedAt": "2026-09-02T22:39:47.865Z",
+        "lastIndexedAt": "2026-09-06T00:26:33.670Z",
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-09-02T22:39:47.235Z",
+        "lastMetadataAttemptAt": "2026-09-06T00:26:33.224Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8287,7 +8287,7 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 2231183756,
         "fileModifiedAt": "2026-07-19T04:05:11.571Z",
-        "lastIndexedAt": "2026-09-02T22:39:48.371Z",
+        "lastIndexedAt": "2026-09-06T00:26:34.106Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8298,7 +8298,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-09-02T22:39:47.903Z",
+        "lastMetadataAttemptAt": "2026-09-06T00:26:33.676Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13744,7 +13744,7 @@ const movies = [
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-09-02T22:39:48.392Z",
+        "lastMetadataAttemptAt": "2026-09-06T00:26:34.111Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16836,8 +16836,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:57.675Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -17152,7 +17152,7 @@ const movies = [
         "overview": "Enquanto os membros dos caçadores e os Hashira participavam de um rigoroso programa de fortalecimento coletivo, conhecido como Treinamento dos Hashira, em preparação para a batalha final contra os demônios, Muzan Kibutsuji aparece na Mansão Ubuyashiki. Com a vida do líder da organização em risco, Tanjiro e os Hashira correm até o quartel-general, mas acabam sendo lançados, pelas mãos de Muzan, em uma queda profunda rumo a um espaço misterioso para um confronto final, o Castelo Infinito.",
         "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-poster.jpg",
         "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-backdrop.jpg",
-        "video": "assets/movies/Demon Slayer Kimetsu no Yaiba Infinity Castle (2025) [tt32820897] (2).mkv",
+        "video": "assets/movies/Demon Slayer Kimetsu no Yaiba Infinity Castle (2025) [tt32820897].mkv",
         "audience": "general",
         "addedAt": "2026-08-23T01:05:16.385Z",
         "progress": 0,
@@ -17215,6 +17215,572 @@ const movies = [
         "subtitles": [],
         "fileStatus": "missing-file",
         "playable": false
+    },
+    {
+        "id": 457,
+        "title": "Edge of Tomorrow",
+        "originalTitle": "Edge of Tomorrow",
+        "year": 2014,
+        "duration": "1h 53min",
+        "rating": 7.9,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Ficção científica"
+        ],
+        "overview": "A Terra está dominada por alienígenas e o major Bill Cage, um relações públicas das Forças Armadas dos Estados Unidos, é obrigado a ir para a linha de frente. Inexplicavelmente, ele acaba preso em um ciclo do tempo, revivendo repetidamente sua última batalha. No entanto, quanto mais vezes ele luta, suas habilidades de guerreiro melhoram e ele fica mais perto de descobrir como derrotar o inimigo.",
+        "poster": "assets/posters/edge-of-tomorrow-2014-poster.jpg",
+        "backdrop": "assets/backdrops/edge-of-tomorrow-2014-backdrop.jpg",
+        "video": "assets/movies/Edge of Tomorrow (2014) [tt1631867].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:35:58.903Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt1631867",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 4427249492,
+        "fileModifiedAt": "2026-09-05T23:35:58.903Z",
+        "lastIndexedAt": "2026-09-06T00:26:36.259Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/edge-of-tomorrow-2014-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/edge-of-tomorrow-2014-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 458,
+        "title": "Mary Magdalene",
+        "originalTitle": "Mary Magdalene",
+        "year": 2018,
+        "duration": "2h 00min",
+        "rating": 5.9,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Drama"
+        ],
+        "overview": "A história de uma das figuras mais enigmáticas e incompreendidas da história bíblica: Maria Madalena (Rooney Mara). Em busca de uma nova maneira de viver, contrariando a sociedade, sua familia tradicional e o machismo de alguns apóstolos, a jovem junta-se a Jesus de Nazaré (Joaquin Phoenix) em sua incansável missão de propagar a fé.",
+        "poster": "assets/posters/mary-magdalene-2018-poster.jpg",
+        "backdrop": "assets/backdrops/mary-magdalene-2018-backdrop.jpg",
+        "video": "assets/movies/Mary Magdalene (2018) [tt5360996].mkv",
+        "audience": "general",
+        "addedAt": "2026-08-29T01:24:32.596Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt5360996",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 2468997511,
+        "fileModifiedAt": "2026-08-29T01:24:32.596Z",
+        "lastIndexedAt": "2026-09-06T00:26:37.166Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/mary-magdalene-2018-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/458-pt-br.vtt",
+                "default": true,
+                "source": "local"
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 459,
+        "title": "Star Wars O Mandaloriano e Grogu DDP5 1 H 265-",
+        "originalTitle": "Star Wars O Mandaloriano e Grogu DDP5 1 H 265-",
+        "year": 2026,
+        "duration": "",
+        "rating": null,
+        "contentRating": "",
+        "quality": "Local",
+        "genres": [],
+        "overview": "",
+        "poster": "",
+        "backdrop": "",
+        "video": "assets/movies/Star Wars O Mandaloriano e Grogu DDP5 1 H 265- (2026).mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T22:41:52.235Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "",
+        "identificationConfidence": "low",
+        "identificationReason": "Indexado pelo nome local; metadados externos indisponiveis.",
+        "metadataStatus": "incomplete",
+        "fileSize": 13434583070,
+        "fileModifiedAt": "2026-09-05T22:41:52.235Z",
+        "lastIndexedAt": "2026-09-06T00:26:37.735Z",
+        "subtitles": [],
+        "fileStatus": "missing-file",
+        "playable": false
+    },
+    {
+        "id": 460,
+        "title": "The Lion King",
+        "originalTitle": "The Lion King",
+        "year": 1994,
+        "duration": "1h 28min",
+        "rating": 8.5,
+        "contentRating": "G",
+        "quality": "Local",
+        "genres": [
+            "Animação",
+            "Família",
+            "Drama"
+        ],
+        "overview": "Mufasa, o Rei Leão, e a rainha Sarabi apresentam ao reino o herdeiro do trono, Simba. O recém-nascido recebe a bênção do sábio babuíno Rafiki, mas ao crescer é envolvido nas artimanhas de seu tio Scar, o invejoso e maquiavélico irmão de Mufasa, que planeja livrar-se do sobrinho e herdar o trono.",
+        "poster": "assets/posters/the-lion-king-1994-poster.jpg",
+        "backdrop": "assets/backdrops/the-lion-king-1994-backdrop.jpg",
+        "video": "assets/movies/The Lion King (1994) [tt0110357].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:44:58.241Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0110357",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 4785321159,
+        "fileModifiedAt": "2026-09-05T23:44:58.241Z",
+        "lastIndexedAt": "2026-09-06T00:26:38.487Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-lion-king-1994-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/460-pt-br.vtt",
+                "default": true,
+                "source": "local"
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 461,
+        "title": "The Lion King 3: Hakuna Matata",
+        "originalTitle": "The Lion King 3: Hakuna Matata",
+        "year": 2004,
+        "duration": "1h 17min",
+        "rating": 6.5,
+        "contentRating": "G",
+        "quality": "Local",
+        "genres": [
+            "Aventura",
+            "Animação",
+            "Comédia",
+            "Família"
+        ],
+        "overview": "Timão e Pumba começam a assistir o primeiro filme do Rei Leão, e Timão fica insistindo para que Pumba avance até a parte em que eles aparecem, porque eles não estão no início do filme. A partir daí, Pumba resolve contar um pouco da história dos dois, que começa antes da jornada de Simba. Contam sobre a mãe de Timão e sobre o Tio Max, descobrem porque Timão deixou a colônia, e onde ele aprendeu o Hakuna Matata. Também relatam como os dois se conheceram, e os perigos que enfrentaram enquanto procuravam pelo lar dos sonhos.",
+        "poster": "assets/posters/the-lion-king-3-hakuna-matata-2004-poster.jpg",
+        "backdrop": "assets/backdrops/the-lion-king-3-hakuna-matata-2004-backdrop.jpg",
+        "video": "assets/movies/The Lion King 3 Hakuna Matata (2004) [tt0318403].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:44:54.826Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0318403",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 3793670172,
+        "fileModifiedAt": "2026-09-05T23:44:54.826Z",
+        "lastIndexedAt": "2026-09-06T00:26:39.287Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-lion-king-3-hakuna-matata-2004-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/461-pt-br.vtt",
+                "default": true,
+                "source": "local"
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 462,
+        "title": "The Lion King 2: Simba's Pride",
+        "originalTitle": "The Lion King 2: Simba's Pride",
+        "year": 1998,
+        "duration": "1h 21min",
+        "rating": 6.5,
+        "contentRating": "G",
+        "quality": "Local",
+        "genres": [
+            "Aventura",
+            "Animação",
+            "Drama",
+            "Família",
+            "Romance"
+        ],
+        "overview": "Kiara é a filhote de Simba e Nala. A pequena leoa tem um espírito livre e aventureiro. Um dia, ela resolve passear para além dos limites do território de seu pai e encontra os descendentes do maléfico Scar. Um dos descendentes do algoz de Mufasa é Kovu, que se torna um grande amigo de Kiara. Entretanto, o amor entre os dois leõezinhos irá reacender uma rivalidade histórica.",
+        "poster": "assets/posters/the-lion-king-2-simba-s-pride-1998-poster.jpg",
+        "backdrop": "assets/backdrops/the-lion-king-2-simba-s-pride-1998-backdrop.jpg",
+        "video": "assets/movies/The Lion King 2 Simba's Pride (1998) [tt0120131].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:44:55.059Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0120131",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 3911932227,
+        "fileModifiedAt": "2026-09-05T23:44:55.059Z",
+        "lastIndexedAt": "2026-09-06T00:26:40.096Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-lion-king-2-simba-s-pride-1998-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/462-pt-br.vtt",
+                "default": true,
+                "source": "local"
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 463,
+        "title": "The Matrix",
+        "originalTitle": "The Matrix",
+        "year": 1999,
+        "duration": "2h 16min",
+        "rating": 8.7,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Ficção científica"
+        ],
+        "overview": "O jovem programador Thomas Anderson é atormentado por estranhos pesadelos em que está sempre conectado por cabos a um imenso sistema de computadores do futuro. À medida que o sonho se repete, ele começa a desconfiar da realidade. Thomas conhece os misteriosos Morpheus e Trinity e descobre que é vítima de um sistema inteligente e artificial chamado Matrix, que manipula a mente das pessoas e cria a ilusão de um mundo real enquanto usa os cérebros e corpos dos indivíduos para produzir energia.",
+        "poster": "assets/posters/the-matrix-1999-poster.jpg",
+        "backdrop": "assets/backdrops/the-matrix-1999-backdrop.jpg",
+        "video": "assets/movies/The Matrix (1999) [tt0133093].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:24:37.747Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0133093",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 2186793537,
+        "fileModifiedAt": "2026-09-05T23:24:37.747Z",
+        "lastIndexedAt": "2026-09-06T00:26:40.905Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-matrix-1999-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/463-pt-br.vtt",
+                "default": true,
+                "source": "local"
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 464,
+        "title": "The Matrix Reloaded",
+        "originalTitle": "The Matrix Reloaded",
+        "year": 2003,
+        "duration": "2h 18min",
+        "rating": 7.2,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Aventura",
+            "Ação",
+            "Suspense",
+            "Ficção científica"
+        ],
+        "overview": "Após derrotar as máquinas em seu combate inicial, Neo ainda vive na Nabucodonosor ao lado de Morpheus, Trinity e Link, o novo tripulante da nave. As máquinas estão realizando uma grande ofensiva contra Zion, onde 250 mil delas escavam rumo à cidade e podem alcançá-la em poucos dias. A Nabucodonosor é convocada para retornar a Zion e participar da reunião que definirá o contra-ataque para salvar a humanidade da extinção. Entretanto, um recado enviado pelo Oráculo faz com que Neo retorne à Matrix.",
+        "poster": "assets/posters/the-matrix-reloaded-2003-poster.jpg",
+        "backdrop": "assets/backdrops/the-matrix-reloaded-2003-backdrop.jpg",
+        "video": "assets/movies/The Matrix Reloaded (2003) [tt0234215].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:24:04.841Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0234215",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 2189532924,
+        "fileModifiedAt": "2026-09-05T23:24:04.841Z",
+        "lastIndexedAt": "2026-09-06T00:26:41.705Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-matrix-reloaded-2003-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/464-pt-br.vtt",
+                "default": true,
+                "source": "local"
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 465,
+        "title": "The Matrix Revolutions",
+        "originalTitle": "The Matrix Revolutions",
+        "year": 2003,
+        "duration": "2h 09min",
+        "rating": 6.7,
+        "contentRating": "R",
+        "quality": "Local",
+        "genres": [
+            "Aventura",
+            "Ação",
+            "Suspense",
+            "Ficção científica"
+        ],
+        "overview": "Após enfrentar os sentinelas no mundo real, Neo, a maior esperança da humanidade, está preso entre a Matrix e a realidade. A maioria da população do planeta permanece em um estado de suspensão da realidade virtual. Os poucos humanos que estão cientes das duras realidades tentam desesperadamente afastar as máquinas a tempo de Neo escapar e salvar o dia. Mas as coisas pioram quando o poderoso programa de computador, Agente Smith, aparece na forma humana.",
+        "poster": "assets/posters/the-matrix-revolutions-2003-poster.jpg",
+        "backdrop": "assets/backdrops/the-matrix-revolutions-2003-backdrop.jpg",
+        "video": "assets/movies/The Matrix Revolutions (2003) [tt0242653].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:24:31.476Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0242653",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 2174749217,
+        "fileModifiedAt": "2026-09-05T23:24:31.476Z",
+        "lastIndexedAt": "2026-09-06T00:26:42.536Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/the-matrix-revolutions-2003-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/465-pt-br.vtt",
+                "default": true,
+                "source": "local"
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 466,
+        "title": "Top Gun",
+        "originalTitle": "Top Gun",
+        "year": 1986,
+        "duration": "1h 50min",
+        "rating": 7,
+        "contentRating": "PG",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Drama",
+            "Romance"
+        ],
+        "overview": "A escola naval de pilotos é onde o melhor dos melhores treinam para refinar suas habilidades de voo de elite. Quando o piloto Maverick é enviado para a escola, sua atitude irresponsável e comportamento arrogante o colocam em desacordo com os outros pilotos, especialmente Iceman. Porém Maverick não está apenas competindo para ser o piloto superior de caça, ele também está lutando pela atenção de sua bonita instrutora de voo, Charlotte Blackwood.",
+        "poster": "assets/posters/top-gun-1986-poster.jpg",
+        "backdrop": "assets/backdrops/top-gun-1986-backdrop.jpg",
+        "video": "assets/movies/Top Gun (1986) [tt0092099].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:18:02.130Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt0092099",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 2764114213,
+        "fileModifiedAt": "2026-09-05T23:18:02.130Z",
+        "lastIndexedAt": "2026-09-06T00:26:43.328Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/top-gun-1986-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/top-gun-1986-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 467,
+        "title": "Top Gun: Maverick",
+        "originalTitle": "Top Gun: Maverick",
+        "year": 2022,
+        "duration": "2h 10min",
+        "rating": 8.2,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Drama"
+        ],
+        "overview": "Depois de mais de 30 anos de serviço como um dos principais aviadores da Marinha, Pete \"Maverick\" Mitchell está de volta, rompendo os limites como um piloto de testes corajoso. No mundo contemporâneo das guerras tecnológicas, Maverick enfrenta drones e prova que o fator humano ainda é essencial.",
+        "poster": "assets/posters/top-gun-maverick-2022-poster.jpg",
+        "backdrop": "assets/backdrops/top-gun-maverick-2022-backdrop.jpg",
+        "video": "assets/movies/Top Gun Maverick (2022) [tt1745960].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T23:26:11.237Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt1745960",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 6210491750,
+        "fileModifiedAt": "2026-09-05T23:26:11.237Z",
+        "lastIndexedAt": "2026-09-06T00:26:44.134Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/top-gun-maverick-2022-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/top-gun-maverick-2022-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
+    },
+    {
+        "id": 468,
+        "title": "Star Wars: The Mandalorian and Grogu",
+        "originalTitle": "Star Wars: The Mandalorian and Grogu",
+        "year": 2026,
+        "duration": "2h 12min",
+        "rating": 6.8,
+        "contentRating": "PG-13",
+        "quality": "Local",
+        "genres": [
+            "Ação",
+            "Aventura",
+            "Ficção científica"
+        ],
+        "overview": "O maligno Império caiu e os senhores da guerra Imperiais ainda estão espalhados pela galáxia. Enquanto a jovem Nova República luta para proteger tudo pelo que a Rebelião batalhou, ela conta com a ajuda do lendário caçador de recompensas Mandaloriano Din Djarin e seu jovem aprendiz Grogu.",
+        "poster": "assets/posters/star-wars-the-mandalorian-and-grogu-2026-poster.jpg",
+        "backdrop": "assets/backdrops/star-wars-the-mandalorian-and-grogu-2026-backdrop.jpg",
+        "video": "assets/movies/Star Wars The Mandalorian and Grogu (2026) [tt30825738].mkv",
+        "audience": "general",
+        "addedAt": "2026-09-05T22:41:52.235Z",
+        "progress": 0,
+        "favorite": false,
+        "featured": false,
+        "themes": [],
+        "imdbId": "tt30825738",
+        "identificationConfidence": "high",
+        "identificationReason": "IMDb ID confirmado.",
+        "metadataStatus": "complete",
+        "fileSize": 13434583070,
+        "fileModifiedAt": "2026-09-05T22:41:52.235Z",
+        "lastIndexedAt": "2026-09-06T00:28:20.397Z",
+        "subtitles": [
+            {
+                "label": "English",
+                "srclang": "en",
+                "src": "assets/subtitles/star-wars-the-mandalorian-and-grogu-2026-en.vtt",
+                "default": false
+            },
+            {
+                "label": "Portugues (Brasil)",
+                "srclang": "pt-br",
+                "src": "assets/subtitles/star-wars-the-mandalorian-and-grogu-2026-pt-br.vtt",
+                "default": true
+            }
+        ],
+        "fileStatus": "available",
+        "playable": true
     }
 ];
 
