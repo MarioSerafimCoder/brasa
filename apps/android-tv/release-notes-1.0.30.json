@@ -1,0 +1,5 @@
+[
+  "Corrigida a detecção de vídeos interrompidos antes do fim: o episódio não é marcado como concluído indevidamente.",
+  "Recuperação de congelamentos mesmo quando o player ainda informa reprodução ativa, respeitando pausas manuais.",
+  "Retomada no ponto exato após falhas, com tentativas limitadas e proteção contra interrupções por pré-carregamento."
+]

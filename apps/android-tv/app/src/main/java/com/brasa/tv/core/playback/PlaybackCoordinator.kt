@@ -29,10 +29,13 @@ class PlaybackCoordinator(
     private var generation = 0L
 
     suspend fun preload(baseUrl: String, info: PlaybackInfo) {
+        // A late focus/prefetch callback must never replace the movie being watched.
+        if (current?.preloading == false) return
         val requestGeneration = ++generation
         val simpleCache = if (info.playbackMode == "hls") null else cache.getOrCreate()
         withContext(Dispatchers.Main.immediate) {
             if (requestGeneration != generation) return@withContext
+            if (current?.preloading == false) return@withContext
             val factory = PlaybackFactory(appContext, http)
             val identity = factory.playbackIdentity(baseUrl, info)
             val cacheKey = if (info.playbackMode == "hls") null else factory.cacheKey(baseUrl, info)

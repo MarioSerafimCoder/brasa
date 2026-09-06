@@ -68,6 +68,7 @@ import com.brasa.tv.core.model.PlaybackInfo
 import com.brasa.tv.core.model.WatchProgress
 import com.brasa.tv.core.playback.PlaybackTimeline
 import com.brasa.tv.core.playback.SeekPolicy
+import com.brasa.tv.core.playback.PlaybackRecovery
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
@@ -78,6 +79,7 @@ import com.brasa.tv.designsystem.BrasaText
 import com.brasa.tv.designsystem.BrasaTextMuted
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import java.util.Locale
 
 @Composable
@@ -96,6 +98,7 @@ fun PlayerScreen(
         return
     }
     val info = state.playback
+    val recovery = remember(info?.mediaKey) { PlaybackRecovery() }
     val settings by container.settings.values.collectAsState(initial = AppSettings())
     if (info == null || settings.serverBaseUrl.isBlank()) {
         BackHandler(onBack = onBack)
@@ -114,7 +117,7 @@ fun PlayerScreen(
     } else {
         val identity = "${info.mediaKey}|${info.playbackMode}|${info.playbackRevision}|${info.playbackUrl}"
         key(identity) {
-            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, settings, container, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onBack)
+            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, settings, container, recovery, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onBack)
         }
     }
 }
@@ -149,6 +152,7 @@ private fun PlayerContent(
     serverBaseUrl: String,
     settings: AppSettings,
     container: AppContainer,
+    recovery: PlaybackRecovery,
     onProgress: (String, WatchProgress) -> Unit,
     onPlaybackFallback: (String) -> Unit,
     onRemoteSeek: (String, Long) -> Unit,
@@ -163,6 +167,7 @@ private fun PlayerContent(
     var loadAttempt by remember(playbackIdentity, serverBaseUrl) { mutableIntStateOf(0) }
     var retryPositionOverride by remember(playbackIdentity, serverBaseUrl) { mutableLongStateOf(info.resumePosition) }
     var retryCount by remember(playbackIdentity, serverBaseUrl) { mutableIntStateOf(0) }
+    var pendingRetry by remember(playbackIdentity, serverBaseUrl) { mutableStateOf<Job?>(null) }
     var fallbackRequested by remember(playbackIdentity, serverBaseUrl) { mutableStateOf(false) }
     LaunchedEffect(playbackIdentity, serverBaseUrl, loadAttempt) {
         acquiredPlayer = null
@@ -223,8 +228,10 @@ private fun PlayerContent(
 
     fun retryPlayback() {
         loadError = ""
-        retryPositionOverride = maxOf(player.currentPosition, info.resumePosition)
-        container.playback.release(player)
+        // This is local player time, including when resuming an offset HLS playlist.
+        retryPositionOverride = player.currentPosition.coerceAtLeast(0)
+        recovery.resetSampling()
+        // DisposableEffect owns release; releasing here too races the old listener/session.
         acquiredPlayer = null
         loadAttempt++
     }
@@ -262,6 +269,8 @@ private fun PlayerContent(
     }
     fun requestRemoteSeek(targetPosition: Long, recovery: Boolean = false) {
         if (recoveryRequested) return
+        pendingRetry?.cancel()
+        pendingRetry = null
         val total = duration.takeIf { it > 0 } ?: info.duration ?: Long.MAX_VALUE
         val target = targetPosition.coerceIn(0L, (total - 1_000).coerceAtLeast(0))
         recoveryRequested = true
@@ -319,10 +328,15 @@ private fun PlayerContent(
                 if (playbackState == Player.STATE_ENDED) {
                     val absolute = PlaybackTimeline.absolutePosition(info, player.currentPosition)
                     val total = PlaybackTimeline.absoluteDuration(info, player.duration.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L)
-                    val reachedRealEnd = total <= 0 || absolute >= total - 30_000 || absolute.toDouble() / total.coerceAtLeast(1L).toDouble() >= .98
-                    if (info.playbackMode == "hls" && !reachedRealEnd) {
-                        Log.w(TAG, "Playlist HLS terminou antes do filme em ${info.mediaKey}: $absolute/$total; solicitando continuação")
-                        requestRemoteSeek(absolute, recovery = true)
+                    if (PlaybackRecovery.isPrematureEnd(absolute, total)) {
+                        save()
+                        Log.w(TAG, "Mídia terminou antes da duração esperada em ${info.mediaKey}: $absolute/$total, modo=${info.playbackMode}")
+                        if (recovery.canRecoverPrematureEnd(absolute)) requestRemoteSeek(absolute, recovery = true)
+                        else {
+                            loadError = "O vídeo termina antes do esperado neste trecho. O arquivo pode estar incompleto ou danificado; confira a cópia no computador."
+                            player.pause()
+                            controlsVisible = true
+                        }
                     } else {
                         save(true)
                         ended = true
@@ -332,7 +346,6 @@ private fun PlayerContent(
             }
             override fun onRenderedFirstFrame() {
                 firstFrameRendered = true
-                retryCount = 0
                 Log.i(TAG, "Primeiro frame ${info.mediaKey} em ${SystemClock.elapsedRealtime() - startedAt}ms")
             }
             override fun onPlayerError(error: PlaybackException) {
@@ -345,14 +358,14 @@ private fun PlayerContent(
                 if (info.playbackMode == "direct" && isCompatibilityError(error) && !fallbackRequested) {
                     fallbackRequested = true
                     loadError = ""
-                    save()
-                    player.pause()
-                    onPlaybackFallback(info.mediaKey)
+                    requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true)
                     Log.w(TAG, "Fallback HLS solicitado para ${info.mediaKey}: ${error.errorCodeName}", error)
-                } else if (recoverable && retryCount < 2) {
-                    retryCount++
+                } else if (recoverable && pendingRetry?.isActive == true) {
+                    return
+                } else if (recoverable && recovery.beginRetry()) {
+                    retryCount = recovery.attempts
                     loadError = ""
-                    playbackScope.launch { delay(1_500L * retryCount); retryPlayback() }
+                    pendingRetry = playbackScope.launch { delay(1_500L * retryCount); retryPlayback() }
                     Log.w(TAG, "Tentativa $retryCount para ${info.mediaKey}: ${error.errorCodeName}", error)
                 } else {
                     loadError = publicPlaybackError(error)
@@ -362,6 +375,8 @@ private fun PlayerContent(
         }
         player.addListener(listener)
         onDispose {
+            pendingRetry?.cancel()
+            pendingRetry = null
             save()
             activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             player.removeListener(listener)
@@ -379,8 +394,8 @@ private fun PlayerContent(
                 player.pause()
                 onPlaybackFallback(info.mediaKey)
                 Log.w(TAG, "Fallback HLS solicitado: buffer recebido sem primeiro quadro para ${info.mediaKey}")
-            } else if (retryCount < 2) {
-                retryCount++
+            } else if (recovery.beginRetry()) {
+                retryCount = recovery.attempts
                 retryPlayback()
                 Log.w(TAG, "Player recriado: buffer recebido sem primeiro quadro para ${info.mediaKey}")
             } else {
@@ -392,21 +407,28 @@ private fun PlayerContent(
     }
     LaunchedEffect(player, firstFrameRendered) {
         if (!firstFrameRendered) return@LaunchedEffect
-        var previousPosition = player.currentPosition
-        var stalledFor = 0L
+        recovery.resetSampling()
         while (!recoveryRequested && !ended) {
             delay(2_000)
             val currentPosition = player.currentPosition
-            val shouldAdvance = player.playWhenReady && player.playbackState != Player.STATE_ENDED
-            val advanced = currentPosition > previousPosition + 250
-            stalledFor = if (shouldAdvance && !advanced && !player.isPlaying) stalledFor + 2_000 else 0
-            if (stalledFor >= 12_000) {
+            val shouldAdvance = player.playWhenReady && player.playbackState != Player.STATE_ENDED &&
+                player.playbackSuppressionReason == Player.PLAYBACK_SUPPRESSION_REASON_NONE &&
+                player.playerError == null && pendingRetry?.isActive != true && loadError.isBlank()
+            if (recovery.sample(SystemClock.elapsedRealtime(), currentPosition, shouldAdvance)) {
                 val absolute = PlaybackTimeline.absolutePosition(info, currentPosition)
-                Log.w(TAG, "Reprodução parou de avançar por ${stalledFor}ms em ${info.mediaKey}; retomando em $absolute")
-                requestRemoteSeek(absolute, recovery = true)
+                Log.w(TAG, "Reprodução sem avanço em ${info.mediaKey}: position=$absolute, state=${player.playbackState}, isPlaying=${player.isPlaying}")
+                if (recovery.beginRetry()) {
+                    retryCount = recovery.attempts
+                    retryPlayback()
+                } else if (recovery.canRecoverPrematureEnd(absolute)) {
+                    requestRemoteSeek(absolute, recovery = true)
+                } else {
+                    loadError = "Não foi possível continuar neste trecho. Confira a conexão e se o arquivo do vídeo está completo no computador."
+                    player.pause()
+                    controlsVisible = true
+                }
                 break
             }
-            previousPosition = currentPosition
         }
     }
     LaunchedEffect(player) { while (true) { delay(12_000); if (player.isPlaying) save(); if (BuildConfig.DEBUG) Log.d(TAG, "Buffer ${info.mediaKey}: ${player.totalBufferedDuration}ms") } }
