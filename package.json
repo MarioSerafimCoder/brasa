@@ -14,6 +14,9 @@
     "test:security": "node scripts/test-local-security.mjs",
     "test:library": "node scripts/test-library-health.mjs",
     "test:media": "node scripts/test-media-compatibility.mjs"
+    ,"test:media-integrity": "node scripts/test-media-integrity.mjs"
+    ,"media:audit-integrity": "node scripts/audit-media-integrity.mjs"
+    ,"media:quarantine-defective": "node scripts/audit-media-integrity.mjs --quarantine"
     ,"test:admin-auth": "node scripts/test-admin-auth.mjs"
     ,"test:admin-api": "node scripts/test-admin-api.mjs"
     ,"test:admin-library": "node scripts/test-admin-library.mjs"

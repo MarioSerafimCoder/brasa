@@ -25,6 +25,9 @@ data/library-health.json.corrupt-*
 data/sync-history.json
 data/sync-history.backup.json
 data/library-audit/
+data/library-integrity-scan.json
+data/library-integrity-report.json
+data/library-integrity-report.txt
 .brasa-server.json
 .brasa-admin.json
 .brasa-admin.json.corrupt-*

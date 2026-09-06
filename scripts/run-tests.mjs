@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 const suites = ["test-env-setup.mjs", "test-provider-recovery.mjs", "test-network-tv.mjs", "test-network-diagnostics.mjs", "test-android-tv-api.mjs", "test-android-tv-contract.mjs", "test-tv-collections.mjs", "test-http-range.mjs", "test-tv-library-cache.mjs", "test-android-tv-release.mjs", "test-android-tv-update-api.mjs", "test-tv-focus.mjs", "test-automatic-launcher.mjs", "test-browser-ui-regressions.mjs", "test-network-launchers.mjs", "test-android-tv-ui-regressions.mjs", "test-library-watcher.mjs", "test-sync-coordinator.mjs", "test-profiles.mjs", "test-migrations.mjs", "test-local-security.mjs", "test-library-health.mjs", "test-media-compatibility.mjs", "test-adaptive-streaming.mjs", "test-media-cache.mjs", "test-profiles-collections.mjs", "test-admin-auth.mjs", "test-admin-api.mjs", "test-admin-library.mjs", "test-admin-profiles.mjs", "test-admin-logs.mjs"];
 suites.splice(suites.indexOf("test-adaptive-streaming.mjs"), 0, "test-media-tools.mjs", "test-media-state.mjs", "test-media-priority.mjs", "test-hls-playlist-recovery.mjs", "test-recently-added.mjs");
+suites.splice(suites.indexOf("test-media-compatibility.mjs") + 1, 0, "test-media-integrity.mjs");
 let passed = 0;
 suites.push("test-library-scan.mjs");
 suites.push("test-new-episode-scan.mjs");
