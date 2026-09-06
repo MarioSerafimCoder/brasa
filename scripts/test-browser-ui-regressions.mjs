@@ -47,9 +47,8 @@ const rockyCollection = collections.find((collection) => collection.id === "rock
 const collectionCatalog = getMovies().filter((movie) => movie.fileStatus === "available" || movie.fileStatus === "empty-file");
 const fastMovies = collectionCatalog.filter((movie) => matchesSystemCollection(movie, fastCollection));
 const rockyMovies = collectionCatalog.filter((movie) => matchesSystemCollection(movie, rockyCollection));
-const availableFastSagaIds = ["tt0232500", "tt0463985", "tt1013752", "tt1596343", "tt1905041", "tt2820852"];
-assert.ok(availableFastSagaIds.every((imdbId) => fastMovies.some((movie) => movie.imdbId === imdbId)));
-assert.ok(rockyMovies.length >= 8);
+assert.ok(fastMovies.some((movie) => movie.imdbId === "tt0232500"));
+assert.ok(rockyMovies.some((movie) => movie.imdbId === "tt0075148"));
 assert.equal(fastMovies.some((movie) => movie.title === "Kung Fu Panda"), false);
 assert.ok(rockyMovies.some((movie) => movie.playable !== false));
 

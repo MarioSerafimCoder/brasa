@@ -42,7 +42,7 @@ for (const item of files) {
     const initial = mediaDiagnostics(demux.stderr, demux.code);
     let confirmation = null, status = "ok", destination = "";
     if (initial.suspicious) {
-        const decoded = await ffmpeg(["-nostdin", "-hide_banner", "-v", "error", "-xerror", "-i", item.file, "-map", "0:v:0", "-map", "0:a?", "-threads", "1", "-f", "null", "NUL"]);
+        const decoded = await ffmpeg(["-nostdin", "-hide_banner", "-v", "error", "-xerror", "-i", item.file, "-map", "0:v:0", "-map", "0:a?", "-threads", "0", "-f", "null", "NUL"]);
         confirmation = mediaDiagnostics(decoded.stderr, decoded.code);
         if (confirmation.suspicious || initial.evidence.length) {
             defective++;
@@ -102,11 +102,12 @@ async function availableDestination(item) {
 
 async function saveState(final = false) {
     const values = Object.values(entries), bad = values.filter((item) => ["defective", "quarantined"].includes(item.status));
+    const healthy = values.filter((item) => item.status === "ok");
     const state = { version: 1, startedAt: prior.startedAt || new Date().toISOString(), updatedAt: new Date().toISOString(), completedAt: final ? new Date().toISOString() : "", applyQuarantine, totalFiles: files.length, totalBytes, checked, entries };
     await atomicJson(stateFile, state);
-    const report = { generatedAt: state.updatedAt, completed: final, totals: { files: files.length, bytes: totalBytes, checked, defective: bad.length, quarantined: bad.filter((item) => item.status === "quarantined").length }, items: bad };
+    const report = { generatedAt: state.updatedAt, completed: final, totals: { files: files.length, auditedFiles: values.length, healthy: healthy.length, bytes: totalBytes, checked, defective: bad.length, quarantined: bad.filter((item) => item.status === "quarantined").length }, items: bad };
     await atomicJson(reportJson, report);
-    const lines = ["AUDITORIA DE INTEGRIDADE DA BIBLIOTECA BRASA", `Gerado: ${report.generatedAt}`, `Arquivos: ${files.length} | Verificados: ${checked} | Defeituosos: ${report.totals.defective} | Quarentena: ${report.totals.quarantined}`, ""];
+    const lines = ["AUDITORIA DE INTEGRIDADE DA BIBLIOTECA BRASA", `Gerado: ${report.generatedAt}`, `Resultado acumulado: ${report.totals.auditedFiles} | Íntegros: ${report.totals.healthy} | Defeituosos: ${report.totals.defective} | Quarentena: ${report.totals.quarantined}`, `Arquivos atualmente disponíveis: ${files.length} | Verificados nesta execução: ${checked}`, ""];
     for (const item of bad) lines.push(`[${item.status.toUpperCase()}] ${item.relativeFile}`, `Origem: ${item.source}`, `Destino: ${item.destination || "não movido"}`, ...(item.evidence || []).map((line) => `Erro: ${line}`), "");
     await fs.writeFile(`${reportTxt}.tmp`, `${lines.join("\n")}\n`, "utf8");
     await fs.rename(`${reportTxt}.tmp`, reportTxt);
