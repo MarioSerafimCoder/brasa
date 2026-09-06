@@ -27,6 +27,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,9 +74,12 @@ fun CollectionsScreen(
     onRefresh: () -> Unit,
 ) {
     val catalog = state.catalog
-    var selectedId by remember(state.profile?.id) { mutableStateOf<String?>(null) }
+    var selectedId by rememberSaveable(state.profile?.id) { mutableStateOf<String?>(null) }
+    val overviewGridState = rememberLazyGridState()
+    val movieGridState = rememberSaveable(selectedId, saver = LazyGridState.Saver) { LazyGridState() }
+    val focusMemory = rememberCatalogFocus("collections:${state.profile?.id}")
     val selected = catalog?.collections?.firstOrNull { it.id == selectedId }
-    BackHandler { if (selected != null) selectedId = null else onHome() }
+    BackHandler { if (selected != null) { focusMemory.restore("collection:${selected.id}"); selectedId = null } else onHome() }
     LaunchedEffect(state.profile?.id) { if (state.profile != null) onRefresh() }
 
     if (catalog == null) {
@@ -104,12 +111,13 @@ fun CollectionsScreen(
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Fixed(3),
+                state = overviewGridState,
                 contentPadding = PaddingValues(bottom = BrasaSpacing.x8),
                 horizontalArrangement = Arrangement.spacedBy(18.dp),
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 items(catalog.collections, key = Collection::id) { collection ->
-                    CollectionCard(collection) { selectedId = collection.id }
+                    CollectionCard(collection, modifier = focusMemory.modifier("collection:${collection.id}")) { focusMemory.select("collection:${collection.id}"); selectedId = collection.id }
                 }
             }
         } else {
@@ -124,12 +132,13 @@ fun CollectionsScreen(
             LazyVerticalGrid(
                 modifier = Modifier.fillMaxSize(),
                 columns = GridCells.Fixed(8),
+                state = movieGridState,
                 contentPadding = PaddingValues(bottom = BrasaSpacing.x8),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 items(selected.items, key = { it.mediaKey.ifBlank { it.id } }) { movie ->
-                    MediaCard(movie, { onItem(movie) }, format = MediaCardFormat.CompactPoster)
+                    MediaCard(movie, { focusMemory.select(movie.mediaKey); onItem(movie) }, modifier = focusMemory.modifier(movie.mediaKey), format = MediaCardFormat.CompactPoster)
                 }
             }
         }
@@ -137,12 +146,12 @@ fun CollectionsScreen(
 }
 
 @Composable
-private fun CollectionCard(collection: Collection, onClick: () -> Unit) {
+private fun CollectionCard(collection: Collection, modifier: Modifier = Modifier, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (focused) 1.035f else 1f, tween(160), label = "collectionScale")
     val artwork = collection.banner.ifBlank { collection.items.firstOrNull()?.backdrop ?: collection.items.firstOrNull()?.poster.orEmpty() }
     Box(
-        Modifier.fillMaxWidth().aspectRatio(2.35f)
+        modifier.fillMaxWidth().aspectRatio(2.35f)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .shadow(if (focused) 12.dp else 2.dp, RoundedCornerShape(14.dp))
             .background(BrasaBackground, RoundedCornerShape(14.dp))

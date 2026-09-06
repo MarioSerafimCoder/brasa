@@ -22,6 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -55,8 +57,10 @@ fun SearchScreen(
 ) {
     BackHandler(onBack = onBack)
     LaunchedEffect(state.profile?.id) { if (state.profile != null) onRefresh() }
-    var query by remember { mutableStateOf("") }
-    var selectedGenre by remember(state.profile?.id) { mutableStateOf("Todos") }
+    var query by rememberSaveable(state.profile?.id) { mutableStateOf("") }
+    var selectedGenre by rememberSaveable(state.profile?.id) { mutableStateOf("Todos") }
+    val focusMemory = rememberCatalogFocus("search:${state.profile?.id}")
+    LaunchedEffect(state.profile?.id) { if (query.isNotBlank()) onSearch(query) }
     val catalogItems = remember(state.catalog) { state.catalog?.let { it.movies + it.series }.orEmpty() }
     val genres = remember(catalogItems) { catalogItems.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinct().sorted() }
     val results = remember(query, selectedGenre, state.searchResults, catalogItems) {
@@ -114,7 +118,7 @@ fun SearchScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             items(results, key = { it.mediaKey }) { item ->
-                MediaCard(item, { onItem(item) }, format = if (item.type == "series") MediaCardFormat.Landscape else MediaCardFormat.Poster)
+                MediaCard(item, { focusMemory.select(item.mediaKey); onItem(item) }, modifier = focusMemory.modifier(item.mediaKey), format = if (item.type == "series") MediaCardFormat.Landscape else MediaCardFormat.Poster)
             }
         }
     }

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
+import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -33,6 +34,7 @@ import com.brasa.tv.designsystem.LocalCardDensity
 fun CatalogScreen(state: BrasaUiState, onItem: (CatalogItem) -> Unit, onBack: () -> Unit) {
     BackHandler(onBack = onBack)
     val row = state.selectedRow
+    val focusMemory = rememberCatalogFocus("row:${state.profile?.id}:${row?.id}")
     val cardDensity=LocalCardDensity.current
     Column(Modifier.fillMaxSize().background(BrasaBackground).padding(horizontal = BrasaSpacing.safe)) {
         BrasaTopBar(Modifier.padding(top = BrasaSpacing.x2), active = row?.title.orEmpty(), onHome = onBack, profileInitials = state.profile?.initials.orEmpty())
@@ -47,7 +49,7 @@ fun CatalogScreen(state: BrasaUiState, onItem: (CatalogItem) -> Unit, onBack: ()
             verticalArrangement = Arrangement.spacedBy(BrasaSpacing.x4),
         ) {
             items(row?.items.orEmpty(), key = { it.mediaKey.ifBlank { it.id } }) { item ->
-                MediaCard(item, { onItem(item) }, format = MediaCardFormat.Poster)
+                MediaCard(item, { focusMemory.select(item.mediaKey); onItem(item) }, modifier = focusMemory.modifier(item.mediaKey), format = MediaCardFormat.Poster)
             }
         }
     }

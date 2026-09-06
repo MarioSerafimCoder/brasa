@@ -22,6 +22,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -77,6 +80,8 @@ fun KidsHomeScreen(
     val hero = heroes.getOrNull(heroIndex % heroes.size.coerceAtLeast(1))
     val firstFocus = remember { FocusRequester() }
     val listState = rememberLazyListState()
+    val focusMemory = rememberCatalogFocus("kids-home:${state.profile?.id}")
+    var initialFocusSet by rememberSaveable(state.profile?.id) { mutableStateOf(false) }
     LaunchedEffect(heroes, state.profile?.id) {
         if (heroes.size > 1) while (true) {
             delay(12_000)
@@ -84,9 +89,11 @@ fun KidsHomeScreen(
         }
     }
     LaunchedEffect(state.profile?.id, heroes.isNotEmpty()) {
+        if (initialFocusSet || heroes.isEmpty()) return@LaunchedEffect
         listState.scrollToItem(0)
         delay(80)
         runCatching { firstFocus.requestFocus() }
+        initialFocusSet = true
     }
     LaunchedEffect(hero?.mediaKey) { hero?.let(onPrefetch) }
 
@@ -133,8 +140,8 @@ fun KidsHomeScreen(
                             Text(hero.overview, color = Color.White.copy(alpha = .86f), fontSize = 17.sp, lineHeight = 23.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(18.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                BrasaButton("Assistir", { onPlay(hero) }, Modifier.focusRequester(firstFocus), style = BrasaButtonStyle.Primary, leading = "▶")
-                                BrasaButton("Ver detalhes", { onItem(hero) })
+                                BrasaButton("Assistir", { focusMemory.select("hero-play"); onPlay(hero) }, focusMemory.modifier("hero-play").focusRequester(firstFocus), style = BrasaButtonStyle.Primary, leading = "▶")
+                                BrasaButton("Ver detalhes", { focusMemory.select("hero-details"); onItem(hero) }, modifier = focusMemory.modifier("hero-details"))
                             }
                         }
                     }
@@ -147,7 +154,8 @@ fun KidsHomeScreen(
                     kidsTitle(row.title),
                     Modifier.padding(start = BrasaSpacing.safe, end = BrasaSpacing.safe, top = 18.dp, bottom = 8.dp),
                     action = "Ver tudo  ›",
-                    onAction = { onSeeMore(row) },
+                    onAction = { focusMemory.select("row:${row.id}"); onSeeMore(row) },
+                    actionModifier = focusMemory.modifier("row:${row.id}"),
                 )
                 LazyRow(
                     modifier = Modifier.focusRestorer(),
@@ -155,7 +163,8 @@ fun KidsHomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(20.dp),
                 ) {
                     items(row.items, key = { it.mediaKey.ifBlank { it.id } }) { item ->
-                        MediaCard(item, { onItem(item) }, format = MediaCardFormat.Landscape, onFocused = { onPrefetch(item) })
+                        val key = "${row.id}:${item.mediaKey.ifBlank { item.id }}"
+                        MediaCard(item, { focusMemory.select(key); onItem(item) }, modifier = focusMemory.modifier(key), format = MediaCardFormat.Landscape, onFocused = { onPrefetch(item) })
                     }
                 }
                 Spacer(Modifier.height(20.dp))

@@ -28,6 +28,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,14 +79,16 @@ fun DetailsScreen(
     BackHandler(onBack = onBack)
     val item = state.selected ?: return MessagePanel("Conteúdo indisponível", "Volte e escolha outro item.", "Voltar", onBack)
     val playFocus = remember { FocusRequester() }
-    var selectedSeasonNumber by remember(item.mediaKey) { mutableStateOf(item.seasons.firstOrNull()?.seasonNumber ?: 0) }
+    var selectedSeasonNumber by rememberSaveable(item.mediaKey) { mutableStateOf(item.seasons.firstOrNull()?.seasonNumber ?: 0) }
+    val focusMemory = rememberCatalogFocus("details:${state.profile?.id}:${item.mediaKey}")
+    var initialFocusSet by rememberSaveable(item.mediaKey) { mutableStateOf(false) }
     val selectedSeason = item.seasons.firstOrNull { it.seasonNumber == selectedSeasonNumber } ?: item.seasons.firstOrNull()
     val firstPlayable = selectedSeason?.episodes?.firstOrNull() ?: item
     var keepPreload by remember(item.mediaKey) { mutableStateOf(false) }
 
     LaunchedEffect(item.mediaKey, selectedSeasonNumber) {
         onPrefetch(firstPlayable)
-        runCatching { playFocus.requestFocus() }
+        if (!initialFocusSet) { runCatching { playFocus.requestFocus() }; initialFocusSet = true }
     }
     DisposableEffect(item.mediaKey) { onDispose { if (!keepPreload) onCancelPreload() } }
 
@@ -123,8 +127,8 @@ fun DetailsScreen(
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         BrasaButton(
                             continueLabel(firstPlayable),
-                            { keepPreload = true; onPlay(firstPlayable) },
-                            Modifier.focusRequester(playFocus),
+                            { focusMemory.select("play"); keepPreload = true; onPlay(firstPlayable) },
+                            focusMemory.modifier("play").focusRequester(playFocus),
                             enabled = firstPlayable.streamUrl.isNotBlank(),
                             style = BrasaButtonStyle.Primary,
                             leading = "▶",
@@ -164,7 +168,8 @@ fun DetailsScreen(
                     horizontalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
                     items(selectedSeason?.episodes.orEmpty(), key = { it.mediaKey }) { episode ->
-                        EpisodeCard(episode, onFocused = { onPrefetch(episode) }) {
+                        EpisodeCard(episode, modifier = focusMemory.modifier(episode.mediaKey), onFocused = { onPrefetch(episode) }) {
+                            focusMemory.select(episode.mediaKey)
                             keepPreload = true
                             onPlay(episode)
                         }
@@ -176,11 +181,11 @@ fun DetailsScreen(
 }
 
 @Composable
-private fun EpisodeCard(episode: CatalogItem, onFocused: () -> Unit, onClick: () -> Unit) {
+private fun EpisodeCard(episode: CatalogItem, modifier: Modifier = Modifier, onFocused: () -> Unit, onClick: () -> Unit) {
     var focused by remember { mutableStateOf(false) }
     LaunchedEffect(focused, episode.mediaKey) { if (focused) { delay(180); onFocused() } }
     Column(
-        Modifier.width(330.dp).graphicsLayer { scaleX = if (focused) 1.035f else 1f; scaleY = if (focused) 1.035f else 1f }
+        modifier.width(330.dp).graphicsLayer { scaleX = if (focused) 1.035f else 1f; scaleY = if (focused) 1.035f else 1f }
             .background(BrasaSurface, RoundedCornerShape(16.dp))
             .border(if (focused) 3.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp)).onFocusChanged { focused = it.isFocused }.clickable(role = Role.Button, onClick = onClick),

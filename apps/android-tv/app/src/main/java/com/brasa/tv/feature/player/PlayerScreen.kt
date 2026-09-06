@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -52,6 +53,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.Tracks
+import androidx.media3.ui.CaptionStyleCompat
+import androidx.media3.ui.SubtitleView
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
@@ -63,6 +67,7 @@ import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.core.model.PlaybackInfo
 import com.brasa.tv.core.model.WatchProgress
 import com.brasa.tv.core.playback.PlaybackTimeline
+import com.brasa.tv.core.playback.SeekPolicy
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
@@ -109,7 +114,7 @@ fun PlayerScreen(
     } else {
         val identity = "${info.mediaKey}|${info.playbackMode}|${info.playbackRevision}|${info.playbackUrl}"
         key(identity) {
-            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, container, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onBack)
+            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, settings, container, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onBack)
         }
     }
 }
@@ -142,6 +147,7 @@ private fun PlayerContent(
     playbackIdentity: String,
     title: String,
     serverBaseUrl: String,
+    settings: AppSettings,
     container: AppContainer,
     onProgress: (String, WatchProgress) -> Unit,
     onPlaybackFallback: (String) -> Unit,
@@ -200,7 +206,20 @@ private fun PlayerContent(
     var seekPreview by remember(player) { mutableLongStateOf(-1L) }
     var remoteSeekTarget by remember(player) { mutableLongStateOf(-1L) }
     var recoveryRequested by remember(player) { mutableStateOf(false) }
+    var trackDialogType by remember(player) { mutableStateOf<Int?>(null) }
+    var restoreTrackFocus by remember(player) { mutableStateOf(false) }
+    var currentTracks by remember(player) { mutableStateOf(player.currentTracks) }
     val playbackScope = rememberCoroutineScope()
+    LaunchedEffect(player) {
+        player.trackSelectionParameters = applyPlaybackPreferences(player.trackSelectionParameters, settings)
+    }
+    LaunchedEffect(trackDialogType, restoreTrackFocus) {
+        if (trackDialogType == null && restoreTrackFocus) {
+            withFrameNanos { }
+            runCatching { playFocus.requestFocus() }
+            restoreTrackFocus = false
+        }
+    }
 
     fun retryPlayback() {
         loadError = ""
@@ -252,19 +271,26 @@ private fun PlayerContent(
         centerNotice = if (recovery) "Reconectando em ${formatTime(target)}…" else "Carregando ${formatTime(target)}…"
         onRemoteSeek(info.mediaKey, target)
     }
-    fun seekBy(delta: Long) {
-        val target = (PlaybackTimeline.absolutePosition(info, player.currentPosition) + delta)
-            .coerceIn(0L, (duration.takeIf { it > 0 } ?: info.duration ?: Long.MAX_VALUE) - 1_000)
+    fun seekToPosition(targetPosition: Long) {
+        val total = duration.takeIf { it > 0 } ?: info.duration ?: Long.MAX_VALUE
+        val target = targetPosition.coerceIn(0L, (total - 1_000).coerceAtLeast(0))
         val localTarget = target - info.playbackOffset
-        val canSeekLocally = localTarget >= 0 && target <= buffered - 2_000
+        val canSeekLocally = SeekPolicy.canSeekLocally(
+            info.playbackMode, info.supportsRange, player.isCurrentMediaItemSeekable,
+            target, info.playbackOffset, PlaybackTimeline.absolutePosition(info, player.currentPosition),
+            PlaybackTimeline.absolutePosition(info, player.bufferedPosition),
+        )
         if (canSeekLocally) {
             player.seekTo(localTarget)
             position = target
-            centerNotice = if (delta < 0) "↶ 10s" else "10s ↷"
+            centerNotice = formatTime(target)
         } else {
             requestRemoteSeek(target)
         }
         revealControls()
+    }
+    fun seekBy(delta: Long) {
+        seekToPosition(PlaybackTimeline.absolutePosition(info, player.currentPosition) + delta)
     }
 
     BackHandler { exit() }
@@ -276,6 +302,7 @@ private fun PlayerContent(
         var rebufferStartedAt = 0L
         var rebufferCount = 0
         val listener = object : Player.Listener {
+            override fun onTracksChanged(tracks: Tracks) { currentTracks = tracks }
             override fun onIsPlayingChanged(value: Boolean) { isPlaying = value; revealControls() }
             override fun onPlaybackStateChanged(playbackState: Int) {
                 val now = SystemClock.elapsedRealtime()
@@ -383,8 +410,8 @@ private fun PlayerContent(
         }
     }
     LaunchedEffect(player) { while (true) { delay(12_000); if (player.isPlaying) save(); if (BuildConfig.DEBUG) Log.d(TAG, "Buffer ${info.mediaKey}: ${player.totalBufferedDuration}ms") } }
-    LaunchedEffect(controlsVisible, interaction, isPlaying) {
-        if (controlsVisible && isPlaying && !ended) {
+    LaunchedEffect(controlsVisible, interaction, isPlaying, trackDialogType) {
+        if (controlsVisible && isPlaying && !ended && trackDialogType == null) {
             delay(4_000)
             controlsVisible = false
             runCatching { rootFocus.requestFocus() }
@@ -431,7 +458,20 @@ private fun PlayerContent(
         AndroidView(
             factory = { PlayerView(it).apply { useController = false; this.player = player } },
             modifier = Modifier.fillMaxSize(),
-            update = { it.player = player },
+            update = { view ->
+                view.player = player
+                view.subtitleView?.apply {
+                    setApplyEmbeddedStyles(false)
+                    setApplyEmbeddedFontSizes(false)
+                    setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * settings.subtitleSize)
+                    setStyle(CaptionStyleCompat(
+                        android.graphics.Color.WHITE,
+                        if (settings.subtitleStyle == "background") 0xB3000000.toInt() else android.graphics.Color.TRANSPARENT,
+                        android.graphics.Color.TRANSPARENT, CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+                        android.graphics.Color.BLACK, null,
+                    ))
+                }
+            },
         )
 
         if (loadError.isNotBlank()) {
@@ -497,7 +537,7 @@ private fun PlayerContent(
                                 true
                             }
                             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                                requestRemoteSeek(seekPreview.takeIf { it >= 0 } ?: position)
+                                seekToPosition(seekPreview.takeIf { it >= 0 } ?: position)
                                 seekPreview = -1L
                                 true
                             }
@@ -544,9 +584,9 @@ private fun PlayerContent(
                     Spacer(Modifier.width(11.dp))
                     BrasaButton("10s", { seekBy(10_000) }, leading = "↷")
                     Spacer(Modifier.width(22.dp))
-                    BrasaButton("Áudio", { trackNotice = cycleAudio(player); revealControls() })
+                    BrasaButton("Áudio", { trackDialogType = C.TRACK_TYPE_AUDIO; revealControls() })
                     Spacer(Modifier.width(9.dp))
-                    BrasaButton("Legenda", { trackNotice = cycleSubtitle(player); revealControls() })
+                    BrasaButton("Legenda", { trackDialogType = C.TRACK_TYPE_TEXT; revealControls() })
                     if (info.playbackMode == "hls") {
                         Spacer(Modifier.width(9.dp))
                         BrasaButton(selectedQuality, { selectedQuality = cycleQuality(player, info, selectedQuality); trackNotice = "Qualidade: $selectedQuality"; revealControls() })
@@ -557,6 +597,36 @@ private fun PlayerContent(
 
         if (centerNotice.isNotBlank()) {
             Text(centerNotice, modifier = Modifier.align(Alignment.Center).background(Color.Black.copy(alpha = .72f), RoundedCornerShape(50)).padding(horizontal = 26.dp, vertical = 14.dp), color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        }
+
+        trackDialogType?.let { type ->
+            TrackSelectionDialog(
+                type = type, tracks = playbackTracks(currentTracks, type),
+                subtitlesDisabled = C.TRACK_TYPE_TEXT in player.trackSelectionParameters.disabledTrackTypes,
+                settings = settings,
+                onSelect = { track ->
+                    player.trackSelectionParameters = selectPlaybackTrack(player.trackSelectionParameters, type, track)
+                    playbackScope.launch {
+                        if (type == C.TRACK_TYPE_AUDIO) container.settings.saveAudioLanguage(settings.selectedProfileId, track?.language.orEmpty())
+                        else container.settings.saveSubtitleChoice(settings.selectedProfileId, if (track == null) "off" else "language", track?.language.orEmpty())
+                    }
+                    trackDialogType = null
+                    revealControls()
+                    restoreTrackFocus = true
+                },
+                onAutomaticAudio = {
+                    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+                        .clearOverridesOfType(C.TRACK_TYPE_AUDIO).setPreferredAudioLanguage(null)
+                        .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false).build()
+                    playbackScope.launch { container.settings.saveAudioLanguage(settings.selectedProfileId, "") }
+                    trackDialogType = null
+                    revealControls()
+                    restoreTrackFocus = true
+                },
+                onSize = { size -> playbackScope.launch { container.settings.saveSubtitleSize(settings.selectedProfileId, size) } },
+                onStyle = { style -> playbackScope.launch { container.settings.saveSubtitleStyle(settings.selectedProfileId, style) } },
+                onDismiss = { trackDialogType = null; revealControls(); restoreTrackFocus = true },
+            )
         }
 
         if (ended && info.nextEpisode != null) {
@@ -588,30 +658,6 @@ private fun formatTime(milliseconds: Long): String {
     else String.format(Locale.ROOT, "%02d:%02d", minutes, seconds)
 }
 
-private fun cycleAudio(player: ExoPlayer): String {
-    val languages = player.currentTracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }.flatMap { group ->
-        (0 until group.length).mapNotNull { group.getTrackFormat(it).language }
-    }.distinct()
-    if (languages.isEmpty()) return "Nenhuma faixa de áudio alternativa"
-    val current = player.trackSelectionParameters.preferredAudioLanguages.firstOrNull()
-    val next = languages[(languages.indexOf(current) + 1).coerceAtLeast(0) % languages.size]
-    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().setPreferredAudioLanguage(next).build()
-    return "Áudio: ${next.uppercase(Locale.ROOT)}"
-}
-
-private fun cycleSubtitle(player: ExoPlayer): String {
-    val languages = player.currentTracks.groups.filter { it.type == C.TRACK_TYPE_TEXT }.flatMap { group ->
-        (0 until group.length).mapNotNull { group.getTrackFormat(it).language }
-    }.distinct()
-    val current = player.trackSelectionParameters.preferredTextLanguages.firstOrNull()
-    if (languages.isEmpty() || current == languages.lastOrNull()) {
-        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build()
-        return if (languages.isEmpty()) "Nenhuma legenda disponível" else "Legendas desativadas"
-    }
-    val next = languages[(languages.indexOf(current) + 1).coerceAtLeast(0) % languages.size]
-    player.trackSelectionParameters = player.trackSelectionParameters.buildUpon().setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false).setPreferredTextLanguage(next).build()
-    return "Legenda: ${next.uppercase(Locale.ROOT)}"
-}
 
 private fun cycleQuality(player: ExoPlayer, info: PlaybackInfo, current: String): String {
     val options = listOf("Automática") + info.qualities

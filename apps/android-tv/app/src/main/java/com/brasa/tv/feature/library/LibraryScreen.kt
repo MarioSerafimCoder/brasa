@@ -22,6 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
@@ -66,9 +68,12 @@ fun LibraryScreen(
     val title = if (type == "series") "Séries" else "Filmes"
     val source = if (type == "series") catalog.series else catalog.movies
     val genres = remember(source) { source.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinct().sorted() }
-    var selectedGenre by remember(type, state.profile?.id) { mutableStateOf("Todos") }
-    val items = remember(source, selectedGenre) {
-        if (selectedGenre == "Todos") source else source.filter { selectedGenre in it.genres }
+    var selectedGenre by rememberSaveable(type, state.profile?.id) { mutableStateOf("Todos") }
+    var order by rememberSaveable(type, state.profile?.id) { mutableStateOf(CatalogOrder.ORIGINAL) }
+    var unwatchedOnly by rememberSaveable(type, state.profile?.id) { mutableStateOf(false) }
+    val focusMemory = rememberCatalogFocus("$type:${state.profile?.id}")
+    val items = remember(source, selectedGenre, order, unwatchedOnly) {
+        orderCatalog(if (selectedGenre == "Todos") source else source.filter { selectedGenre in it.genres }, order, unwatchedOnly)
     }
     val kids = state.profile?.kind == "kids"
     val cardDensity = LocalCardDensity.current
@@ -116,6 +121,12 @@ fun LibraryScreen(
             }
         }
         Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            BrasaButton("Ordem: ${order.label}", { order = CatalogOrder.entries[(order.ordinal + 1) % CatalogOrder.entries.size] })
+            BrasaButton(if (unwatchedOnly) "✓ Não assistidos" else "Não assistidos", { unwatchedOnly = !unwatchedOnly },
+                style = if (unwatchedOnly) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
+        }
+        Spacer(Modifier.height(10.dp))
         LazyVerticalGrid(
             modifier = Modifier.fillMaxSize(),
             columns = if (type == "movie") GridCells.Fixed(8) else GridCells.Adaptive(188.dp * cardDensity),
@@ -124,7 +135,8 @@ fun LibraryScreen(
             verticalArrangement = Arrangement.spacedBy(if (type == "movie") 14.dp else BrasaSpacing.x4),
         ) {
             items(items, key = { it.mediaKey.ifBlank { it.id } }) { item ->
-                MediaCard(item, { onItem(item) }, format = if (type == "series") MediaCardFormat.Landscape else MediaCardFormat.CompactPoster)
+                val key = item.mediaKey.ifBlank { item.id }
+                MediaCard(item, { focusMemory.select(key); onItem(item) }, modifier = focusMemory.modifier(key), format = if (type == "series") MediaCardFormat.Landscape else MediaCardFormat.CompactPoster)
             }
         }
     }

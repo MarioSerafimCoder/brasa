@@ -10,6 +10,7 @@ val configuredVersionName=appVersion.getProperty("VERSION_NAME")?.takeIf{it.matc
 val signingValues=listOf("BRASA_TV_KEYSTORE_PATH","BRASA_TV_KEYSTORE_PASSWORD","BRASA_TV_KEY_ALIAS","BRASA_TV_KEY_PASSWORD").associateWith{System.getenv(it).orEmpty()}
 val releaseSigningReady=signingValues.values.all(String::isNotBlank)
 val publicCertificateFingerprint=rootProject.file("release-certificate.sha256").takeIf{it.isFile}?.readText()?.trim()?.uppercase().orEmpty()
+val robolectricRuntimeDir=providers.gradleProperty("brasaRobolectricRuntimeDir").orNull
 
 android {
     namespace = "com.brasa.tv"
@@ -31,7 +32,15 @@ android {
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     packaging { resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}") }
-    testOptions { unitTests.isIncludeAndroidResources = true }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+        unitTests.all {
+            robolectricRuntimeDir?.let { directory ->
+                it.systemProperty("robolectric.offline", "true")
+                it.systemProperty("robolectric.dependency.dir", directory)
+            }
+        }
+    }
 }
 
 val validateReleaseSigning=tasks.register("validateReleaseSigning"){
@@ -52,5 +61,8 @@ dependencies {
     implementation(libs.datastore); implementation(libs.coroutines.android); implementation(libs.serialization.json)
     implementation(libs.okhttp); implementation(libs.okhttp.logging); implementation(libs.coil.compose); implementation(libs.coil.network)
     testImplementation(libs.junit); testImplementation(libs.mockwebserver)
+    testImplementation("org.robolectric:robolectric:4.16")
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.test.junit4)
     androidTestImplementation(libs.androidx.junit); androidTestImplementation(libs.espresso.core); androidTestImplementation(libs.compose.test.junit4)
 }

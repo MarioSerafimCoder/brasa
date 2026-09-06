@@ -179,11 +179,11 @@ private fun NavItem(text: String, active: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-fun SectionHeading(title: String, modifier: Modifier = Modifier, action: String? = null, onAction: (() -> Unit)? = null) {
+fun SectionHeading(title: String, modifier: Modifier = Modifier, action: String? = null, onAction: (() -> Unit)? = null, actionModifier: Modifier = Modifier) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(title, color = BrasaText, fontSize = BrasaType.section, fontWeight = FontWeight.Bold)
         Spacer(Modifier.weight(1f))
-        if (action != null && onAction != null) BrasaButton(action, onAction, style = BrasaButtonStyle.Ghost)
+        if (action != null && onAction != null) BrasaButton(action, onAction, modifier = actionModifier, style = BrasaButtonStyle.Ghost)
     }
 }
 
