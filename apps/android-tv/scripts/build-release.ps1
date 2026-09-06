@@ -23,8 +23,17 @@ try{
     }
     if($KeyAlias -notmatch '^[A-Za-z0-9._-]{3,64}$'){throw "Alias de chave inválido."}
     $env:BRASA_TV_KEY_ALIAS=$KeyAlias
+    $gradleArguments=@("test","lint","assembleRelease")
+    $robolectricSource=Get-ChildItem (Join-Path $env:USERPROFILE ".m2\repository\org\robolectric\android-all-instrumented") -Recurse -Filter "android-all-instrumented-*.jar" -ErrorAction SilentlyContinue|Sort-Object LastWriteTime -Descending|Select-Object -First 1
+    if($robolectricSource){
+        $robolectricRuntime=Join-Path $env:PUBLIC "BRasaTVTestRuntime"
+        New-Item -ItemType Directory -Path $robolectricRuntime -Force|Out-Null
+        $runtimeCopy=Join-Path $robolectricRuntime $robolectricSource.Name
+        if(-not(Test-Path -LiteralPath $runtimeCopy)-or(Get-Item -LiteralPath $runtimeCopy).Length-ne$robolectricSource.Length){Copy-Item -LiteralPath $robolectricSource.FullName -Destination $runtimeCopy -Force}
+        $gradleArguments+="-PbrasaRobolectricRuntimeDir=$($robolectricRuntime.Replace('\','/'))"
+    }
     Push-Location $projectRoot
-    try{& .\gradlew.bat test lint assembleRelease;if($LASTEXITCODE-ne 0){throw "Testes, lint ou build release falharam."}}finally{Pop-Location}
+    try{& .\gradlew.bat @gradleArguments;if($LASTEXITCODE-ne 0){throw "Testes, lint ou build release falharam."}}finally{Pop-Location}
     $apk=Join-Path $projectRoot "app\build\outputs\apk\release\app-release.apk";if(-not(Test-Path $apk)){throw "APK release não foi gerado."}
     $sdkRoot=if($env:ANDROID_HOME){$env:ANDROID_HOME}else{Join-Path $projectRoot ".toolchain\android-sdk"}
     $apksigner=Get-ChildItem (Join-Path $sdkRoot "build-tools") -Recurse -Filter apksigner.bat -ErrorAction SilentlyContinue|Sort-Object FullName -Descending|Select-Object -First 1

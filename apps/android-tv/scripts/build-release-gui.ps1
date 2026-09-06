@@ -5,10 +5,44 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 $versionProperties=ConvertFrom-StringData (Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) "version.properties") -Raw)
 $versionName=$versionProperties.VERSION_NAME
+$credentialDirectory=Join-Path $env:LOCALAPPDATA "BRasa TV"
+$credentialFile=Join-Path $credentialDirectory "release-signing.xml"
+
+function Convert-SecureToPlain([Security.SecureString]$value){
+    $pointer=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($value)
+    try{[Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)}finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)}
+}
+
+function Invoke-ReleaseBuild([Security.SecureString]$storePassword,[Security.SecureString]$keyPassword){
+    $log=Join-Path $env:TEMP "brasa-tv-release-build.log"
+    try{
+        $env:BRASA_TV_KEYSTORE_PASSWORD=Convert-SecureToPlain $storePassword
+        $env:BRASA_TV_KEY_PASSWORD=Convert-SecureToPlain $keyPassword
+        & (Join-Path $PSScriptRoot "build-release.ps1") *>&1 | Out-File -LiteralPath $log -Encoding utf8
+        [Windows.Forms.MessageBox]::Show("APK $versionName gerado e assinado com sucesso.","BRasa TV",0,64)|Out-Null
+        return $true
+    }catch{
+        $_|Out-File -LiteralPath $log -Append -Encoding utf8
+        [Windows.Forms.MessageBox]::Show("Não foi possível gerar o APK. O diagnóstico foi salvo em $log","BRasa TV",0,16)|Out-Null
+        return $false
+    }finally{
+        Remove-Item Env:BRASA_TV_KEYSTORE_PASSWORD,Env:BRASA_TV_KEY_PASSWORD -ErrorAction SilentlyContinue
+    }
+}
+
+if(Test-Path -LiteralPath $credentialFile){
+    try{
+        $saved=Import-Clixml -LiteralPath $credentialFile
+        if($saved.StorePassword-isnot[Security.SecureString]-or$saved.KeyPassword-isnot[Security.SecureString]){throw "Credencial inválida."}
+        if(Invoke-ReleaseBuild $saved.StorePassword $saved.KeyPassword){exit 0}else{exit 1}
+    }catch{
+        [Windows.Forms.MessageBox]::Show("As credenciais protegidas não puderam ser usadas. Informe-as novamente para renovar o armazenamento.","BRasa TV",0,48)|Out-Null
+    }
+}
 
 $form=New-Object Windows.Forms.Form
 $form.Text="BRasa TV $versionName - Assinatura"
-$form.Size=New-Object Drawing.Size(470,250)
+$form.Size=New-Object Drawing.Size(470,285)
 $form.StartPosition="CenterScreen"
 $form.TopMost=$true
 $form.FormBorderStyle="FixedDialog"
@@ -35,11 +69,16 @@ $key=New-Object Windows.Forms.TextBox
 $key.Location=New-Object Drawing.Point(25,140);$key.Size=New-Object Drawing.Size(400,28);$key.UseSystemPasswordChar=$true
 $form.Controls.Add($key)
 
+$remember=New-Object Windows.Forms.CheckBox
+$remember.Text="Guardar com a proteção do Windows neste computador"
+$remember.Checked=$true;$remember.AutoSize=$true;$remember.Location=New-Object Drawing.Point(25,172)
+$form.Controls.Add($remember)
+
 $ok=New-Object Windows.Forms.Button
-$ok.Text="Gerar APK";$ok.Location=New-Object Drawing.Point(245,178);$ok.Size=New-Object Drawing.Size(86,30);$ok.DialogResult=[Windows.Forms.DialogResult]::OK
+$ok.Text="Gerar APK";$ok.Location=New-Object Drawing.Point(245,196);$ok.Size=New-Object Drawing.Size(86,30);$ok.DialogResult=[Windows.Forms.DialogResult]::OK
 $form.Controls.Add($ok);$form.AcceptButton=$ok
 $cancel=New-Object Windows.Forms.Button
-$cancel.Text="Cancelar";$cancel.Location=New-Object Drawing.Point(339,178);$cancel.Size=New-Object Drawing.Size(86,30);$cancel.DialogResult=[Windows.Forms.DialogResult]::Cancel
+$cancel.Text="Cancelar";$cancel.Location=New-Object Drawing.Point(339,196);$cancel.Size=New-Object Drawing.Size(86,30);$cancel.DialogResult=[Windows.Forms.DialogResult]::Cancel
 $form.Controls.Add($cancel);$form.CancelButton=$cancel
 $form.Add_Shown({$store.Select()})
 
@@ -48,17 +87,11 @@ if([string]::IsNullOrWhiteSpace($store.Text)-or[string]::IsNullOrWhiteSpace($key
     [Windows.Forms.MessageBox]::Show("Preencha as duas senhas.","BRasa TV",0,48)|Out-Null;exit 3
 }
 
-$log=Join-Path $env:TEMP "brasa-tv-release-build.log"
-try{
-    $env:BRASA_TV_KEYSTORE_PASSWORD=$store.Text;$env:BRASA_TV_KEY_PASSWORD=$key.Text
-    & (Join-Path $PSScriptRoot "build-release.ps1") *>&1 | Out-File -LiteralPath $log -Encoding utf8
-    [Windows.Forms.MessageBox]::Show("APK $versionName gerado e assinado com sucesso.","BRasa TV",0,64)|Out-Null
-}catch{
-    $_|Out-File -LiteralPath $log -Append -Encoding utf8
-    [Windows.Forms.MessageBox]::Show("Não foi possível gerar o APK. Confira as senhas. O diagnóstico foi salvo em $log","BRasa TV",0,16)|Out-Null
-    exit 1
-}finally{
-    $store.Text="";$key.Text=""
-    Remove-Item Env:BRASA_TV_KEYSTORE_PASSWORD,Env:BRASA_TV_KEY_PASSWORD -ErrorAction SilentlyContinue
-    $form.Dispose()
+$storeSecure=ConvertTo-SecureString $store.Text -AsPlainText -Force
+$keySecure=ConvertTo-SecureString $key.Text -AsPlainText -Force
+if($remember.Checked){
+    New-Item -ItemType Directory -Path $credentialDirectory -Force|Out-Null
+    [pscustomobject]@{StorePassword=$storeSecure;KeyPassword=$keySecure}|Export-Clixml -LiteralPath $credentialFile -Force
 }
+$store.Text="";$key.Text="";$form.Dispose()
+if(-not(Invoke-ReleaseBuild $storeSecure $keySecure)){exit 1}

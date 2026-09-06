@@ -52,6 +52,12 @@ A versão fica em `apps/android-tv/version.properties`. Nunca reutilize um `VERS
 
 O build solicita credenciais sem exibi-las, executa testes e lint, gera `apps/android-tv/app/build/outputs/apk/release/app-release.apk` e valida a assinatura. As variáveis aceitas são `BRASA_TV_KEYSTORE_PATH`, `BRASA_TV_KEYSTORE_PASSWORD`, `BRASA_TV_KEY_ALIAS` e `BRASA_TV_KEY_PASSWORD`; nunca as grave em arquivos ou logs.
 
+Pelo atalho `ASSINAR ATUALIZACAO BRASA TV.vbs`, o formulário pode guardar as
+credenciais com a proteção DPAPI do Windows. O arquivo fica em
+`%LOCALAPPDATA%\BRasa TV\release-signing.xml`, só pode ser descriptografado pelo
+mesmo usuário do Windows e nunca entra no Git. Para voltar a solicitar as senhas,
+apague apenas esse arquivo de credenciais.
+
 O publicador confirma pacote, versão, certificado não-debug, fingerprint, hash e tamanho, solicita notas e troca a publicação de forma transacional. Uma versão anterior fica em `data/android-tv-updates/previous/`. APKs e o repositório local de releases são ignorados pelo Git.
 
 ```powershell
