@@ -38,8 +38,9 @@ e os arquivos de vídeo não são modificados por estas melhorias.
   seek direto e HLS, seleção individual de faixas, desligar/religar legenda,
   isolamento de preferências, menu de legenda, ordenação, filtro de assistidos,
   retorno ao cartão e posição da biblioteca após rolagem.
-- A versão e o manifesto publicados não foram incrementados nem substituídos.
-  O APK debug é somente de validação e não deve ser instalado sobre o release.
+- Durante esta validação, a versão e o manifesto publicados não foram substituídos.
+  A publicação posterior deve usar uma versão superior; o APK debug é somente de
+  validação e não deve ser instalado sobre o release.
 
 Para reproduzir as verificações Android, com o SDK configurado:
 
@@ -85,5 +86,5 @@ desinstalar o aplicativo nem apagar o pareamento. Peça as senhas somente no for
 - Repetir retorno em Início, infantil, Filmes, Séries, Coleções e Veja mais.
 
 Os testes locais e de interface simulada não substituem a validação dos codecs,
-HDR e controle remoto no aparelho físico. A versão publicada permanece preservada
-até uma publicação release explícita; o APK debug não substitui o release assinado.
+HDR e controle remoto no aparelho físico. O ponto de restauração preserva o release
+anterior; o APK debug não substitui o release assinado.
