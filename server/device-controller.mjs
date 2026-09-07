@@ -37,8 +37,14 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`, playbackCapabilities(request.headers), fallbackMode(url.searchParams.get("fallback")), url.searchParams.get("prepare") !== "0", playbackPosition(url.searchParams.get("positionMs")))); }
         const progress = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/progress\/(movie|episode):([^/]+)$/);
         if (progress) { const profileId = auth.requireProfile(device, progress[1]), mediaKey = `${progress[2]}:${progress[3]}`; if (method === "GET") return success(response, await tvServices.progress(profileId, mediaKey)); if (method === "PUT") return success(response, await tvServices.saveProgress(profileId, mediaKey, await readBody(request))); }
-        const favorite = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/favorites\/(movie|episode):([^/]+)$/);
+        const favorite = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/favorites\/(movie|episode|series):([^/]+)$/);
         if (favorite && ["PUT", "DELETE"].includes(method)) { const profileId = auth.requireProfile(device, favorite[1]), mediaKey = `${favorite[2]}:${favorite[3]}`; return success(response, await tvServices.saveFavorite(profileId, mediaKey, method === "PUT")); }
+        const signal = path.match(/^\/api\/v1\/tv\/profiles\/([a-z0-9-]+)\/actions\/(like|not-for-me|hide|dismiss-continue|mark-watched)\/(movie|episode|series):([^/]+)$/);
+        if (signal && ["PUT", "DELETE"].includes(method)) { const profileId = auth.requireProfile(device, signal[1]), mediaKey = `${signal[3]}:${signal[4]}`; return success(response, await tvServices.saveSignal(profileId, mediaKey, signal[2], method === "PUT")); }
+        const preferences = path.match(/^\/api\/v1\/tv\/profiles\/([a-z0-9-]+)\/preferences$/);
+        if (preferences && method === "PUT") { const profileId = auth.requireProfile(device, preferences[1]); return success(response, await tvServices.savePreferences(profileId, await readBody(request))); }
+        const personalization = path.match(/^\/api\/v1\/tv\/profiles\/([a-z0-9-]+)\/personalization$/);
+        if (personalization && method === "DELETE") { const profileId = auth.requireProfile(device, personalization[1]); return success(response, await tvServices.resetPersonalization(profileId)); }
         const verifyPin = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/verify-pin$/);
         if (verifyPin && method === "POST") { const profileId = auth.requireProfile(device, verifyPin[1]); return success(response, { valid: await tvServices.verifyPin(profileId, (await readBody(request)).pin) }); }
         const stream = path.match(/^\/api\/tv\/stream\/(movie|episode):([^/]+)$/);

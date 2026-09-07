@@ -71,6 +71,7 @@ fun CollectionsScreen(
     onSeries: () -> Unit,
     onSearch: () -> Unit,
     onProfiles: () -> Unit,
+    onMyList: () -> Unit = {},
     onRefresh: () -> Unit,
 ) {
     val catalog = state.catalog
@@ -99,6 +100,7 @@ fun CollectionsScreen(
             onMovies = onMovies,
             onSeries = onSeries,
             onCollections = {},
+            onMyList = onMyList,
             onSearch = onSearch,
             onProfiles = onProfiles,
             profileInitials = state.profile?.initials.orEmpty(),

@@ -10,6 +10,7 @@ import com.brasa.tv.core.model.PlaybackInfo
 import com.brasa.tv.core.model.Season
 import com.brasa.tv.core.model.ServerInfo
 import com.brasa.tv.core.model.WatchProgress
+import com.brasa.tv.core.model.seriesContinuation
 import com.brasa.tv.core.network.BrasaHttpClient
 import com.brasa.tv.core.network.LocalServerAddress
 import com.brasa.tv.core.security.SecureTokenStore
@@ -141,6 +142,9 @@ class BrasaRepository(
     suspend fun prefetchPlayback(profileId: String, key: String) { runCatching { playback(profileId, key, prepare = false) } }
     suspend fun saveProgress(profileId: String, key: String, value: WatchProgress) = api.progress(requireServer(), profileId, key, value)
     suspend fun favorite(profileId: String, key: String, enabled: Boolean) = api.favorite(requireServer(), profileId, key, enabled)
+    suspend fun signal(profileId: String, key: String, action: String, enabled: Boolean = true) = api.signal(requireServer(), profileId, key, action, enabled)
+    suspend fun savePreferences(profileId: String, autoplayNext: Boolean) = api.preferences(requireServer(), profileId, autoplayNext)
+    suspend fun resetPersonalization(profileId: String) = api.resetPersonalization(requireServer(), profileId)
     suspend fun verifyPin(profileId: String, pin: String) = api.verifyPin(requireServer(), profileId, pin).valid
     suspend fun networkStatus() = api.networkStatus(requireServer())
     suspend fun startNetworkTest(profile: String, durationSeconds: Int = 60) = api.startNetworkTest(requireServer(), profile, durationSeconds)
@@ -177,25 +181,23 @@ class BrasaRepository(
     private fun String.toLocalUrl(base: String) = if (isBlank()) "" else LocalServerAddress.resolve(base, this)
 
     private fun catalogAsHome(catalog: CatalogResponse): HomeResponse {
-        val allEpisodes = catalog.series.flatMap { it.seasons.flatMap(Season::episodes) }
-        val recentSeries = catalog.series.mapNotNull { series ->
-            val latest = series.seasons.flatMap(Season::episodes)
-                .filter { (it.progress?.percentage ?: 0.0) > 0.0 }
-                .maxByOrNull { it.progress?.updatedAt.orEmpty() }
-            latest?.let { series.copy(progress = it.progress) }
+        val continuedSeries = catalog.series.mapNotNull { series ->
+            val resolved = series.seriesContinuation()
+            resolved.episode?.takeIf { resolved.watched && !resolved.completed }?.let { episode ->
+                series.copy(progress = episode.progress, resumeMediaKey = episode.mediaKey, actionLabel = "Continuar T${(episode.seasonNumber ?: 0).toString().padStart(2, '0')} · E${(episode.episodeNumber ?: 0).toString().padStart(2, '0')}")
+            }
         }
-        val recentlyWatched = (catalog.movies + recentSeries)
-            .filter { (it.progress?.percentage ?: 0.0) > 0.0 }
+        val continueWatching = (catalog.movies.filter { (it.progress?.percentage ?: 0.0) in 0.01..94.99 && it.progress?.completed != true } + continuedSeries)
             .sortedByDescending { it.progress?.updatedAt.orEmpty() }
         val recentlyAdded = (catalog.movies + catalog.series)
             .filter { it.addedAt.isNotBlank() }
             .sortedByDescending(CatalogItem::addedAt)
             .take(36)
-        val favorites = catalog.movies.filter(CatalogItem::favorite)
+        val favorites = (catalog.movies + catalog.series).filter { it.favorite || it.inMyList }
         return HomeResponse(
             catalog.profile,
             listOf(
-                HomeRow("recently-watched", "Assistidos recentemente", items = recentlyWatched),
+                HomeRow("continue-watching", "Continuar assistindo", type = "continue", items = continueWatching),
                 HomeRow("recently-added", "Recém-adicionados", items = recentlyAdded),
                 HomeRow("movies", "Filmes", items = catalog.movies),
                 HomeRow("series", "Séries", items = catalog.series),

@@ -277,11 +277,11 @@ const seriesData = [
         ],
         "seasonCount": 1,
         "episodeCount": 13,
+        "tmdbId": 196950,
+        "imdbId": "tt32550889",
         "originalTitle": "とんがり帽子のアトリエ",
         "year": 2026,
-        "rating": 8.726,
-        "imdbId": "tt32550889",
-        "tmdbId": 196950
+        "rating": 8.7
     },
     {
         "id": "lanternas",
@@ -552,7 +552,7 @@ const seriesData = [
         "imdbId": "tt43337681",
         "originalTitle": "スター・ウォーズ：ビジョンズ／九人目のジェダイ",
         "year": 2026,
-        "rating": 7.7
+        "rating": 7.617
     },
     {
         "id": "x-men-97",
@@ -565,7 +565,7 @@ const seriesData = [
             "Action & Adventure",
             "Sci-Fi & Fantasy"
         ],
-        "contentRating": "TV-14",
+        "contentRating": "",
         "poster": "assets/posters/x-men-97-2024-poster.jpg",
         "backdrop": "assets/backdrops/x-men-97-2024-backdrop.jpg",
         "overview": "X-Men ’97 revisita a era icônica dos anos 1990, quando os X-Men, um grupo de mutantes que usam seus dons extraordinários para proteger um mundo que os odeia e teme, são desafiados como nunca antes, forçados a enfrentar um novo futuro perigoso e inesperado.",
@@ -607,28 +607,9 @@ const seriesData = [
                         "subtitles": [],
                         "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e2.jpg",
                         "backdrop": "assets/episode-thumbnails/x-men-97-s2-e2.jpg",
-                        "nextEpisodeId": "series-x-men-97-s2-e3-x-men-97-s02e03",
+                        "nextEpisodeId": "series-x-men-97-s2-e4-x-men-97-s02e04",
                         "tmdbId": 7383311,
                         "overview": "Após o Dia-E, uma força paramilitar secreta surge para tentar preencher o vazio deixado pelos X-Men.",
-                        "durationMinutes": 29
-                    },
-                    {
-                        "id": "series-x-men-97-s2-e3-x-men-97-s02e03",
-                        "seriesId": "x-men-97",
-                        "seasonNumber": 2,
-                        "episodeNumber": 3,
-                        "title": "A Ascensão do Apocalipse (1)",
-                        "video": "assets/series/X-Men '97/Temporada 02/X-Men '97 - S02E03.mkv",
-                        "quality": "Local",
-                        "audience": "general",
-                        "addedAt": "2026-07-27T00:38:00.793Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e3.jpg",
-                        "backdrop": "assets/episode-thumbnails/x-men-97-s2-e3.jpg",
-                        "nextEpisodeId": "series-x-men-97-s2-e4-x-men-97-s02e04",
-                        "tmdbId": 7383312,
-                        "overview": "O plano de resgate da equipe do Antigo Egito se complica por conta de um visitante inesperado.",
                         "durationMinutes": 29
                     },
                     {
@@ -645,29 +626,10 @@ const seriesData = [
                         "subtitles": [],
                         "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e4.jpg",
                         "backdrop": "assets/episode-thumbnails/x-men-97-s2-e4.jpg",
-                        "nextEpisodeId": "series-x-men-97-s2-e5-x-men-97-s02e05",
+                        "nextEpisodeId": "series-x-men-97-s2-e6-x-men-97-s02e06",
                         "tmdbId": 7383313,
                         "overview": "Uma aliança entre os X-Men e En Sabah Nur começa a ruir quando Rama-Tut busca o poder supremo.",
                         "durationMinutes": 35
-                    },
-                    {
-                        "id": "series-x-men-97-s2-e5-x-men-97-s02e05",
-                        "seriesId": "x-men-97",
-                        "seasonNumber": 2,
-                        "episodeNumber": 5,
-                        "title": "Arma X, Mentiras, e DVDs",
-                        "video": "assets/series/X-Men '97/Temporada 02/X-Men '97 - S02E05.mkv",
-                        "quality": "Local",
-                        "audience": "general",
-                        "addedAt": "2026-07-18T15:07:08.292Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/x-men-97-s2-e5.jpg",
-                        "backdrop": "assets/episode-thumbnails/x-men-97-s2-e5.jpg",
-                        "nextEpisodeId": "series-x-men-97-s2-e6-x-men-97-s02e06",
-                        "tmdbId": 7383314,
-                        "overview": "Wolverine, Morfo e um grupo de antigos rivais enfrentam o mais recente experimento da Arma X.",
-                        "durationMinutes": 31
                     },
                     {
                         "id": "series-x-men-97-s2-e6-x-men-97-s02e06",
@@ -730,12 +692,12 @@ const seriesData = [
             }
         ],
         "seasonCount": 1,
-        "episodeCount": 8,
+        "episodeCount": 6,
+        "tmdbId": 138502,
+        "imdbId": "tt16026746",
         "originalTitle": "X-Men '97",
         "year": 2024,
-        "rating": 8.693,
-        "imdbId": "tt16026746",
-        "tmdbId": 138502
+        "rating": 8.696
     },
     {
         "id": "eu-a-patroa-e-as-criancas",
@@ -1705,7 +1667,7 @@ const seriesData = [
             "Faroeste",
             "Drama"
         ],
-        "contentRating": "TV-MA",
+        "contentRating": "",
         "poster": "assets/posters/yellowstone-2018-poster.jpg",
         "backdrop": "assets/backdrops/yellowstone-2018-backdrop.jpg",
         "overview": "John Dutton tenta proteger seu rancho, o maior dos Estados Unidos, de um mundo corrupto.",
@@ -1861,29 +1823,10 @@ const seriesData = [
                         "subtitles": [],
                         "thumbnail": "assets/episode-thumbnails/yellowstone-s1-e8.jpg",
                         "backdrop": "assets/episode-thumbnails/yellowstone-s1-e8.jpg",
-                        "nextEpisodeId": "series-yellowstone-s1-e9-yellowstone-s01e09-1080p-h264-web-dl-dual-sf",
+                        "nextEpisodeId": "series-yellowstone-s3-e1-yellowstone-s03e01",
                         "tmdbId": 1534479,
                         "overview": "Rip enfrenta a investigação do xerife depois do acidente com os turistas.",
                         "durationMinutes": 41
-                    },
-                    {
-                        "id": "series-yellowstone-s1-e9-yellowstone-s01e09-1080p-h264-web-dl-dual-sf",
-                        "seriesId": "yellowstone",
-                        "seasonNumber": 1,
-                        "episodeNumber": 9,
-                        "title": "O resultado: Parte 2",
-                        "video": "assets/series/Yellowstone/Temporada 01/Yellowstone.S01E09.1080p.H264.WEB-DL.DUAL-SF.mkv",
-                        "quality": "1080p",
-                        "audience": "general",
-                        "addedAt": "2026-07-25T23:40:07.672Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/yellowstone-s1-e9.jpg",
-                        "backdrop": "assets/episode-thumbnails/yellowstone-s1-e9.jpg",
-                        "nextEpisodeId": "series-yellowstone-s3-e1-yellowstone-s03e01",
-                        "tmdbId": 1544468,
-                        "overview": "John descobre seus verdadeiros aliados, Rip procura respostas, a carreira política de Jamie é ameaçada, Beth assume um novo papel e Kayce volta para casa.",
-                        "durationMinutes": 46
                     }
                 ]
             },
@@ -2018,29 +1961,10 @@ const seriesData = [
                         "subtitles": [],
                         "thumbnail": "assets/episode-thumbnails/yellowstone-s3-e7.jpg",
                         "backdrop": "assets/episode-thumbnails/yellowstone-s3-e7.jpg",
-                        "nextEpisodeId": "series-yellowstone-s3-e8-yellowstone-s03e08",
+                        "nextEpisodeId": "series-yellowstone-s3-e10-yellowstone-s03e10",
                         "tmdbId": 2373603,
                         "overview": "John Dutton enfrenta esqueletos de seu passado, enquanto Beth faz planos para o futuro.",
                         "durationMinutes": 43
-                    },
-                    {
-                        "id": "series-yellowstone-s3-e8-yellowstone-s03e08",
-                        "seriesId": "yellowstone",
-                        "seasonNumber": 3,
-                        "episodeNumber": 8,
-                        "title": "Eu matei um homem hoje",
-                        "video": "assets/series/Yellowstone/Temporada 03/Yellowstone - S03E08.mkv",
-                        "quality": "Local",
-                        "audience": "general",
-                        "addedAt": "2026-07-18T21:40:34.606Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/yellowstone-s3-e8.jpg",
-                        "backdrop": "assets/episode-thumbnails/yellowstone-s3-e8.jpg",
-                        "nextEpisodeId": "series-yellowstone-s3-e10-yellowstone-s03e10",
-                        "tmdbId": 2376529,
-                        "overview": "Beth continua sua batalha contra seu adversário financeiro.",
-                        "durationMinutes": 44
                     },
                     {
                         "id": "series-yellowstone-s3-e10-yellowstone-s03e10",
@@ -2065,12 +1989,12 @@ const seriesData = [
             }
         ],
         "seasonCount": 2,
-        "episodeCount": 18,
+        "episodeCount": 16,
+        "tmdbId": 73586,
+        "imdbId": "tt4236770",
         "originalTitle": "Yellowstone",
         "year": 2018,
-        "rating": 8.271,
-        "imdbId": "tt4236770",
-        "tmdbId": 73586
+        "rating": 8.27
     },
     {
         "id": "tartarugas-ninjas-historias-mutantes",
@@ -2344,7 +2268,7 @@ const seriesData = [
             "Action & Adventure",
             "Sci-Fi & Fantasy"
         ],
-        "contentRating": "TV-MA",
+        "contentRating": "",
         "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-2019-poster.jpg",
         "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-2019-backdrop.jpg",
         "overview": "Japão, era Taisho. Tanjiro, um bondoso jovem que ganha a vida vendendo carvão, descobre que sua família foi massacrada por um demônio. E pra piorar, Nezuko, sua irmã mais nova e única sobrevivente, também foi transformada num demônio. Arrasado com esta sombria realidade, Tanjiro decide se tornar um matador de demônios para fazer sua irmã voltar a ser humana, e para matar o demônio que matou sua família. Um triste conto sobre dois irmãos, onde os destinos dos humanos e dos demônios se entrelaçam, começa agora.",
@@ -2833,11 +2757,11 @@ const seriesData = [
         ],
         "seasonCount": 1,
         "episodeCount": 25,
+        "tmdbId": 85937,
+        "imdbId": "tt9335498",
         "originalTitle": "鬼滅の刃",
         "year": 2019,
-        "rating": 8.6,
-        "imdbId": "tt9335498",
-        "tmdbId": 85937
+        "rating": 8.639
     },
     {
         "id": "avatar-a-lenda-de-aang",
@@ -4186,7 +4110,7 @@ const seriesData = [
         "imdbId": "tt14452776",
         "originalTitle": "The Bear",
         "year": 2022,
-        "rating": 8.1
+        "rating": 8.147
     },
     {
         "id": "as-aventuras-de-jackie-chan",
@@ -6043,7 +5967,7 @@ const seriesData = [
         "imdbId": "tt0259141",
         "originalTitle": "Jackie Chan Adventures",
         "year": 2000,
-        "rating": 8.2
+        "rating": 8.16
     }
 ];
 

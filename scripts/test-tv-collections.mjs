@@ -40,7 +40,7 @@ assert.ok(bestPicture.some((item) => item.imdbId === "tt0075148"));
 assert.ok(dc.some((item) => item.title === "The Batman"));
 assert.ok(dc.some((item) => item.title === "Superman"));
 assert.ok(spiderMan.some((item) => item.title === "Spider-Man"));
-assert.ok(spiderMan.some((item) => item.title === "Spider-Man: Into the Spider-Verse"));
+assert.ok(spiderMan.some((item) => item.imdbId === "tt4633694"), "Into the Spider-Verse deve permanecer na coleção mesmo com ajuste de pontuação no título.");
 assert.ok(scienceFiction.length >= 20);
 assert.ok(scienceFiction.every((item) => (item.genres || []).some((genre) => genre.toLowerCase() === "ficção científica")));
 assert.ok(ghibli.some((item) => item.title === "Spirited Away"));

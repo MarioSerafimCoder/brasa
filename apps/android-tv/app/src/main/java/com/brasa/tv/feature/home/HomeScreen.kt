@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +44,7 @@ import com.brasa.tv.core.model.HomeRow
 import com.brasa.tv.designsystem.BrasaBackground
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
+import com.brasa.tv.designsystem.BrasaOrange
 import com.brasa.tv.designsystem.BrasaText
 import com.brasa.tv.designsystem.BrasaTextMuted
 import com.brasa.tv.designsystem.BrasaTopBar
@@ -55,6 +55,7 @@ import com.brasa.tv.designsystem.MediaCardFormat
 import com.brasa.tv.designsystem.MessagePanel
 import com.brasa.tv.designsystem.SectionHeading
 import com.brasa.tv.designsystem.metadata
+import com.brasa.tv.core.model.playableItem
 import kotlinx.coroutines.delay
 
 @Composable
@@ -67,6 +68,7 @@ fun HomeScreen(
     onMovies: () -> Unit,
     onSeries: () -> Unit,
     onCollections: () -> Unit,
+    onMyList: () -> Unit,
     onProfiles: () -> Unit,
     onSettings: () -> Unit,
     onSeeMore: (HomeRow) -> Unit,
@@ -90,20 +92,13 @@ fun HomeScreen(
         home.rows.flatMap(HomeRow::items)
             .filter { it.backdrop.isNotBlank() || it.poster.isNotBlank() }
             .distinctBy { it.mediaKey.ifBlank { it.id } }
-            .shuffled()
+            .sortedWith(compareBy<CatalogItem> { item -> home.rows.indexOfFirst { row -> item in row.items } }.thenByDescending { it.addedAt })
     }
-    var heroIndex by remember(home, state.profile?.id) { mutableIntStateOf(0) }
-    val hero = heroCandidates.getOrNull(heroIndex % heroCandidates.size.coerceAtLeast(1))
+    val hero = heroCandidates.firstOrNull()
     val heroFocus = remember { FocusRequester() }
     val listState = rememberLazyListState()
     val focusMemory = rememberCatalogFocus("home:${state.profile?.id}")
     var initialFocusSet by rememberSaveable(state.profile?.id) { mutableStateOf(false) }
-    LaunchedEffect(heroCandidates, state.profile?.id) {
-        if (heroCandidates.size > 1) while (true) {
-            delay(12_000)
-            heroIndex = (heroIndex + 1) % heroCandidates.size
-        }
-    }
     LaunchedEffect(state.profile?.id, heroCandidates.isNotEmpty()) {
         if (initialFocusSet) return@LaunchedEffect
         listState.scrollToItem(0)
@@ -122,7 +117,7 @@ fun HomeScreen(
         contentPadding = PaddingValues(bottom = 54.dp),
     ) {
         item {
-            Box(Modifier.fillMaxWidth().height(430.dp)) {
+            Box(Modifier.fillMaxWidth().height(360.dp)) {
                 if (hero != null) {
                     AsyncImage(
                         model = hero.backdrop.ifBlank { hero.poster },
@@ -149,6 +144,7 @@ fun HomeScreen(
                     onMovies = onMovies,
                     onSeries = onSeries,
                     onCollections = onCollections,
+                    onMyList = onMyList,
                     onSearch = onSearch,
                     onProfiles = onProfiles,
                     onSettings = onSettings,
@@ -158,6 +154,7 @@ fun HomeScreen(
                     Column(
                         Modifier.align(Alignment.CenterStart).padding(start = BrasaSpacing.safe, top = 56.dp).width(570.dp),
                     ) {
+                        if (state.reconnecting) Text("Reconectando e atualizando…", color = BrasaOrange, fontSize = BrasaType.metadata, fontWeight = FontWeight.Bold)
                         Text(metadata(hero), color = BrasaTextMuted, fontSize = BrasaType.metadata, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(7.dp))
                         Text(
@@ -182,7 +179,7 @@ fun HomeScreen(
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             BrasaButton(
                                 continueLabel(hero),
-                                { focusMemory.select("hero-play"); onPlay(hero) },
+                                { focusMemory.select("hero-play"); onPlay(hero.playableItem()) },
                                 focusMemory.modifier("hero-play").focusRequester(heroFocus),
                                 style = BrasaButtonStyle.Primary,
                                 leading = "▶",
@@ -210,7 +207,7 @@ fun HomeScreen(
                 ) {
                     items(row.items, key = { it.mediaKey.ifBlank { it.id } }) { item ->
                         val key = "${row.id}:${item.mediaKey.ifBlank { item.id }}"
-                        MediaCard(item, { focusMemory.select(key); onItem(item) }, modifier = focusMemory.modifier(key), format = if (posters) MediaCardFormat.Poster else MediaCardFormat.Landscape, onFocused = { onPrefetch(item) })
+                        MediaCard(item, { focusMemory.select(key); if (row.type == "continue") onPlay(item.playableItem()) else onItem(item) }, modifier = focusMemory.modifier(key), format = if (posters) MediaCardFormat.Poster else MediaCardFormat.Landscape, onFocused = { onPrefetch(item.playableItem()) })
                     }
                 }
                 Spacer(Modifier.height(26.dp))
@@ -220,6 +217,7 @@ fun HomeScreen(
 }
 
 private fun continueLabel(item: CatalogItem): String {
+    if (item.actionLabel.isNotBlank()) return item.actionLabel + (item.remainingMinutes?.let { " — faltam $it min" } ?: "")
     val seconds = item.progress?.currentTime?.toLong() ?: 0L
     if (seconds <= 0) return "Assistir"
     val hours = seconds / 3600

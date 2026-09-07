@@ -66,6 +66,7 @@ import com.brasa.tv.core.di.AppContainer
 import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.core.model.PlaybackInfo
 import com.brasa.tv.core.model.WatchProgress
+import com.brasa.tv.core.model.playableItem
 import com.brasa.tv.core.playback.PlaybackTimeline
 import com.brasa.tv.core.playback.SeekPolicy
 import com.brasa.tv.core.playback.PlaybackRecovery
@@ -91,6 +92,7 @@ fun PlayerScreen(
     onRemoteSeek: (String, Long) -> Unit,
     onRetry: () -> Unit,
     onNext: (CatalogItem) -> Unit,
+    onSignal: (String, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     if (state.previewMode) {
@@ -117,7 +119,9 @@ fun PlayerScreen(
     } else {
         val identity = "${info.mediaKey}|${info.playbackMode}|${info.playbackRevision}|${info.playbackUrl}"
         key(identity) {
-            PlayerContent(info, identity, state.selected?.title.orEmpty(), settings.serverBaseUrl, settings, container, recovery, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onBack)
+            val selected = state.selected
+            val related = state.catalog?.let { catalog -> (catalog.movies + catalog.series).filter { it.mediaKey != selected?.mediaKey && it.genres.any(selected?.genres.orEmpty()::contains) }.take(2) }.orEmpty()
+            PlayerContent(info, identity, selected, related, settings.serverBaseUrl, settings, container, recovery, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onSignal, onBack)
         }
     }
 }
@@ -148,7 +152,8 @@ private fun PreparationScreen(info: PlaybackInfo, onRetry: () -> Unit, onBack: (
 private fun PlayerContent(
     info: PlaybackInfo,
     playbackIdentity: String,
-    title: String,
+    selected: CatalogItem?,
+    related: List<CatalogItem>,
     serverBaseUrl: String,
     settings: AppSettings,
     container: AppContainer,
@@ -157,6 +162,7 @@ private fun PlayerContent(
     onPlaybackFallback: (String) -> Unit,
     onRemoteSeek: (String, Long) -> Unit,
     onNext: (CatalogItem) -> Unit,
+    onSignal: (String, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -198,6 +204,15 @@ private fun PlayerContent(
     val rootFocus = remember { FocusRequester() }
     val playFocus = remember { FocusRequester() }
     var ended by remember { mutableStateOf(false) }
+    var autoNextSeconds by remember(info.mediaKey) { mutableIntStateOf(10) }
+    var autoNextCancelled by remember(info.mediaKey) { mutableStateOf(false) }
+    val endFocus = remember { FocusRequester() }
+    LaunchedEffect(ended, settings.autoplayNext, autoNextCancelled, info.nextEpisode?.mediaKey) {
+        if (!ended || !settings.autoplayNext || autoNextCancelled || info.nextEpisode == null) return@LaunchedEffect
+        runCatching { endFocus.requestFocus() }
+        while (autoNextSeconds > 0) { delay(1_000); autoNextSeconds-- }
+        if (!autoNextCancelled) onNext(info.nextEpisode)
+    }
     var controlsVisible by remember { mutableStateOf(true) }
     var interaction by remember { mutableIntStateOf(0) }
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
@@ -524,7 +539,7 @@ private fun PlayerContent(
                 Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(horizontal = 34.dp, vertical = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(title.ifBlank { "Reproduzindo agora" }, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(selected?.title.orEmpty().ifBlank { "Reproduzindo agora" }, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             Column(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 52.dp, vertical = 30.dp),
@@ -651,18 +666,34 @@ private fun PlayerContent(
             )
         }
 
-        if (ended && info.nextEpisode != null) {
+        if (ended) {
             Column(
-                Modifier.align(Alignment.Center).width(510.dp).background(BrasaSurface.copy(alpha = .97f), RoundedCornerShape(16.dp)).padding(30.dp),
+                Modifier.align(Alignment.Center).width(620.dp).background(BrasaSurface.copy(alpha = .97f), RoundedCornerShape(16.dp)).padding(30.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text("Próximo episódio", color = Color.White, fontSize = 29.sp, fontWeight = FontWeight.ExtraBold)
-                Spacer(Modifier.height(8.dp))
-                Text(info.nextEpisode.title, color = BrasaTextMuted, fontSize = 18.sp)
-                Spacer(Modifier.height(21.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    BrasaButton("Reproduzir agora", { onNext(info.nextEpisode) }, style = BrasaButtonStyle.Primary, leading = "▶")
-                    BrasaButton("Voltar à série", ::exit)
+                if (info.nextEpisode != null) {
+                    Text("Próximo episódio", color = Color.White, fontSize = 29.sp, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.height(8.dp))
+                    Text(info.nextEpisode.title, color = BrasaTextMuted, fontSize = 18.sp)
+                    if (settings.autoplayNext && !autoNextCancelled) Text("Reprodução automática em $autoNextSeconds s", color = BrasaOrange, fontSize = 16.sp)
+                    Spacer(Modifier.height(21.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        BrasaButton("Reproduzir agora", { onNext(info.nextEpisode) }, style = BrasaButtonStyle.Primary, leading = "▶")
+                        if (settings.autoplayNext && !autoNextCancelled) BrasaButton("Cancelar contagem", { autoNextCancelled = true }, Modifier.focusRequester(endFocus))
+                        BrasaButton("Voltar à série", ::exit)
+                    }
+                } else {
+                    Text("Você terminou ${selected?.title.orEmpty()}", color = Color.White, fontSize = 27.sp, fontWeight = FontWeight.ExtraBold)
+                    Spacer(Modifier.height(14.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        BrasaButton("Gostei", { onSignal("like", true) }, style = BrasaButtonStyle.Primary)
+                        BrasaButton("Não é para mim", { onSignal("not-for-me", true) })
+                        BrasaButton("Voltar", ::exit)
+                    }
+                    if (related.isNotEmpty()) {
+                        Spacer(Modifier.height(18.dp)); Text("Talvez você também goste", color=BrasaText,fontSize=18.sp,fontWeight=FontWeight.Bold); Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement=Arrangement.spacedBy(10.dp)){related.forEach{candidate->BrasaButton(candidate.title.take(24),{onNext(candidate.playableItem())},style=BrasaButtonStyle.Ghost)}}
+                    }
                 }
             }
         }

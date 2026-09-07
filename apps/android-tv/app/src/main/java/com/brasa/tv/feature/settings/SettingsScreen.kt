@@ -58,6 +58,8 @@ fun SettingsScreen(
     onProfiles: () -> Unit,
     onClearCache: () -> Unit,
     onLoadCache: () -> Unit,
+    onResetPersonalization: () -> Unit,
+    onAutoplayNext: (Boolean) -> Unit,
     onForget: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -92,6 +94,8 @@ fun SettingsScreen(
             SettingsSection("Reprodução") {
                 StatusLine("Cache utilizado", formatBytes(state.cacheBytes))
                 BrasaButton(if (state.loading) "Limpando cache…" else "Limpar cache", onClearCache, Modifier.fillMaxWidth(), enabled = !state.loading)
+                Spacer(Modifier.height(BrasaSpacing.x1))
+                BrasaButton(if (deviceSettings.autoplayNext) "✓ Próximo episódio automático" else "Próximo episódio automático", { val next=!deviceSettings.autoplayNext;scope.launch{state.profile?.id?.let{settingsStore.saveAutoplayNext(it,next)}};onAutoplayNext(next) }, Modifier.fillMaxWidth(), style = if(deviceSettings.autoplayNext) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Interface da TV") {
@@ -100,7 +104,14 @@ fun SettingsScreen(
                 Spacer(Modifier.height(BrasaSpacing.x2))
                 Text("Densidade dos cards",color=BrasaTextMuted,fontSize=BrasaType.metadata)
                 Text("Altera somente cards e a quantidade de conteúdo visível.",color=BrasaTextMuted,fontSize=BrasaType.metadata)
-                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){ScaleOption("Compacta",.85f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}};ScaleOption("Normal",1f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}};ScaleOption("Ampla",1.15f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}}}
+                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){ScaleOption("Compacto",.85f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}};ScaleOption("Confortável",1f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}}}
+            }
+            Spacer(Modifier.height(BrasaSpacing.x2))
+            SettingsSection("Personalização") {
+                Text("Reiniciar preferências apaga avaliações e sugestões ocultadas, mas preserva Minha lista e o progresso.", color=BrasaTextMuted,fontSize=BrasaType.metadata)
+                Spacer(Modifier.height(BrasaSpacing.x1))
+                BrasaButton("Limpar buscas recentes", { scope.launch { state.profile?.id?.let { settingsStore.clearRecentSearches(it) } } }, Modifier.fillMaxWidth())
+                BrasaButton("Reiniciar personalização", onResetPersonalization, Modifier.fillMaxWidth(), style=BrasaButtonStyle.Ghost)
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Aplicativo") {

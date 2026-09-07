@@ -56,6 +56,7 @@ fun LibraryScreen(
     onCollections: () -> Unit,
     onSearch: () -> Unit,
     onProfiles: () -> Unit,
+    onMyList: () -> Unit = {},
     onRefresh: () -> Unit,
 ) {
     BackHandler(onBack = onHome)
@@ -65,8 +66,8 @@ fun LibraryScreen(
         MessagePanel("Carregando biblioteca", "Buscando os títulos disponíveis no computador.", "Tentar novamente", onRefresh)
         return
     }
-    val title = if (type == "series") "Séries" else "Filmes"
-    val source = if (type == "series") catalog.series else catalog.movies
+    val title = when (type) { "series" -> "Séries"; "favorites" -> "Minha lista"; else -> "Filmes" }
+    val source = when (type) { "series" -> catalog.series; "favorites" -> (catalog.movies + catalog.series).filter { it.favorite || it.inMyList }; else -> catalog.movies }
     val genres = remember(source) { source.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinct().sorted() }
     var selectedGenre by rememberSaveable(type, state.profile?.id) { mutableStateOf("Todos") }
     var order by rememberSaveable(type, state.profile?.id) { mutableStateOf(CatalogOrder.ORIGINAL) }
@@ -91,6 +92,7 @@ fun LibraryScreen(
             onMovies = onMovies,
             onSeries = onSeries,
             onCollections = onCollections,
+            onMyList = onMyList,
             onSearch = onSearch,
             onProfiles = onProfiles,
             profileInitials = state.profile?.initials.orEmpty(),
@@ -129,14 +131,14 @@ fun LibraryScreen(
         Spacer(Modifier.height(10.dp))
         LazyVerticalGrid(
             modifier = Modifier.fillMaxSize(),
-            columns = if (type == "movie") GridCells.Fixed(8) else GridCells.Adaptive(188.dp * cardDensity),
+            columns = if (type != "series") GridCells.Fixed(if (cardDensity < .95f) 8 else 6) else GridCells.Adaptive(188.dp * cardDensity),
             contentPadding = PaddingValues(bottom = BrasaSpacing.x8),
             horizontalArrangement = Arrangement.spacedBy(if (type == "movie") 10.dp else BrasaSpacing.x3),
             verticalArrangement = Arrangement.spacedBy(if (type == "movie") 14.dp else BrasaSpacing.x4),
         ) {
             items(items, key = { it.mediaKey.ifBlank { it.id } }) { item ->
                 val key = item.mediaKey.ifBlank { item.id }
-                MediaCard(item, { focusMemory.select(key); onItem(item) }, modifier = focusMemory.modifier(key), format = if (type == "series") MediaCardFormat.Landscape else MediaCardFormat.CompactPoster)
+                MediaCard(item, { focusMemory.select(key); onItem(item) }, modifier = focusMemory.modifier(key), format = if (item.type == "series") MediaCardFormat.Landscape else MediaCardFormat.CompactPoster)
             }
         }
     }

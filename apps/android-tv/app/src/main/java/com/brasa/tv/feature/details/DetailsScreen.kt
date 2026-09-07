@@ -50,6 +50,7 @@ import coil3.compose.AsyncImage
 import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.core.model.Season
+import com.brasa.tv.core.model.playableItem
 import com.brasa.tv.designsystem.BrasaBackground
 import com.brasa.tv.designsystem.BrasaBorder
 import com.brasa.tv.designsystem.BrasaButton
@@ -71,20 +72,24 @@ import kotlinx.coroutines.delay
 fun DetailsScreen(
     state: BrasaUiState,
     onPlay: (CatalogItem) -> Unit,
+    onPlayFromStart: (CatalogItem) -> Unit,
     onPrefetch: (CatalogItem) -> Unit,
     onCancelPreload: () -> Unit,
     onFavorite: () -> Unit,
+    onSignal: (String, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     BackHandler(onBack = onBack)
     val item = state.selected ?: return MessagePanel("Conteúdo indisponível", "Volte e escolha outro item.", "Voltar", onBack)
     val playFocus = remember { FocusRequester() }
-    var selectedSeasonNumber by rememberSaveable(item.mediaKey) { mutableStateOf(item.seasons.firstOrNull()?.seasonNumber ?: 0) }
+    val continuation = item.playableItem()
+    var selectedSeasonNumber by rememberSaveable(item.mediaKey) { mutableStateOf(continuation.seasonNumber ?: item.seasons.firstOrNull()?.seasonNumber ?: 0) }
     val focusMemory = rememberCatalogFocus("details:${state.profile?.id}:${item.mediaKey}")
     var initialFocusSet by rememberSaveable(item.mediaKey) { mutableStateOf(false) }
     val selectedSeason = item.seasons.firstOrNull { it.seasonNumber == selectedSeasonNumber } ?: item.seasons.firstOrNull()
-    val firstPlayable = selectedSeason?.episodes?.firstOrNull() ?: item
+    val firstPlayable = if (item.type == "series") continuation else item
     var keepPreload by remember(item.mediaKey) { mutableStateOf(false) }
+    var expandedOverview by rememberSaveable(item.mediaKey) { mutableStateOf(false) }
 
     LaunchedEffect(item.mediaKey, selectedSeasonNumber) {
         onPrefetch(firstPlayable)
@@ -122,18 +127,36 @@ fun DetailsScreen(
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) { item.genres.take(4).forEach { GenreChip(it) } }
                     }
                     Spacer(Modifier.height(15.dp))
-                    Text(item.overview.ifBlank { "Sinopse ainda não disponível." }, color = BrasaText.copy(alpha = .88f), fontSize = BrasaType.body, lineHeight = 27.sp, maxLines = 4, overflow = TextOverflow.Ellipsis)
+                    Text(item.overview.ifBlank { "Sinopse ainda não disponível." }, color = BrasaText.copy(alpha = .88f), fontSize = BrasaType.body, lineHeight = 27.sp, maxLines = if (expandedOverview) 10 else 4, overflow = TextOverflow.Ellipsis)
+                    if (item.overview.length > 220) BrasaButton(if (expandedOverview) "Recolher sinopse" else "Ler sinopse completa", { expandedOverview = !expandedOverview }, style = BrasaButtonStyle.Ghost)
                     Spacer(Modifier.height(20.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         BrasaButton(
-                            continueLabel(firstPlayable),
+                            continueLabel(item, firstPlayable),
                             { focusMemory.select("play"); keepPreload = true; onPlay(firstPlayable) },
                             focusMemory.modifier("play").focusRequester(playFocus),
                             enabled = firstPlayable.streamUrl.isNotBlank(),
                             style = BrasaButtonStyle.Primary,
                             leading = "▶",
                         )
-                        if (item.type == "movie") BrasaButton(if (item.favorite) "Remover da lista" else "Minha lista", onFavorite, leading = if (item.favorite) "✓" else "+")
+                        BrasaButton(if (item.favorite || item.inMyList) "Remover da lista" else "Minha lista", onFavorite, leading = if (item.favorite || item.inMyList) "✓" else "+")
+                        BrasaButton("Assistir do início", { keepPreload = true; onPlayFromStart(firstPlayable) })
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        BrasaButton(if (item.reaction == "like") "✓ Gostei" else "Gostei", { onSignal("like", item.reaction != "like") }, style = if (item.reaction == "like") BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
+                        BrasaButton(if (item.reaction == "not-for-me") "✓ Não é para mim" else "Não é para mim", { onSignal("not-for-me", item.reaction != "not-for-me") }, style = if (item.reaction == "not-for-me") BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
+                        BrasaButton(if(item.hiddenSuggestion) "Desfazer ocultação" else "Ocultar sugestão", { onSignal("hide", !item.hiddenSuggestion) }, style = BrasaButtonStyle.Ghost)
+                    }
+                    if ((item.progress?.percentage ?: 0.0) > 0.0 || item.type == "series") {
+                        Spacer(Modifier.height(10.dp)); Row(horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+                            BrasaButton("Remover de Continuar assistindo", { onSignal("dismiss-continue", true) }, style=BrasaButtonStyle.Ghost)
+                            BrasaButton("Marcar como assistido", { onSignal("mark-watched", true) }, style=BrasaButtonStyle.Ghost)
+                        }
+                    }
+                    if (item.cast.isNotEmpty() || item.directors.isNotEmpty()) {
+                        Spacer(Modifier.height(10.dp))
+                        Text(listOfNotNull(item.directors.takeIf { it.isNotEmpty() }?.let { "Direção: ${it.joinToString()}" }, item.cast.takeIf { it.isNotEmpty() }?.let { "Elenco: ${it.take(5).joinToString()}" }).joinToString("  ·  "), color = BrasaTextMuted, fontSize = BrasaType.metadata, maxLines = 2)
                     }
                 }
             }
@@ -177,6 +200,14 @@ fun DetailsScreen(
                 }
             }
         }
+        val similar = state.catalog?.let { catalog -> (catalog.movies + catalog.series).filter { candidate -> candidate.mediaKey != item.mediaKey && candidate.genres.any(item.genres::contains) }.take(12) }.orEmpty()
+        if (similar.isNotEmpty()) item {
+            Text("Títulos semelhantes", modifier = Modifier.padding(horizontal = BrasaSpacing.safe), color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(10.dp))
+            LazyRow(contentPadding = PaddingValues(horizontal = BrasaSpacing.safe, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                items(similar, key = { it.mediaKey }) { candidate -> com.brasa.tv.designsystem.MediaCard(candidate, { onPlay(candidate.playableItem()) }, format = if (candidate.type == "series") com.brasa.tv.designsystem.MediaCardFormat.Landscape else com.brasa.tv.designsystem.MediaCardFormat.Poster, onFocused = { onPrefetch(candidate.playableItem()) }) }
+            }
+        }
     }
 }
 
@@ -208,7 +239,8 @@ private fun EpisodeCard(episode: CatalogItem, modifier: Modifier = Modifier, onF
     }
 }
 
-private fun continueLabel(item: CatalogItem): String {
+private fun continueLabel(parent: CatalogItem, item: CatalogItem): String {
+    if (parent.actionLabel.isNotBlank()) return parent.actionLabel + (parent.remainingMinutes?.let { " — faltam $it min" } ?: "")
     val seconds = item.progress?.currentTime?.toLong() ?: 0L
     if (seconds <= 0) return "Assistir"
     val hours = seconds / 3600

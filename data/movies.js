@@ -152,8 +152,8 @@ const movies = [
         "title": "Superman",
         "originalTitle": "Superman",
         "year": 2025,
-        "duration": "2h 09min",
-        "rating": 7,
+        "duration": "2h 08min",
+        "rating": 7.328,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -172,12 +172,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt5950044",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
-        "fileSize": 25119571112,
-        "fileModifiedAt": "2026-07-11T16:48:50.177Z",
-        "lastIndexedAt": "2026-08-17T01:06:11.312Z",
+        "fileSize": 3179713648,
+        "fileModifiedAt": "2026-09-06T22:58:16.269Z",
+        "lastIndexedAt": "2026-09-06T23:57:02.361Z",
         "subtitles": [
             {
                 "label": "English",
@@ -194,7 +194,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:10.918Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:02.155Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -233,8 +233,8 @@ const movies = [
         "title": "Masters of the Universe",
         "originalTitle": "Masters of the Universe",
         "year": 2026,
-        "duration": "2h 20min",
-        "rating": 6.5,
+        "duration": "2h 13min",
+        "rating": 7.15,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -253,12 +253,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0427340",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1478591394,
         "fileModifiedAt": "2026-07-11T15:54:50.372Z",
-        "lastIndexedAt": "2026-08-17T01:06:11.774Z",
+        "lastIndexedAt": "2026-09-06T23:57:02.555Z",
         "subtitles": [
             {
                 "label": "English",
@@ -275,7 +275,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:11.313Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:02.362Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -284,7 +284,7 @@ const movies = [
         "originalTitle": "Ad Astra",
         "year": 2019,
         "duration": "2h 03min",
-        "rating": 6.5,
+        "rating": 6.135,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -302,12 +302,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2935510",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2488901054,
-        "fileModifiedAt": "2026-07-11T16:25:24.769Z",
-        "lastIndexedAt": "2026-08-17T01:06:12.212Z",
+        "fileModifiedAt": "2026-09-06T23:05:14.732Z",
+        "lastIndexedAt": "2026-09-06T23:57:02.760Z",
         "subtitles": [
             {
                 "label": "English",
@@ -324,7 +324,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:11.775Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:02.556Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -372,8 +372,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:12.213Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -383,7 +383,7 @@ const movies = [
         "originalTitle": "Lilo & Stitch",
         "year": 2025,
         "duration": "1h 48min",
-        "rating": 6.7,
+        "rating": 7.183,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -402,12 +402,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt11655566",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 11428527756,
         "fileModifiedAt": "2026-07-16T01:07:17.373Z",
-        "lastIndexedAt": "2026-08-17T01:06:13.163Z",
+        "lastIndexedAt": "2026-09-06T23:57:02.951Z",
         "subtitles": [
             {
                 "label": "English",
@@ -424,7 +424,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:12.649Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:02.761Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -432,8 +432,8 @@ const movies = [
         "title": "Michael",
         "originalTitle": "Michael",
         "year": 2026,
-        "duration": "2h 07min",
-        "rating": 7.5,
+        "duration": "2h 08min",
+        "rating": 8.653,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -451,12 +451,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt11378946",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3538536485,
         "fileModifiedAt": "2026-07-16T01:32:49.720Z",
-        "lastIndexedAt": "2026-08-17T01:06:13.571Z",
+        "lastIndexedAt": "2026-09-06T23:57:03.139Z",
         "subtitles": [
             {
                 "label": "English",
@@ -473,7 +473,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:13.164Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:02.952Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4142,7 +4142,7 @@ const movies = [
         "originalTitle": "Batman Begins",
         "year": 2005,
         "duration": "2h 20min",
-        "rating": 8.2,
+        "rating": 7.73,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -4161,12 +4161,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0372784",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2660367745,
         "fileModifiedAt": "2026-07-19T00:04:32.510Z",
-        "lastIndexedAt": "2026-08-17T01:06:14.065Z",
+        "lastIndexedAt": "2026-09-06T23:57:03.323Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4183,22 +4183,24 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:13.572Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:03.140Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 124,
-        "title": "Batman: Gotham Knight",
-        "originalTitle": "Batman: Gotham Knight",
+        "title": "Batman Gotham Knight",
+        "originalTitle": "Batman Gotham Knight",
         "year": 2008,
         "duration": "1h 15min",
-        "rating": 6.7,
+        "rating": 6.725,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
             "Ação",
             "Crime",
-            "Animação"
+            "Animação",
+            "Drama",
+            "Ficção científica"
         ],
         "overview": "Dos produtores de Batman Begins e de Batman – O Cavaleiro das Trevas, o grande lançamento de cinema do ano, vem esta maravilhosa interpretação da transição do Homem-Morcego, de inciante à Cavaleiro das Trevas. Seis histórias interrelacionadas revelam as primeiras aventuras de Bruce Wayne como Batman e os passos que ele tomou até se transformar no incansável vingador de Gotham City. Estas incríveis aventuras colocam Batman contra o amedrontador Espantalho e dois outros vilões jamais encarados antes: o ensandecido Killer Croc e o pistoleiro que nunca erra conhecido como Deadshot",
         "poster": "assets/posters/batman-gotham-knight-2008-poster.jpg",
@@ -4211,12 +4213,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1117563",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2921635762,
         "fileModifiedAt": "2026-07-18T23:55:18.306Z",
-        "lastIndexedAt": "2026-08-17T01:06:14.486Z",
+        "lastIndexedAt": "2026-09-06T23:57:03.523Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4233,16 +4235,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:14.066Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:03.325Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 125,
-        "title": "Batman: The Dark Knight Returns, Part 1",
-        "originalTitle": "Batman: The Dark Knight Returns, Part 1",
+        "title": "Batman The Dark Knight Returns, Part 1",
+        "originalTitle": "Batman The Dark Knight Returns, Part 1",
         "year": 2012,
         "duration": "1h 16min",
-        "rating": 8,
+        "rating": 7.74,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -4262,12 +4264,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2313197",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3187730308,
         "fileModifiedAt": "2026-07-19T00:04:32.513Z",
-        "lastIndexedAt": "2026-08-17T01:06:14.898Z",
+        "lastIndexedAt": "2026-09-06T23:57:03.717Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4284,7 +4286,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:14.487Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:03.524Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4292,8 +4294,8 @@ const movies = [
         "title": "The Batman",
         "originalTitle": "The Batman",
         "year": 2022,
-        "duration": "2h 56min",
-        "rating": 7.8,
+        "duration": "3h 05min",
+        "rating": 7.668,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -4312,12 +4314,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1877830",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 24552994424,
         "fileModifiedAt": "2026-07-19T11:07:19.385Z",
-        "lastIndexedAt": "2026-08-17T01:06:15.387Z",
+        "lastIndexedAt": "2026-09-06T23:57:03.889Z",
         "subtitles": [
             {
                 "label": "English",
@@ -4334,7 +4336,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:14.899Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:03.718Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -4366,11 +4368,11 @@ const movies = [
         "metadataStatus": "complete",
         "fileSize": 3010175059,
         "fileModifiedAt": "2026-07-18T23:59:58.942Z",
-        "lastIndexedAt": "2026-09-06T00:26:33.670Z",
+        "lastIndexedAt": "2026-09-06T20:52:05.123Z",
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-09-06T00:26:33.224Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:03.890Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -5039,7 +5041,7 @@ const movies = [
         "originalTitle": "Madagascar",
         "year": 2005,
         "duration": "1h 26min",
-        "rating": 6.9,
+        "rating": 6.93,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -5059,12 +5061,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0351283",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3405182400,
         "fileModifiedAt": "2026-07-19T03:41:27.640Z",
-        "lastIndexedAt": "2026-08-17T01:06:16.294Z",
+        "lastIndexedAt": "2026-09-06T23:57:04.301Z",
         "subtitles": [
             {
                 "label": "English",
@@ -5081,7 +5083,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:15.774Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:04.118Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -5148,56 +5150,6 @@ const movies = [
         "fileStatus": "missing-file",
         "playable": false,
         "lastMetadataAttemptAt": "2026-07-19T12:11:01.594Z",
-        "lastMetadataAttemptConfigured": true
-    },
-    {
-        "id": 151,
-        "title": "Demon Slayer Kimetsu no Yaiba Infinity Castle HDTC",
-        "originalTitle": "Demon Slayer Kimetsu no Yaiba Infinity Castle HDTC",
-        "year": 2025,
-        "duration": "2h 35min",
-        "rating": 7.7,
-        "contentRating": "",
-        "quality": "Local",
-        "genres": [
-            "Animação",
-            "Ação",
-            "Fantasia"
-        ],
-        "overview": "Enquanto os membros dos caçadores e os Hashira participavam de um rigoroso programa de fortalecimento coletivo, conhecido como Treinamento dos Hashira, em preparação para a batalha final contra os demônios, Muzan Kibutsuji aparece na Mansão Ubuyashiki. Com a vida do líder da organização em risco, Tanjiro e os Hashira correm até o quartel-general, mas acabam sendo lançados, pelas mãos de Muzan, em uma queda profunda rumo a um espaço misterioso para um confronto final, o Castelo Infinito.",
-        "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-infinity-castle-hdtc-2025-poster.jpg",
-        "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-infinity-castle-hdtc-2025-backdrop.jpg",
-        "video": "assets/movies/Demon Slayer Kimetsu no Yaiba Infinity Castle HDTC (2025) [tt32820897].mkv",
-        "audience": "general",
-        "addedAt": "2026-07-18T21:59:43.919Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt32820897",
-        "identificationConfidence": "medium",
-        "identificationReason": "Metadados complementados pelo TMDb.",
-        "metadataStatus": "complete",
-        "fileSize": 3211565689,
-        "fileModifiedAt": "2026-07-18T21:59:43.919Z",
-        "lastIndexedAt": "2026-07-19T12:11:02.083Z",
-        "subtitles": [
-            {
-                "label": "English",
-                "srclang": "en",
-                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-infinity-castle-hdtc-2025-en.vtt",
-                "default": false
-            },
-            {
-                "label": "Portugues (Brasil)",
-                "srclang": "pt-br",
-                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-infinity-castle-hdtc-2025-pt-br.vtt",
-                "default": true
-            }
-        ],
-        "fileStatus": "missing-file",
-        "playable": false,
-        "lastMetadataAttemptAt": "2026-07-19T12:11:01.758Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6063,8 +6015,8 @@ const movies = [
         "title": "Inside Out 2",
         "originalTitle": "Inside Out 2",
         "year": 2024,
-        "duration": "1h 36min",
-        "rating": 7.5,
+        "duration": "1h 40min",
+        "rating": 7.539,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -6084,12 +6036,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt22022452",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2090640879,
         "fileModifiedAt": "2026-07-19T00:42:34.421Z",
-        "lastIndexedAt": "2026-08-17T01:06:16.694Z",
+        "lastIndexedAt": "2026-09-06T23:57:04.487Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6106,7 +6058,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:16.295Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:04.303Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6313,7 +6265,7 @@ const movies = [
         "originalTitle": "Harry Potter and the Chamber of Secrets",
         "year": 2002,
         "duration": "2h 41min",
-        "rating": 7.5,
+        "rating": 7.707,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -6331,12 +6283,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0295297",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2675810177,
         "fileModifiedAt": "2026-07-18T23:31:55.390Z",
-        "lastIndexedAt": "2026-08-17T01:06:17.107Z",
+        "lastIndexedAt": "2026-09-06T23:57:04.683Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6353,7 +6305,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:16.695Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:04.488Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6362,7 +6314,7 @@ const movies = [
         "originalTitle": "Harry Potter and the Order of the Phoenix",
         "year": 2007,
         "duration": "2h 18min",
-        "rating": 7.5,
+        "rating": 7.672,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -6380,12 +6332,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0373889",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2278226324,
         "fileModifiedAt": "2026-07-18T23:09:56.555Z",
-        "lastIndexedAt": "2026-08-17T01:06:17.549Z",
+        "lastIndexedAt": "2026-09-06T23:57:04.873Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6402,7 +6354,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:17.108Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:04.684Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6411,7 +6363,7 @@ const movies = [
         "originalTitle": "Harry Potter and the Sorcerer's Stone",
         "year": 2001,
         "duration": "2h 32min",
-        "rating": 7.7,
+        "rating": 7.903,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -6429,12 +6381,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0241527",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2532785912,
         "fileModifiedAt": "2026-07-18T23:12:29.228Z",
-        "lastIndexedAt": "2026-08-17T01:06:17.957Z",
+        "lastIndexedAt": "2026-09-06T23:57:05.054Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6451,16 +6403,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:17.550Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:04.874Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 188,
-        "title": "Harry Potter and the Deathly Hallows: Part 1",
-        "originalTitle": "Harry Potter and the Deathly Hallows: Part 1",
+        "title": "Harry Potter and the Deathly Hallows Part 1",
+        "originalTitle": "Harry Potter and the Deathly Hallows Part 1",
         "year": 2010,
         "duration": "2h 26min",
-        "rating": 7.7,
+        "rating": 7.732,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -6478,12 +6430,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0926084",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2429280385,
         "fileModifiedAt": "2026-07-18T23:36:11.011Z",
-        "lastIndexedAt": "2026-08-17T01:06:18.448Z",
+        "lastIndexedAt": "2026-09-06T23:57:05.252Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6500,7 +6452,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:17.958Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:05.055Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6556,7 +6508,7 @@ const movies = [
         "originalTitle": "Harry Potter and the Goblet of Fire",
         "year": 2005,
         "duration": "2h 37min",
-        "rating": 7.7,
+        "rating": 7.802,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -6574,12 +6526,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0330373",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2611865285,
         "fileModifiedAt": "2026-07-18T23:19:17.513Z",
-        "lastIndexedAt": "2026-08-17T01:06:18.863Z",
+        "lastIndexedAt": "2026-09-06T23:57:05.438Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6596,7 +6548,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:18.449Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:05.255Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6605,7 +6557,7 @@ const movies = [
         "originalTitle": "Harry Potter and the Half-Blood Prince",
         "year": 2009,
         "duration": "2h 33min",
-        "rating": 7.6,
+        "rating": 7.682,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -6623,12 +6575,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0417741",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2553905006,
         "fileModifiedAt": "2026-07-18T23:36:11.756Z",
-        "lastIndexedAt": "2026-08-17T01:06:19.259Z",
+        "lastIndexedAt": "2026-09-06T23:57:05.637Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6645,7 +6597,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:18.865Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:05.439Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -6654,7 +6606,7 @@ const movies = [
         "originalTitle": "Harry Potter and the Prisoner of Azkaban",
         "year": 2004,
         "duration": "2h 22min",
-        "rating": 7.9,
+        "rating": 8.01,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -6672,12 +6624,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0304141",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2356690807,
         "fileModifiedAt": "2026-07-18T23:02:27.212Z",
-        "lastIndexedAt": "2026-08-17T01:06:19.696Z",
+        "lastIndexedAt": "2026-09-06T23:57:05.838Z",
         "subtitles": [
             {
                 "label": "English",
@@ -6694,7 +6646,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:19.260Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:05.638Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -7165,7 +7117,7 @@ const movies = [
         "originalTitle": "Despicable Me 4",
         "year": 2024,
         "duration": "1h 34min",
-        "rating": 6.2,
+        "rating": 6.97,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -7186,12 +7138,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt7510222",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2322051207,
         "fileModifiedAt": "2026-07-19T00:33:03.697Z",
-        "lastIndexedAt": "2026-08-17T01:06:20.111Z",
+        "lastIndexedAt": "2026-09-06T23:57:06.033Z",
         "subtitles": [
             {
                 "label": "English",
@@ -7208,7 +7160,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:19.697Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:05.839Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -7349,7 +7301,7 @@ const movies = [
         "originalTitle": "Ne Zha 2",
         "year": 2025,
         "duration": "2h 24min",
-        "rating": 7.9,
+        "rating": 8.164,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -7369,12 +7321,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt34956443",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2990081586,
         "fileModifiedAt": "2026-07-18T20:41:57.601Z",
-        "lastIndexedAt": "2026-08-17T01:06:20.568Z",
+        "lastIndexedAt": "2026-09-06T23:57:06.217Z",
         "subtitles": [
             {
                 "label": "English",
@@ -7391,7 +7343,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:20.112Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:06.034Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -7472,8 +7424,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:20.569Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -7978,7 +7930,7 @@ const movies = [
         "originalTitle": "The Croods",
         "year": 2013,
         "duration": "1h 38min",
-        "rating": 7.1,
+        "rating": 6.9,
         "contentRating": "PG",
         "quality": "1080p",
         "genres": [
@@ -7998,12 +7950,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0481499",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2300232925,
         "fileModifiedAt": "2026-07-19T03:59:37.469Z",
-        "lastIndexedAt": "2026-08-17T01:06:21.512Z",
+        "lastIndexedAt": "2026-09-06T23:57:06.401Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8020,7 +7972,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:21.047Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:06.218Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8095,7 +8047,7 @@ const movies = [
         "originalTitle": "Treasure Planet",
         "year": 2002,
         "duration": "1h 35min",
-        "rating": 7.2,
+        "rating": 7.577,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -8116,12 +8068,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0133240",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1776371365,
         "fileModifiedAt": "2026-07-19T03:36:52.486Z",
-        "lastIndexedAt": "2026-08-17T01:06:21.890Z",
+        "lastIndexedAt": "2026-09-06T23:57:06.609Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8138,7 +8090,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:21.513Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:06.402Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8254,8 +8206,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:21.890Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -8264,8 +8216,8 @@ const movies = [
         "title": "Red",
         "originalTitle": "Red",
         "year": 2022,
-        "duration": "1h 31min",
-        "rating": 3.1,
+        "duration": "1h 32min",
+        "rating": 4.217,
         "contentRating": "",
         "quality": "Local",
         "genres": [
@@ -8282,12 +8234,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt12757372",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2231183756,
         "fileModifiedAt": "2026-07-19T04:05:11.571Z",
-        "lastIndexedAt": "2026-09-06T00:26:34.106Z",
+        "lastIndexedAt": "2026-09-06T23:57:06.777Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8298,7 +8250,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-09-06T00:26:33.676Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:06.610Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -8336,11 +8288,11 @@ const movies = [
     },
     {
         "id": 239,
-        "title": "Rogue One: A Star Wars Story",
-        "originalTitle": "Rogue One: A Star Wars Story",
+        "title": "Rogue One A Star Wars Story",
+        "originalTitle": "Rogue One A Star Wars Story",
         "year": 2016,
         "duration": "2h 13min",
-        "rating": 7.8,
+        "rating": 7.51,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -8359,12 +8311,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt3748528",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3049034903,
         "fileModifiedAt": "2026-07-19T03:43:29.620Z",
-        "lastIndexedAt": "2026-08-17T01:06:23.105Z",
+        "lastIndexedAt": "2026-09-06T23:57:06.960Z",
         "subtitles": [
             {
                 "label": "English",
@@ -8381,7 +8333,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:22.706Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:06.781Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -10402,7 +10354,7 @@ const movies = [
         "originalTitle": "Sing Song",
         "year": 2017,
         "duration": "1h 36min",
-        "rating": 6.6,
+        "rating": 5,
         "contentRating": "",
         "quality": "Local",
         "genres": [
@@ -10421,16 +10373,16 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt7051286",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2206124432,
         "fileModifiedAt": "2026-07-19T04:00:31.210Z",
-        "lastIndexedAt": "2026-08-17T01:06:23.572Z",
+        "lastIndexedAt": "2026-09-06T23:57:07.135Z",
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:23.107Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:06.961Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -10479,8 +10431,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:23.576Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -11301,7 +11253,7 @@ const movies = [
         "originalTitle": "A Bug's Life",
         "year": 1998,
         "duration": "1h 35min",
-        "rating": 7.2,
+        "rating": 6.982,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -11321,12 +11273,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0120623",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1481518785,
         "fileModifiedAt": "2026-07-19T02:49:59.539Z",
-        "lastIndexedAt": "2026-08-17T01:06:24.373Z",
+        "lastIndexedAt": "2026-09-06T23:57:07.325Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11343,7 +11295,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:23.971Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:07.140Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -11846,8 +11798,8 @@ const movies = [
         "title": "Spirited Away",
         "originalTitle": "Spirited Away",
         "year": 2003,
-        "duration": "2h 04min",
-        "rating": 8.6,
+        "duration": "2h 05min",
+        "rating": 8.534,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -11866,12 +11818,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0245429",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 10605467724,
         "fileModifiedAt": "2026-07-19T11:31:15.838Z",
-        "lastIndexedAt": "2026-08-17T01:06:24.829Z",
+        "lastIndexedAt": "2026-09-06T23:57:07.513Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11888,7 +11840,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:24.374Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:07.326Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -11897,7 +11849,7 @@ const movies = [
         "originalTitle": "Deadpool & Wolverine",
         "year": 2024,
         "duration": "2h 08min",
-        "rating": 7.5,
+        "rating": 7.586,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -11916,12 +11868,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt6263850",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
-        "fileSize": 15364137605,
-        "fileModifiedAt": "2026-07-11T16:37:18.629Z",
-        "lastIndexedAt": "2026-08-17T01:06:25.243Z",
+        "fileSize": 2776708343,
+        "fileModifiedAt": "2026-09-06T22:54:51.954Z",
+        "lastIndexedAt": "2026-09-06T23:57:07.720Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11938,7 +11890,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:24.830Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:07.514Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -11947,7 +11899,7 @@ const movies = [
         "originalTitle": "Finding Nemo",
         "year": 2003,
         "duration": "1h 40min",
-        "rating": 8.2,
+        "rating": 7.82,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -11966,12 +11918,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0266543",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1550826304,
         "fileModifiedAt": "2026-07-19T03:47:43.417Z",
-        "lastIndexedAt": "2026-08-17T01:06:25.741Z",
+        "lastIndexedAt": "2026-09-06T23:57:07.918Z",
         "subtitles": [
             {
                 "label": "English",
@@ -11988,7 +11940,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:25.244Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:07.721Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12037,8 +11989,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:25.742Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -12047,8 +11999,8 @@ const movies = [
         "title": "The Emperor's New Groove",
         "originalTitle": "The Emperor's New Groove",
         "year": 2000,
-        "duration": "1h 18min",
-        "rating": 7.4,
+        "duration": "1h 16min",
+        "rating": 7.567,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -12069,12 +12021,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0120917",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1829266346,
         "fileModifiedAt": "2026-07-19T01:16:23.950Z",
-        "lastIndexedAt": "2026-08-17T01:06:26.656Z",
+        "lastIndexedAt": "2026-09-06T23:57:08.115Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12091,7 +12043,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:26.148Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:07.919Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12100,7 +12052,7 @@ const movies = [
         "originalTitle": "Rise of the Guardians",
         "year": 2012,
         "duration": "1h 37min",
-        "rating": 7.2,
+        "rating": 7.38,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -12121,12 +12073,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1446192",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1937474303,
         "fileModifiedAt": "2026-07-19T01:13:02.634Z",
-        "lastIndexedAt": "2026-08-17T01:06:27.083Z",
+        "lastIndexedAt": "2026-09-06T23:57:08.308Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12143,7 +12095,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:26.657Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:08.116Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12151,8 +12103,8 @@ const movies = [
         "title": "Aladdin",
         "originalTitle": "Aladdin",
         "year": 1992,
-        "duration": "1h 30min",
-        "rating": 8,
+        "duration": "1h 33min",
+        "rating": 7.657,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -12173,12 +12125,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0103639",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1711101745,
         "fileModifiedAt": "2026-07-19T02:22:48.986Z",
-        "lastIndexedAt": "2026-08-17T01:06:27.595Z",
+        "lastIndexedAt": "2026-09-06T23:57:08.502Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12195,7 +12147,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:27.084Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:08.309Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12204,7 +12156,7 @@ const movies = [
         "originalTitle": "Alice in Wonderland",
         "year": 1951,
         "duration": "1h 15min",
-        "rating": 7.3,
+        "rating": 7.19,
         "contentRating": "Approved",
         "quality": "Local",
         "genres": [
@@ -12224,12 +12176,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0043274",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1571520781,
         "fileModifiedAt": "2026-07-19T02:06:36.593Z",
-        "lastIndexedAt": "2026-08-17T01:06:28.061Z",
+        "lastIndexedAt": "2026-09-06T23:57:08.683Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12246,7 +12198,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:27.596Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:08.503Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12353,11 +12305,11 @@ const movies = [
     },
     {
         "id": 354,
-        "title": "Atlantis: The Lost Empire",
-        "originalTitle": "Atlantis: The Lost Empire",
+        "title": "Atlantis The Lost Empire",
+        "originalTitle": "Atlantis The Lost Empire",
         "year": 2001,
         "duration": "1h 35min",
-        "rating": 6.9,
+        "rating": 7.048,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -12377,12 +12329,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0230011",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1379592156,
         "fileModifiedAt": "2026-07-19T02:36:08.239Z",
-        "lastIndexedAt": "2026-08-17T01:06:28.467Z",
+        "lastIndexedAt": "2026-09-06T23:57:08.867Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12399,7 +12351,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:28.062Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:08.684Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12408,7 +12360,7 @@ const movies = [
         "originalTitle": "The Dark Knight",
         "year": 2008,
         "duration": "2h 32min",
-        "rating": 9.1,
+        "rating": 8.535,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -12427,12 +12379,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0468569",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1977680329,
         "fileModifiedAt": "2026-07-18T23:39:57.393Z",
-        "lastIndexedAt": "2026-08-17T01:06:28.986Z",
+        "lastIndexedAt": "2026-09-06T23:57:09.064Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12449,7 +12401,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:28.468Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:08.868Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12508,7 +12460,7 @@ const movies = [
         "originalTitle": "Cinderella",
         "year": 1950,
         "duration": "1h 14min",
-        "rating": 7.3,
+        "rating": 7.053,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -12528,12 +12480,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0042332",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 4565662504,
         "fileModifiedAt": "2026-07-19T05:12:35.720Z",
-        "lastIndexedAt": "2026-08-17T01:06:29.386Z",
+        "lastIndexedAt": "2026-09-06T23:57:09.268Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12550,7 +12502,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:28.987Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:09.065Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12605,62 +12557,12 @@ const movies = [
         "lastMetadataAttemptConfigured": true
     },
     {
-        "id": 359,
-        "title": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
-        "originalTitle": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
-        "year": 2025,
-        "duration": "2h 35min",
-        "rating": 8.4,
-        "contentRating": "R",
-        "quality": "Local",
-        "genres": [
-            "Animação",
-            "Ação",
-            "Fantasia"
-        ],
-        "overview": "Enquanto os membros dos caçadores e os Hashira participavam de um rigoroso programa de fortalecimento coletivo, conhecido como Treinamento dos Hashira, em preparação para a batalha final contra os demônios, Muzan Kibutsuji aparece na Mansão Ubuyashiki. Com a vida do líder da organização em risco, Tanjiro e os Hashira correm até o quartel-general, mas acabam sendo lançados, pelas mãos de Muzan, em uma queda profunda rumo a um espaço misterioso para um confronto final, o Castelo Infinito.",
-        "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-poster.jpg",
-        "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-backdrop.jpg",
-        "video": "assets/movies/Demon Slayer Kimetsu no Yaiba Infinity Castle (2025) [tt32820897].mkv",
-        "audience": "general",
-        "addedAt": "2026-07-18T21:59:43.919Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt32820897",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
-        "metadataStatus": "complete",
-        "fileSize": 3211565689,
-        "fileModifiedAt": "2026-07-18T21:59:43.919Z",
-        "lastIndexedAt": "2026-08-17T01:06:29.893Z",
-        "subtitles": [
-            {
-                "label": "English",
-                "srclang": "en",
-                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-en.vtt",
-                "default": false
-            },
-            {
-                "label": "Portugues (Brasil)",
-                "srclang": "pt-br",
-                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-pt-br.vtt",
-                "default": true
-            }
-        ],
-        "fileStatus": "available",
-        "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:29.387Z",
-        "lastMetadataAttemptConfigured": true
-    },
-    {
         "id": 360,
         "title": "Inside Out",
         "originalTitle": "Inside Out",
         "year": 2015,
         "duration": "1h 35min",
-        "rating": 8.1,
+        "rating": 7.906,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -12681,12 +12583,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2096673",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1818443009,
-        "fileModifiedAt": "2026-07-19T03:16:59.597Z",
-        "lastIndexedAt": "2026-08-17T01:06:30.287Z",
+        "fileModifiedAt": "2026-09-06T23:01:30.956Z",
+        "lastIndexedAt": "2026-09-06T23:57:09.625Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12703,7 +12605,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:29.894Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:09.427Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12712,7 +12614,7 @@ const movies = [
         "originalTitle": "Onward",
         "year": 2020,
         "duration": "1h 42min",
-        "rating": 7.4,
+        "rating": 7.634,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -12733,12 +12635,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt7146812",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2093166744,
         "fileModifiedAt": "2026-07-19T11:42:07.691Z",
-        "lastIndexedAt": "2026-08-17T01:06:30.780Z",
+        "lastIndexedAt": "2026-09-06T23:57:09.806Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12755,16 +12657,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:30.288Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:09.626Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 362,
-        "title": "Dune: Part Two",
-        "originalTitle": "Dune: Part Two",
+        "title": "Dune Part Two",
+        "originalTitle": "Dune Part Two",
         "year": 2024,
         "duration": "2h 46min",
-        "rating": 8.4,
+        "rating": 8.135,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -12782,12 +12684,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt15239678",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3762302567,
         "fileModifiedAt": "2026-07-19T00:41:24.359Z",
-        "lastIndexedAt": "2026-08-17T01:06:31.182Z",
+        "lastIndexedAt": "2026-09-06T23:57:09.990Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12804,7 +12706,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:30.781Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:09.807Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12812,8 +12714,8 @@ const movies = [
         "title": "Elemental",
         "originalTitle": "Elemental",
         "year": 2023,
-        "duration": "1h 41min",
-        "rating": 7,
+        "duration": "1h 42min",
+        "rating": 7.596,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -12833,12 +12735,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt15789038",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 5123469707,
         "fileModifiedAt": "2026-07-19T05:57:43.861Z",
-        "lastIndexedAt": "2026-08-17T01:06:31.699Z",
+        "lastIndexedAt": "2026-09-06T23:57:10.201Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12855,7 +12757,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:31.183Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:09.991Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -12864,7 +12766,7 @@ const movies = [
         "originalTitle": "Baby Driver",
         "year": 2017,
         "duration": "1h 53min",
-        "rating": 7.5,
+        "rating": 7.444,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -12882,12 +12784,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt3890160",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2163358458,
         "fileModifiedAt": "2026-07-19T00:09:10.940Z",
-        "lastIndexedAt": "2026-08-17T01:06:32.094Z",
+        "lastIndexedAt": "2026-09-06T23:57:10.374Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12904,16 +12806,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:31.700Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:10.202Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 365,
-        "title": "F1: The Movie",
-        "originalTitle": "F1: The Movie",
+        "title": "F1 The Movie",
+        "originalTitle": "F1 The Movie",
         "year": 2025,
         "duration": "2h 35min",
-        "rating": 7.6,
+        "rating": 7.822,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -12931,12 +12833,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt16311594",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 12403827155,
         "fileModifiedAt": "2026-07-19T11:48:51.383Z",
-        "lastIndexedAt": "2026-08-17T01:06:32.497Z",
+        "lastIndexedAt": "2026-09-06T23:57:10.564Z",
         "subtitles": [
             {
                 "label": "English",
@@ -12953,16 +12855,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:32.095Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:10.375Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 366,
-        "title": "Harry Potter and the Deathly Hallows: Part 2",
-        "originalTitle": "Harry Potter and the Deathly Hallows: Part 2",
+        "title": "Harry Potter and the Deathly Hallows Part 2",
+        "originalTitle": "Harry Potter and the Deathly Hallows Part 2",
         "year": 2011,
         "duration": "2h 10min",
-        "rating": 8.1,
+        "rating": 8.08,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -12980,12 +12882,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1201607",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2462932336,
         "fileModifiedAt": "2026-07-18T23:20:14.153Z",
-        "lastIndexedAt": "2026-08-17T01:06:32.899Z",
+        "lastIndexedAt": "2026-09-06T23:57:10.750Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13002,7 +12904,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:32.498Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:10.565Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13011,7 +12913,7 @@ const movies = [
         "originalTitle": "Hercules",
         "year": 1997,
         "duration": "1h 33min",
-        "rating": 7.3,
+        "rating": 7.499,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -13033,12 +12935,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0119282",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1966798588,
-        "fileModifiedAt": "2026-07-19T03:34:37.183Z",
-        "lastIndexedAt": "2026-08-17T01:06:33.319Z",
+        "fileModifiedAt": "2026-09-06T22:59:10.240Z",
+        "lastIndexedAt": "2026-09-06T23:57:10.957Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13055,16 +12957,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:32.901Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:10.751Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 368,
-        "title": "Spider-Man: Across the Spider-Verse",
-        "originalTitle": "Spider-Man: Across the Spider-Verse",
+        "title": "Spider-Man Across the Spider-Verse",
+        "originalTitle": "Spider-Man Across the Spider-Verse",
         "year": 2023,
         "duration": "2h 20min",
-        "rating": 8.5,
+        "rating": 8.347,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -13084,12 +12986,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt9362722",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
-        "fileSize": 11394552764,
-        "fileModifiedAt": "2026-07-18T23:35:16.578Z",
-        "lastIndexedAt": "2026-08-17T01:06:33.857Z",
+        "fileSize": 3838771682,
+        "fileModifiedAt": "2026-09-06T23:01:10.190Z",
+        "lastIndexedAt": "2026-09-06T23:57:11.184Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13106,16 +13008,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:33.320Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:10.958Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 369,
-        "title": "Spider-Man: Homecoming",
-        "originalTitle": "Spider-Man: Homecoming",
+        "title": "Spider-Man Homecoming",
+        "originalTitle": "Spider-Man Homecoming",
         "year": 2017,
         "duration": "2h 13min",
-        "rating": 7.4,
+        "rating": 7.333,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -13134,12 +13036,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2250912",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3079449877,
         "fileModifiedAt": "2026-07-18T18:55:18.516Z",
-        "lastIndexedAt": "2026-08-17T01:06:34.281Z",
+        "lastIndexedAt": "2026-09-06T23:57:11.370Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13156,16 +13058,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:33.859Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:11.185Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 370,
-        "title": "Spider-Man: Far from Home",
-        "originalTitle": "Spider-Man: Far from Home",
+        "title": "Spider-Man Far from Home",
+        "originalTitle": "Spider-Man Far from Home",
         "year": 2019,
-        "duration": "2h 09min",
-        "rating": 7.3,
+        "duration": "2h 10min",
+        "rating": 7.393,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -13184,12 +13086,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt6320628",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2948713489,
         "fileModifiedAt": "2026-07-18T19:03:32.370Z",
-        "lastIndexedAt": "2026-08-17T01:06:34.840Z",
+        "lastIndexedAt": "2026-09-06T23:57:11.551Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13206,16 +13108,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:34.283Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:11.371Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 371,
-        "title": "Spider-Man: No Way Home",
-        "originalTitle": "Spider-Man: No Way Home",
+        "title": "Spider-Man No Way Home",
+        "originalTitle": "Spider-Man No Way Home",
         "year": 2021,
-        "duration": "2h 28min",
-        "rating": 8.1,
+        "duration": "2h 29min",
+        "rating": 7.946,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -13234,12 +13136,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt10872600",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3966947193,
-        "fileModifiedAt": "2026-07-18T19:21:36.406Z",
-        "lastIndexedAt": "2026-08-17T01:06:35.239Z",
+        "fileModifiedAt": "2026-09-06T22:52:47.386Z",
+        "lastIndexedAt": "2026-09-06T23:57:11.759Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13256,7 +13158,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:34.841Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:11.552Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13265,7 +13167,7 @@ const movies = [
         "originalTitle": "Spider-Man",
         "year": 2002,
         "duration": "2h 01min",
-        "rating": 7.4,
+        "rating": 7.352,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -13283,12 +13185,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0145487",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3058754005,
-        "fileModifiedAt": "2026-07-18T20:07:38.148Z",
-        "lastIndexedAt": "2026-08-17T01:06:35.681Z",
+        "fileModifiedAt": "2026-09-06T22:48:33.120Z",
+        "lastIndexedAt": "2026-09-06T23:57:11.939Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13305,7 +13207,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:35.240Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:11.760Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13313,8 +13215,8 @@ const movies = [
         "title": "Spider-Man 2",
         "originalTitle": "Spider-Man 2",
         "year": 2004,
-        "duration": "2h 07min",
-        "rating": 7.5,
+        "duration": "2h 17min",
+        "rating": 7.328,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -13333,12 +13235,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0316654",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3232925780,
-        "fileModifiedAt": "2026-07-18T20:07:38.401Z",
-        "lastIndexedAt": "2026-08-17T01:06:36.253Z",
+        "fileModifiedAt": "2026-09-06T22:48:38.448Z",
+        "lastIndexedAt": "2026-09-06T23:57:12.119Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13355,7 +13257,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:35.682Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:11.940Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13364,7 +13266,7 @@ const movies = [
         "originalTitle": "Spider-Man 3",
         "year": 2007,
         "duration": "2h 19min",
-        "rating": 6.3,
+        "rating": 6.5,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -13383,12 +13285,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0413300",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3512763616,
         "fileModifiedAt": "2026-07-18T19:50:33.609Z",
-        "lastIndexedAt": "2026-08-17T01:06:36.669Z",
+        "lastIndexedAt": "2026-09-06T23:57:12.319Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13405,13 +13307,13 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:36.254Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:12.121Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 375,
-        "title": "Spider-Man: Into the Spider-Verse",
-        "originalTitle": "Spider-Man: Into the Spider-Verse",
+        "title": "Spider-Man Into the Spider-Verse",
+        "originalTitle": "Spider-Man Into the Spider-Verse",
         "year": 2018,
         "duration": "1h 57min",
         "rating": 8.4,
@@ -13434,12 +13336,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt4633694",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2745901943,
         "fileModifiedAt": "2026-07-18T18:51:10.309Z",
-        "lastIndexedAt": "2026-08-17T01:06:37.227Z",
+        "lastIndexedAt": "2026-09-06T23:57:12.526Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13456,16 +13358,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:36.670Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:12.320Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 376,
-        "title": "Karate Kid: Legends",
-        "originalTitle": "Karate Kid: Legends",
+        "title": "Karate Kid Legends",
+        "originalTitle": "Karate Kid Legends",
         "year": 2025,
-        "duration": "1h 34min",
-        "rating": 6.3,
+        "duration": "1h 30min",
+        "rating": 6.97,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -13484,12 +13386,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1674782",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 7591639144,
         "fileModifiedAt": "2026-07-19T01:36:52.063Z",
-        "lastIndexedAt": "2026-08-17T01:06:37.793Z",
+        "lastIndexedAt": "2026-09-06T23:57:12.713Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13506,7 +13408,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:37.228Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:12.527Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13514,8 +13416,8 @@ const movies = [
         "title": "Kung Fu Panda",
         "originalTitle": "Kung Fu Panda",
         "year": 2008,
-        "duration": "1h 32min",
-        "rating": 7.6,
+        "duration": "1h 35min",
+        "rating": 7.337,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -13535,12 +13437,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0441773",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1657122926,
         "fileModifiedAt": "2026-07-19T10:23:10.972Z",
-        "lastIndexedAt": "2026-08-17T01:06:38.187Z",
+        "lastIndexedAt": "2026-09-06T23:57:12.927Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13557,7 +13459,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:37.794Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:12.714Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13565,8 +13467,8 @@ const movies = [
         "title": "Kung Fu Panda 2",
         "originalTitle": "Kung Fu Panda 2",
         "year": 2011,
-        "duration": "1h 30min",
-        "rating": 7.3,
+        "duration": "1h 31min",
+        "rating": 7.085,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -13586,12 +13488,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1302011",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1625340560,
         "fileModifiedAt": "2026-07-19T10:23:17.949Z",
-        "lastIndexedAt": "2026-08-17T01:06:38.757Z",
+        "lastIndexedAt": "2026-09-06T23:57:13.105Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13608,7 +13510,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:38.188Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:12.928Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13617,7 +13519,7 @@ const movies = [
         "originalTitle": "Kung Fu Panda 3",
         "year": 2016,
         "duration": "1h 35min",
-        "rating": 7.1,
+        "rating": 6.94,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -13638,12 +13540,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2267968",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1706209286,
         "fileModifiedAt": "2026-07-19T10:23:12.423Z",
-        "lastIndexedAt": "2026-08-17T01:06:39.161Z",
+        "lastIndexedAt": "2026-09-06T23:57:13.284Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13660,7 +13562,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:38.758Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:13.106Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13669,7 +13571,7 @@ const movies = [
         "originalTitle": "Lightyear",
         "year": 2022,
         "duration": "1h 45min",
-        "rating": 6.1,
+        "rating": 6.863,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -13689,12 +13591,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt10298810",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2351269695,
         "fileModifiedAt": "2026-07-19T05:27:57.102Z",
-        "lastIndexedAt": "2026-08-17T01:06:39.703Z",
+        "lastIndexedAt": "2026-09-06T23:57:13.471Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13711,7 +13613,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:39.162Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:13.285Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13744,7 +13646,7 @@ const movies = [
         "subtitles": [],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-09-06T00:26:34.111Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:13.472Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13850,11 +13752,11 @@ const movies = [
     },
     {
         "id": 384,
-        "title": "Monsters, Inc.",
-        "originalTitle": "Monsters, Inc.",
+        "title": "Monsters, Inc",
+        "originalTitle": "Monsters, Inc",
         "year": 2001,
         "duration": "1h 32min",
-        "rating": 8.1,
+        "rating": 7.856,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -13874,12 +13776,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0198781",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2001324444,
         "fileModifiedAt": "2026-07-19T04:01:08.045Z",
-        "lastIndexedAt": "2026-08-17T01:06:40.713Z",
+        "lastIndexedAt": "2026-09-06T23:57:13.754Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13896,7 +13798,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:40.305Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:13.574Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -13955,7 +13857,7 @@ const movies = [
         "originalTitle": "Ne Zha",
         "year": 2019,
         "duration": "1h 50min",
-        "rating": 7.3,
+        "rating": 7.896,
         "contentRating": "Not Rated",
         "quality": "Local",
         "genres": [
@@ -13974,12 +13876,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt10627720",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2396879912,
         "fileModifiedAt": "2026-07-19T03:09:54.880Z",
-        "lastIndexedAt": "2026-08-17T01:06:41.277Z",
+        "lastIndexedAt": "2026-09-06T23:57:13.936Z",
         "subtitles": [
             {
                 "label": "English",
@@ -13996,7 +13898,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:40.714Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:13.755Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14005,7 +13907,7 @@ const movies = [
         "originalTitle": "The Hunchback of Notre Dame",
         "year": 1996,
         "duration": "1h 31min",
-        "rating": 7,
+        "rating": 7.136,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -14024,12 +13926,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0116583",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2075962840,
         "fileModifiedAt": "2026-07-19T03:32:03.573Z",
-        "lastIndexedAt": "2026-08-17T01:06:41.679Z",
+        "lastIndexedAt": "2026-09-06T23:57:14.126Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14046,7 +13948,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:41.278Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:13.937Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14106,7 +14008,7 @@ const movies = [
         "originalTitle": "Man of Steel",
         "year": 2013,
         "duration": "2h 23min",
-        "rating": 7.1,
+        "rating": 6.661,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -14125,12 +14027,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0770828",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2876282936,
         "fileModifiedAt": "2026-07-18T20:12:27.014Z",
-        "lastIndexedAt": "2026-08-17T01:06:42.178Z",
+        "lastIndexedAt": "2026-09-06T23:57:14.300Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14147,7 +14049,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:41.680Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:14.127Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14156,7 +14058,7 @@ const movies = [
         "originalTitle": "The Prince of Egypt",
         "year": 1998,
         "duration": "1h 39min",
-        "rating": 7.2,
+        "rating": 7.323,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -14176,12 +14078,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0120794",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 856282034,
         "fileModifiedAt": "2026-07-19T02:55:56.460Z",
-        "lastIndexedAt": "2026-08-17T01:06:42.728Z",
+        "lastIndexedAt": "2026-09-06T23:57:14.511Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14198,7 +14100,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:42.179Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:14.301Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14207,7 +14109,7 @@ const movies = [
         "originalTitle": "Big Hero 6",
         "year": 2014,
         "duration": "1h 42min",
-        "rating": 7.8,
+        "rating": 7.725,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -14228,12 +14130,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2245084",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1984261170,
         "fileModifiedAt": "2026-07-19T02:53:18.410Z",
-        "lastIndexedAt": "2026-08-17T01:06:43.122Z",
+        "lastIndexedAt": "2026-09-06T23:57:14.692Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14250,7 +14152,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:42.728Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:14.512Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14259,7 +14161,7 @@ const movies = [
         "originalTitle": "The Bad Guys 2",
         "year": 2025,
         "duration": "1h 44min",
-        "rating": 7,
+        "rating": 7.635,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -14267,7 +14169,8 @@ const movies = [
             "Comédia",
             "Crime",
             "Aventura",
-            "Animação"
+            "Animação",
+            "Ação"
         ],
         "overview": "Os agora reformados Bad Guys estão tentando (muito, muito mesmo) ser bons, mas em vez disso se veem sequestrados para um assalto de alto risco e alcance mundial, arquitetado por uma nova equipe de criminosos que eles nunca imaginaram: as Bad Girls.",
         "poster": "assets/posters/the-bad-guys-2-2025-poster.jpg",
@@ -14280,12 +14183,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt30017619",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2564297713,
         "fileModifiedAt": "2026-07-18T21:50:59.690Z",
-        "lastIndexedAt": "2026-08-17T01:06:43.678Z",
+        "lastIndexedAt": "2026-09-06T23:57:14.904Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14302,16 +14205,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:43.123Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:14.693Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 393,
-        "title": "The Croods: A New Age",
-        "originalTitle": "The Croods: A New Age",
+        "title": "The Croods A New Age",
+        "originalTitle": "The Croods A New Age",
         "year": 2020,
         "duration": "1h 35min",
-        "rating": 6.9,
+        "rating": 7.439,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -14332,12 +14235,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2850386",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2267325058,
         "fileModifiedAt": "2026-07-19T03:23:05.437Z",
-        "lastIndexedAt": "2026-08-17T01:06:44.084Z",
+        "lastIndexedAt": "2026-09-06T23:57:15.096Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14354,7 +14257,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:43.679Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:14.905Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14362,8 +14265,8 @@ const movies = [
         "title": "Ratatouille",
         "originalTitle": "Ratatouille",
         "year": 2007,
-        "duration": "1h 51min",
-        "rating": 8.1,
+        "duration": "1h 50min",
+        "rating": 7.846,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -14383,12 +14286,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0382932",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 4270499186,
         "fileModifiedAt": "2026-07-19T03:56:54.562Z",
-        "lastIndexedAt": "2026-08-17T01:06:44.493Z",
+        "lastIndexedAt": "2026-09-06T23:57:15.281Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14405,7 +14308,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:44.085Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:15.097Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14414,7 +14317,7 @@ const movies = [
         "originalTitle": "Rocky III",
         "year": 1982,
         "duration": "1h 39min",
-        "rating": 6.9,
+        "rating": 6.909,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -14431,12 +14334,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0084602",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1829365704,
         "fileModifiedAt": "2026-07-18T23:28:59.164Z",
-        "lastIndexedAt": "2026-08-17T01:06:45.069Z",
+        "lastIndexedAt": "2026-09-06T23:57:15.485Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14453,7 +14356,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:44.494Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:15.282Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14462,7 +14365,7 @@ const movies = [
         "originalTitle": "Stitch! The Movie",
         "year": 2003,
         "duration": "1h 00min",
-        "rating": 6.2,
+        "rating": 6.438,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -14482,12 +14385,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0348124",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 306746439,
         "fileModifiedAt": "2026-07-19T02:40:14.154Z",
-        "lastIndexedAt": "2026-08-17T01:06:45.469Z",
+        "lastIndexedAt": "2026-09-06T23:57:15.676Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14504,7 +14407,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:45.070Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:15.486Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14513,7 +14416,7 @@ const movies = [
         "originalTitle": "Tarzan",
         "year": 1999,
         "duration": "1h 28min",
-        "rating": 7.3,
+        "rating": 7.409,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -14532,12 +14435,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0120855",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1711174384,
         "fileModifiedAt": "2026-07-19T03:11:47.092Z",
-        "lastIndexedAt": "2026-08-17T01:06:46.038Z",
+        "lastIndexedAt": "2026-09-06T23:57:15.853Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14554,16 +14457,16 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:45.470Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:15.678Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 398,
-        "title": "Transformers: Dark of the Moon",
-        "originalTitle": "Transformers: Dark of the Moon",
+        "title": "Transformers Dark of the Moon",
+        "originalTitle": "Transformers Dark of the Moon",
         "year": 2011,
         "duration": "2h 34min",
-        "rating": 6.2,
+        "rating": 6.238,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -14582,12 +14485,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1399103",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2875229088,
         "fileModifiedAt": "2026-07-19T05:29:36.495Z",
-        "lastIndexedAt": "2026-08-17T01:06:46.436Z",
+        "lastIndexedAt": "2026-09-06T23:57:16.055Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14604,7 +14507,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:46.039Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:15.854Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14613,7 +14516,7 @@ const movies = [
         "originalTitle": "Transformers",
         "year": 2007,
         "duration": "2h 24min",
-        "rating": 7.1,
+        "rating": 6.846,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -14632,12 +14535,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0418279",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 14430077614,
         "fileModifiedAt": "2026-07-19T05:58:05.026Z",
-        "lastIndexedAt": "2026-08-17T01:06:46.816Z",
+        "lastIndexedAt": "2026-09-06T23:57:16.235Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14654,7 +14557,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:46.437Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:16.056Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14663,7 +14566,7 @@ const movies = [
         "originalTitle": "Brave",
         "year": 2012,
         "duration": "1h 33min",
-        "rating": 7.1,
+        "rating": 7.035,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -14683,12 +14586,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1217209",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1319574031,
         "fileModifiedAt": "2026-07-19T03:38:56.682Z",
-        "lastIndexedAt": "2026-08-17T01:06:47.359Z",
+        "lastIndexedAt": "2026-09-06T23:57:16.402Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14705,7 +14608,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:46.817Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:16.236Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14765,7 +14668,7 @@ const movies = [
         "originalTitle": "Zootopia 2",
         "year": 2025,
         "duration": "1h 48min",
-        "rating": 7.3,
+        "rating": 7.674,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -14786,12 +14689,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt26443597",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2830692095,
         "fileModifiedAt": "2026-07-19T00:14:08.162Z",
-        "lastIndexedAt": "2026-08-17T01:06:47.774Z",
+        "lastIndexedAt": "2026-09-06T23:57:16.595Z",
         "subtitles": [
             {
                 "label": "English",
@@ -14808,7 +14711,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:47.360Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:16.404Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -14986,55 +14889,6 @@ const movies = [
         "playable": false
     },
     {
-        "id": 408,
-        "title": "Creed II",
-        "originalTitle": "Creed II",
-        "year": 2018,
-        "duration": "2h 10min",
-        "rating": 7.1,
-        "contentRating": "PG-13",
-        "quality": "Local",
-        "genres": [
-            "Drama",
-            "Ação"
-        ],
-        "overview": "Adonis Creed saiu mais forte do que nunca de sua luta contra 'Pretty' Ricky Conlan e segue sua trajetória rumo ao campeonato mundial de boxe, contra toda a desconfiança que acompanha a sombra de seu pai e com o apoio de Rocky. Sua próxima luta não será tão simples: Ele precisa enfrentar um adversário que possui uma forte ligação com o passado de sua família, o que torna tudo ainda mais complexo.",
-        "poster": "assets/posters/creed-ii-2018-poster.jpg",
-        "backdrop": "assets/backdrops/creed-ii-2018-backdrop.jpg",
-        "video": "assets/movies/Creed II (2018) [tt6343314].mkv",
-        "audience": "general",
-        "addedAt": "2026-07-18T23:04:02.400Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt6343314",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
-        "metadataStatus": "complete",
-        "fileSize": 0,
-        "fileModifiedAt": "2026-07-18T23:04:02.400Z",
-        "lastIndexedAt": "2026-08-17T01:06:48.342Z",
-        "subtitles": [
-            {
-                "label": "English",
-                "srclang": "en",
-                "src": "assets/subtitles/creed-ii-2018-en.vtt",
-                "default": false
-            },
-            {
-                "label": "Portugues (Brasil)",
-                "srclang": "pt-br",
-                "src": "assets/subtitles/creed-ii-2018-pt-br.vtt",
-                "default": true
-            }
-        ],
-        "fileStatus": "available",
-        "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:47.775Z",
-        "lastMetadataAttemptConfigured": true
-    },
-    {
         "id": 409,
         "title": "O Homem que Desafiou o Diabo",
         "originalTitle": "O Homem que Desafiou o Diabo",
@@ -15137,183 +14991,6 @@ const movies = [
         "subtitles": [],
         "fileStatus": "missing-file",
         "playable": false
-    },
-    {
-        "id": 412,
-        "title": "Rocky Balboa",
-        "originalTitle": "Rocky Balboa",
-        "year": 2006,
-        "duration": "1h 42min",
-        "rating": 7.1,
-        "contentRating": "PG",
-        "quality": "Local",
-        "genres": [
-            "Drama"
-        ],
-        "overview": "Rocky, aposentado há muito tempo, trabalha em um restaurante na Filadélfia e lamenta a perda de sua amada mulher, Adrian. Com saudade de seus dias de glória, ele pretende voltar ao ringue e aceita o desafio de lutar contra o atual campeão mundial dos pesos pesados, Mason \"the Line\" Dixon.",
-        "poster": "assets/posters/rocky-balboa-2006-poster.jpg",
-        "backdrop": "assets/backdrops/rocky-balboa-2006-backdrop.jpg",
-        "video": "assets/movies/Rocky Balboa (2006) [tt0479143].mkv",
-        "audience": "general",
-        "addedAt": "2026-07-18T23:20:12.212Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt0479143",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
-        "metadataStatus": "complete",
-        "fileSize": 0,
-        "fileModifiedAt": "2026-07-18T23:20:12.212Z",
-        "lastIndexedAt": "2026-08-17T01:06:48.741Z",
-        "subtitles": [
-            {
-                "label": "English",
-                "srclang": "en",
-                "src": "assets/subtitles/rocky-balboa-2006-en.vtt",
-                "default": false
-            },
-            {
-                "label": "Portugues (Brasil)",
-                "srclang": "pt-br",
-                "src": "assets/subtitles/rocky-balboa-2006-pt-br.vtt",
-                "default": true
-            }
-        ],
-        "fileStatus": "available",
-        "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:48.343Z",
-        "lastMetadataAttemptConfigured": true
-    },
-    {
-        "id": 413,
-        "title": "Rocky II - A Revanche",
-        "originalTitle": "Rocky II - A Revanche",
-        "year": 1979,
-        "duration": "1h 59min",
-        "rating": 7.298,
-        "contentRating": "",
-        "quality": "Local",
-        "genres": [
-            "Drama"
-        ],
-        "overview": "Após a luta contra Apollo Creed, Rocky promete à sua esposa largar os ringues. Mas os fãs de boxe insistem em uma revanche entre os dois pugilistas. Sem dinheiro, Rocky se vê obrigado a aceitar o desafio e recebe a benção da esposa para lutar. Agora o lutador deve se preparar para o combate do século e decide treinar intensamente, sonhando apenas em terminar a luta sem ser nocauteado pelo campeão.",
-        "poster": "assets/posters/rocky-ii-a-revanche-1979-poster.jpg",
-        "backdrop": "assets/backdrops/rocky-ii-a-revanche-1979-backdrop.jpg",
-        "video": "assets/movies/Rocky II - A Revanche (1979) [tt0079817].mkv",
-        "audience": "general",
-        "addedAt": "2026-07-18T23:28:55.597Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt0079817",
-        "identificationConfidence": "low",
-        "identificationReason": "Nome identificado, mas o arquivo de vídeo está vazio (0 bytes).",
-        "metadataStatus": "incomplete",
-        "fileSize": 0,
-        "fileModifiedAt": "2026-07-18T23:28:55.597Z",
-        "lastIndexedAt": "2026-07-19T13:06:41.655Z",
-        "subtitles": [],
-        "fileStatus": "missing-file",
-        "playable": false
-    },
-    {
-        "id": 414,
-        "title": "Rocky IV",
-        "originalTitle": "Rocky IV",
-        "year": 1985,
-        "duration": "1h 31min",
-        "rating": 6.9,
-        "contentRating": "PG",
-        "quality": "Local",
-        "genres": [
-            "Drama"
-        ],
-        "overview": "Após Apollo morrer em uma luta contra Drago, um invencível lutador russo, Rocky decide ir até a União Soviética para enfrentá-lo e vingar o amigo.",
-        "poster": "assets/posters/rocky-iv-1985-poster.jpg",
-        "backdrop": "assets/backdrops/rocky-iv-1985-backdrop.jpg",
-        "video": "assets/movies/Rocky IV (1985) [tt0089927].mkv",
-        "audience": "general",
-        "addedAt": "2026-07-18T22:20:12.637Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt0089927",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
-        "metadataStatus": "complete",
-        "fileSize": 0,
-        "fileModifiedAt": "2026-07-18T22:20:12.637Z",
-        "lastIndexedAt": "2026-08-17T01:06:49.292Z",
-        "subtitles": [
-            {
-                "label": "English",
-                "srclang": "en",
-                "src": "assets/subtitles/rocky-iv-1985-en.vtt",
-                "default": false
-            },
-            {
-                "label": "Portugues (Brasil)",
-                "srclang": "pt-br",
-                "src": "assets/subtitles/rocky-iv-1985-pt-br.vtt",
-                "default": true
-            }
-        ],
-        "fileStatus": "available",
-        "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:48.742Z",
-        "lastMetadataAttemptConfigured": true
-    },
-    {
-        "id": 415,
-        "title": "Rocky V",
-        "originalTitle": "Rocky V",
-        "year": 1990,
-        "duration": "1h 44min",
-        "rating": 5.4,
-        "contentRating": "PG-13",
-        "quality": "Local",
-        "genres": [
-            "Drama"
-        ],
-        "overview": "Na luta com Drago, o lutador russo, Rocky acabou recebendo uma lesão permanente. Assim é forçado a se retirar do boxe e, para piorar as coisas, descobre que seu contador roubou sua fortuna. Sem dinheiro e não podendo voltar a lutar, ele começa a treinar um jovem que promete ser um grande lutador. Mas seu trabalhado não é terminado, pois um empresário atrai o jovem pugilista com um alto salário, mas mestre e aluno ainda vão se reencontrar como rivais.",
-        "poster": "assets/posters/rocky-v-1990-poster.jpg",
-        "backdrop": "assets/backdrops/rocky-v-1990-backdrop.jpg",
-        "video": "assets/movies/Rocky V (1990) [tt0100507].mkv",
-        "audience": "general",
-        "addedAt": "2026-07-18T23:18:55.017Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt0100507",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
-        "metadataStatus": "complete",
-        "fileSize": 0,
-        "fileModifiedAt": "2026-07-18T23:18:55.017Z",
-        "lastIndexedAt": "2026-08-17T01:06:49.721Z",
-        "subtitles": [
-            {
-                "label": "English",
-                "srclang": "en",
-                "src": "assets/subtitles/rocky-v-1990-en.vtt",
-                "default": false
-            },
-            {
-                "label": "Portugues (Brasil)",
-                "srclang": "pt-br",
-                "src": "assets/subtitles/rocky-v-1990-pt-br.vtt",
-                "default": true
-            }
-        ],
-        "fileStatus": "available",
-        "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:49.293Z",
-        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 416,
@@ -15532,7 +15209,7 @@ const movies = [
         "originalTitle": "Creed II",
         "year": 2018,
         "duration": "2h 10min",
-        "rating": 7.1,
+        "rating": 7.034,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -15550,12 +15227,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt6343314",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3054283841,
-        "fileModifiedAt": "2026-07-19T14:46:05.763Z",
-        "lastIndexedAt": "2026-08-17T01:06:50.284Z",
+        "fileModifiedAt": "2026-09-06T23:03:42.614Z",
+        "lastIndexedAt": "2026-09-06T23:57:17.569Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15572,7 +15249,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:49.722Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:17.394Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15581,7 +15258,7 @@ const movies = [
         "originalTitle": "Creed",
         "year": 2015,
         "duration": "2h 13min",
-        "rating": 7.6,
+        "rating": 7.407,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -15598,12 +15275,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt3076658",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2752852193,
         "fileModifiedAt": "2026-07-19T14:46:25.008Z",
-        "lastIndexedAt": "2026-08-17T01:06:50.706Z",
+        "lastIndexedAt": "2026-09-06T23:57:17.751Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15620,7 +15297,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:50.285Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:17.571Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15629,7 +15306,7 @@ const movies = [
         "originalTitle": "Rocky Balboa",
         "year": 2006,
         "duration": "1h 42min",
-        "rating": 7.1,
+        "rating": 6.885,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -15646,12 +15323,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0479143",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1733145276,
-        "fileModifiedAt": "2026-07-19T14:46:20.209Z",
-        "lastIndexedAt": "2026-08-17T01:06:51.110Z",
+        "fileModifiedAt": "2026-09-06T23:03:36.267Z",
+        "lastIndexedAt": "2026-09-06T23:57:17.953Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15668,7 +15345,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:50.707Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:17.752Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15694,12 +15371,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0079817",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2837201881,
-        "fileModifiedAt": "2026-07-19T14:51:00.452Z",
-        "lastIndexedAt": "2026-08-17T01:06:51.689Z",
+        "fileModifiedAt": "2026-09-06T23:05:43.879Z",
+        "lastIndexedAt": "2026-09-06T23:57:18.200Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15716,7 +15393,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:51.111Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:17.954Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15725,11 +15402,13 @@ const movies = [
         "originalTitle": "Rocky IV",
         "year": 1985,
         "duration": "1h 31min",
-        "rating": 6.9,
+        "rating": 7.1,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
-            "Drama"
+            "Drama",
+            "Ação",
+            "Família"
         ],
         "overview": "Após Apollo morrer em uma luta contra Drago, um invencível lutador russo, Rocky decide ir até a União Soviética para enfrentá-lo e vingar o amigo.",
         "poster": "assets/posters/rocky-iv-1985-poster.jpg",
@@ -15742,12 +15421,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0089927",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2178740215,
-        "fileModifiedAt": "2026-07-19T14:45:57.040Z",
-        "lastIndexedAt": "2026-08-17T01:06:52.082Z",
+        "fileModifiedAt": "2026-09-06T23:05:46.802Z",
+        "lastIndexedAt": "2026-09-06T23:57:18.371Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15764,7 +15443,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:51.690Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:18.201Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15772,8 +15451,8 @@ const movies = [
         "title": "Rocky",
         "originalTitle": "Rocky",
         "year": 1976,
-        "duration": "2h 00min",
-        "rating": 8.1,
+        "duration": "1h 59min",
+        "rating": 7.8,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -15790,12 +15469,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0075148",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2618836831,
         "fileModifiedAt": "2026-07-19T14:45:54.517Z",
-        "lastIndexedAt": "2026-08-17T01:06:52.657Z",
+        "lastIndexedAt": "2026-09-06T23:57:18.568Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15812,7 +15491,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:52.083Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:18.372Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15821,7 +15500,7 @@ const movies = [
         "originalTitle": "Rocky V",
         "year": 1990,
         "duration": "1h 44min",
-        "rating": 5.4,
+        "rating": 5.775,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -15838,12 +15517,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0100507",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1850070478,
         "fileModifiedAt": "2026-07-19T14:46:00.324Z",
-        "lastIndexedAt": "2026-08-17T01:06:53.046Z",
+        "lastIndexedAt": "2026-09-06T23:57:18.744Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15860,7 +15539,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:52.658Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:18.569Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15869,7 +15548,7 @@ const movies = [
         "originalTitle": "Turbo Charged Prelude to 2 Fast 2 Furious",
         "year": 2003,
         "duration": "6min",
-        "rating": 6.2,
+        "rating": 6.116,
         "contentRating": "Not Rated",
         "quality": "Local",
         "genres": [
@@ -15886,12 +15565,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2055789",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1531193624,
         "fileModifiedAt": "2026-07-19T14:57:56.017Z",
-        "lastIndexedAt": "2026-08-17T01:06:53.469Z",
+        "lastIndexedAt": "2026-09-06T23:57:18.951Z",
         "subtitles": [
             {
                 "label": "English",
@@ -15902,7 +15581,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:53.047Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:18.745Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -15951,8 +15630,8 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:53.470Z",
         "lastMetadataAttemptConfigured": true
     },
@@ -15962,7 +15641,7 @@ const movies = [
         "originalTitle": "Fast & Furious",
         "year": 2009,
         "duration": "1h 47min",
-        "rating": 6.5,
+        "rating": 6.687,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -15981,12 +15660,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1013752",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1640832288,
         "fileModifiedAt": "2026-07-19T14:57:51.724Z",
-        "lastIndexedAt": "2026-08-17T01:06:54.403Z",
+        "lastIndexedAt": "2026-09-06T23:57:19.149Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16003,7 +15682,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:54.006Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:18.952Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16011,8 +15690,8 @@ const movies = [
         "title": "Fast Five",
         "originalTitle": "Fast Five",
         "year": 2011,
-        "duration": "2h 10min",
-        "rating": 7.3,
+        "duration": "2h 11min",
+        "rating": 7.244,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -16031,12 +15710,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1596343",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1842171476,
         "fileModifiedAt": "2026-07-19T14:57:36.014Z",
-        "lastIndexedAt": "2026-08-17T01:06:55.001Z",
+        "lastIndexedAt": "2026-09-06T23:57:19.335Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16053,7 +15732,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:54.404Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:19.150Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16062,7 +15741,7 @@ const movies = [
         "originalTitle": "Fast & Furious 6",
         "year": 2013,
         "duration": "2h 10min",
-        "rating": 7,
+        "rating": 6.817,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -16081,12 +15760,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1905041",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1670291842,
         "fileModifiedAt": "2026-07-19T14:57:51.711Z",
-        "lastIndexedAt": "2026-08-17T01:06:55.409Z",
+        "lastIndexedAt": "2026-09-06T23:57:19.513Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16103,7 +15782,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:55.002Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:19.336Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16111,8 +15790,8 @@ const movies = [
         "title": "The Fast and the Furious",
         "originalTitle": "The Fast and the Furious",
         "year": 2001,
-        "duration": "1h 46min",
-        "rating": 6.8,
+        "duration": "1h 44min",
+        "rating": 7.016,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -16131,12 +15810,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0232500",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1536685172,
         "fileModifiedAt": "2026-07-19T14:57:52.255Z",
-        "lastIndexedAt": "2026-08-17T01:06:55.821Z",
+        "lastIndexedAt": "2026-09-06T23:57:19.708Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16153,7 +15832,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:55.410Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:19.514Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16161,8 +15840,8 @@ const movies = [
         "title": "Furious 7",
         "originalTitle": "Furious 7",
         "year": 2015,
-        "duration": "2h 17min",
-        "rating": 7.1,
+        "duration": "2h 12min",
+        "rating": 7.214,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -16181,12 +15860,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2820852",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2681238470,
         "fileModifiedAt": "2026-07-19T14:57:59.280Z",
-        "lastIndexedAt": "2026-08-17T01:06:56.408Z",
+        "lastIndexedAt": "2026-09-06T23:57:19.891Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16203,7 +15882,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:55.822Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:19.708Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16251,25 +15930,25 @@ const movies = [
                 "default": true
             }
         ],
-        "fileStatus": "available",
-        "playable": true,
+        "fileStatus": "missing-file",
+        "playable": false,
         "lastMetadataAttemptAt": "2026-08-17T01:06:56.409Z",
         "lastMetadataAttemptConfigured": true
     },
     {
         "id": 437,
-        "title": "Avatar Aang: The Last Airbender",
-        "originalTitle": "Avatar Aang: The Last Airbender",
+        "title": "Avatar Aang The Last Airbender",
+        "originalTitle": "Avatar Aang The Last Airbender",
         "year": 2026,
         "duration": "1h 39min",
-        "rating": 9.178,
+        "rating": 9.2,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
             "Animação",
-            "Ação",
             "Aventura",
-            "Fantasia"
+            "Fantasia",
+            "Família"
         ],
         "overview": "O Avatar Aang, o último mestre do ar do mundo, toma conhecimento de um poder antigo que poderia salvar sua cultura da extinção. Com a ajuda de seus amigos, ele embarca em uma busca global para encontrá-lo antes que caia em mãos erradas e ameace destruir a paz que eles sacrificaram tudo para alcançar.",
         "poster": "assets/posters/avatar-aang-the-last-airbender-2026-poster.jpg",
@@ -16282,12 +15961,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt18259538",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2745961573,
         "fileModifiedAt": "2026-07-25T23:17:56.204Z",
-        "lastIndexedAt": "2026-08-17T01:06:57.279Z",
+        "lastIndexedAt": "2026-09-06T23:57:20.073Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16304,7 +15983,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:56.805Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:19.892Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16748,7 +16427,7 @@ const movies = [
         "originalTitle": "The Devil Wears Prada 2",
         "year": 2026,
         "duration": "1h 59min",
-        "rating": 6.4,
+        "rating": 7.048,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -16766,12 +16445,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt33612209",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3887783372,
         "fileModifiedAt": "2026-07-31T23:01:54.986Z",
-        "lastIndexedAt": "2026-08-17T01:06:57.674Z",
+        "lastIndexedAt": "2026-09-06T23:57:20.256Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16788,7 +16467,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:57.280Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:20.075Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16842,62 +16521,12 @@ const movies = [
         "lastMetadataAttemptConfigured": true
     },
     {
-        "id": 449,
-        "title": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
-        "originalTitle": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
-        "year": 2025,
-        "duration": "2h 35min",
-        "rating": 8.4,
-        "contentRating": "R",
-        "quality": "Local",
-        "genres": [
-            "Animação",
-            "Ação",
-            "Fantasia"
-        ],
-        "overview": "Enquanto os membros dos caçadores e os Hashira participavam de um rigoroso programa de fortalecimento coletivo, conhecido como Treinamento dos Hashira, em preparação para a batalha final contra os demônios, Muzan Kibutsuji aparece na Mansão Ubuyashiki. Com a vida do líder da organização em risco, Tanjiro e os Hashira correm até o quartel-general, mas acabam sendo lançados, pelas mãos de Muzan, em uma queda profunda rumo a um espaço misterioso para um confronto final, o Castelo Infinito.",
-        "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-poster.jpg",
-        "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-infinity-castle-2025-backdrop.jpg",
-        "video": "assets/movies/Demon Slayer Kimetsu no Yaiba Infinity Castle (2025) [tt32820897].mkv",
-        "audience": "general",
-        "addedAt": "2026-08-02T23:08:06.431Z",
-        "progress": 0,
-        "favorite": false,
-        "featured": false,
-        "themes": [],
-        "imdbId": "tt32820897",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
-        "metadataStatus": "complete",
-        "fileSize": 9720487167,
-        "fileModifiedAt": "2026-08-02T23:08:06.431Z",
-        "lastIndexedAt": "2026-08-17T01:06:58.641Z",
-        "subtitles": [
-            {
-                "label": "English",
-                "srclang": "en",
-                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-castelo-infinito-2025-en.vtt",
-                "default": false
-            },
-            {
-                "label": "Portugues (Brasil)",
-                "srclang": "pt-br",
-                "src": "assets/subtitles/demon-slayer-kimetsu-no-yaiba-castelo-infinito-2025-pt-br.vtt",
-                "default": true
-            }
-        ],
-        "fileStatus": "available",
-        "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:58.080Z",
-        "lastMetadataAttemptConfigured": true
-    },
-    {
         "id": 450,
         "title": "Ghost Rider",
         "originalTitle": "Ghost Rider",
         "year": 2007,
-        "duration": "1h 50min",
-        "rating": 5.3,
+        "duration": "2h 03min",
+        "rating": 5.619,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -16916,12 +16545,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0259324",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2369660207,
         "fileModifiedAt": "2026-08-02T23:12:41.399Z",
-        "lastIndexedAt": "2026-08-17T01:06:59.220Z",
+        "lastIndexedAt": "2026-09-06T23:57:20.611Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16938,7 +16567,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-17T01:06:58.642Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:20.432Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16947,7 +16576,7 @@ const movies = [
         "originalTitle": "The Expendables 4",
         "year": 2023,
         "duration": "1h 43min",
-        "rating": 4.8,
+        "rating": 6.041,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -16966,12 +16595,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt3291150",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3028575823,
         "fileModifiedAt": "2026-08-23T00:50:14.165Z",
-        "lastIndexedAt": "2026-08-23T01:13:22.680Z",
+        "lastIndexedAt": "2026-09-06T23:57:20.810Z",
         "subtitles": [
             {
                 "label": "English",
@@ -16988,7 +16617,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-23T01:13:21.231Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:20.612Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -16997,7 +16626,7 @@ const movies = [
         "originalTitle": "The Expendables",
         "year": 2010,
         "duration": "1h 43min",
-        "rating": 6.4,
+        "rating": 6.251,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -17016,12 +16645,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1320253",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 1803476656,
         "fileModifiedAt": "2026-08-23T00:52:09.038Z",
-        "lastIndexedAt": "2026-08-23T01:04:23.585Z",
+        "lastIndexedAt": "2026-09-06T23:57:20.986Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17037,7 +16666,9 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:20.811Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 453,
@@ -17045,7 +16676,7 @@ const movies = [
         "originalTitle": "The Expendables 2",
         "year": 2012,
         "duration": "1h 43min",
-        "rating": 6.6,
+        "rating": 6.355,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -17064,12 +16695,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1764651",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2274694038,
         "fileModifiedAt": "2026-08-23T00:50:12.724Z",
-        "lastIndexedAt": "2026-08-23T01:04:24.526Z",
+        "lastIndexedAt": "2026-09-06T23:57:21.170Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17085,7 +16716,9 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:20.988Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 454,
@@ -17093,7 +16726,7 @@ const movies = [
         "originalTitle": "The Expendables 3",
         "year": 2014,
         "duration": "2h 06min",
-        "rating": 6.1,
+        "rating": 6.201,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -17112,12 +16745,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt2333784",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2514710984,
         "fileModifiedAt": "2026-08-23T00:39:09.307Z",
-        "lastIndexedAt": "2026-08-23T01:04:25.477Z",
+        "lastIndexedAt": "2026-09-06T23:57:21.357Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17133,15 +16766,17 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:21.171Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 455,
-        "title": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
-        "originalTitle": "Demon Slayer: Kimetsu no Yaiba Infinity Castle",
+        "title": "Demon Slayer Kimetsu no Yaiba Infinity Castle",
+        "originalTitle": "Demon Slayer Kimetsu no Yaiba Infinity Castle",
         "year": 2025,
         "duration": "2h 35min",
-        "rating": 8.4,
+        "rating": 8.78,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -17160,12 +16795,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt32820897",
-        "identificationConfidence": "high",
-        "identificationReason": "Metadados confirmados pela OMDb.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 9720487167,
         "fileModifiedAt": "2026-08-23T01:05:16.385Z",
-        "lastIndexedAt": "2026-08-23T19:56:19.917Z",
+        "lastIndexedAt": "2026-09-06T23:57:21.525Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17182,7 +16817,7 @@ const movies = [
         ],
         "fileStatus": "available",
         "playable": true,
-        "lastMetadataAttemptAt": "2026-08-23T19:56:19.534Z",
+        "lastMetadataAttemptAt": "2026-09-06T23:57:21.358Z",
         "lastMetadataAttemptConfigured": true
     },
     {
@@ -17222,7 +16857,7 @@ const movies = [
         "originalTitle": "Edge of Tomorrow",
         "year": 2014,
         "duration": "1h 53min",
-        "rating": 7.9,
+        "rating": 7.643,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -17240,12 +16875,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1631867",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 4427249492,
         "fileModifiedAt": "2026-09-05T23:35:58.903Z",
-        "lastIndexedAt": "2026-09-06T00:26:36.259Z",
+        "lastIndexedAt": "2026-09-06T23:57:21.707Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17261,7 +16896,9 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:21.526Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 458,
@@ -17307,8 +16944,8 @@ const movies = [
                 "source": "local"
             }
         ],
-        "fileStatus": "available",
-        "playable": true
+        "fileStatus": "missing-file",
+        "playable": false
     },
     {
         "id": 459,
@@ -17346,8 +16983,8 @@ const movies = [
         "title": "The Lion King",
         "originalTitle": "The Lion King",
         "year": 1994,
-        "duration": "1h 28min",
-        "rating": 8.5,
+        "duration": "1h 29min",
+        "rating": 8.251,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -17366,12 +17003,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0110357",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 4785321159,
         "fileModifiedAt": "2026-09-05T23:44:58.241Z",
-        "lastIndexedAt": "2026-09-06T00:26:38.487Z",
+        "lastIndexedAt": "2026-09-06T23:57:21.924Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17388,15 +17025,17 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:21.708Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 461,
-        "title": "The Lion King 3: Hakuna Matata",
-        "originalTitle": "The Lion King 3: Hakuna Matata",
+        "title": "The Lion King 3 Hakuna Matata",
+        "originalTitle": "The Lion King 3 Hakuna Matata",
         "year": 2004,
         "duration": "1h 17min",
-        "rating": 6.5,
+        "rating": 6.588,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -17416,12 +17055,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0318403",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3793670172,
         "fileModifiedAt": "2026-09-05T23:44:54.826Z",
-        "lastIndexedAt": "2026-09-06T00:26:39.287Z",
+        "lastIndexedAt": "2026-09-06T23:57:22.104Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17438,15 +17077,17 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:21.925Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 462,
-        "title": "The Lion King 2: Simba's Pride",
-        "originalTitle": "The Lion King 2: Simba's Pride",
+        "title": "The Lion King 2 Simba's Pride",
+        "originalTitle": "The Lion King 2 Simba's Pride",
         "year": 1998,
         "duration": "1h 21min",
-        "rating": 6.5,
+        "rating": 6.941,
         "contentRating": "G",
         "quality": "Local",
         "genres": [
@@ -17467,12 +17108,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0120131",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 3911932227,
         "fileModifiedAt": "2026-09-05T23:44:55.059Z",
-        "lastIndexedAt": "2026-09-06T00:26:40.096Z",
+        "lastIndexedAt": "2026-09-06T23:57:22.402Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17489,7 +17130,9 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:22.105Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 463,
@@ -17497,7 +17140,7 @@ const movies = [
         "originalTitle": "The Matrix",
         "year": 1999,
         "duration": "2h 16min",
-        "rating": 8.7,
+        "rating": 8.257,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -17515,12 +17158,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0133093",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2186793537,
         "fileModifiedAt": "2026-09-05T23:24:37.747Z",
-        "lastIndexedAt": "2026-09-06T00:26:40.905Z",
+        "lastIndexedAt": "2026-09-06T23:57:22.571Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17537,7 +17180,9 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:22.403Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 464,
@@ -17545,7 +17190,7 @@ const movies = [
         "originalTitle": "The Matrix Reloaded",
         "year": 2003,
         "duration": "2h 18min",
-        "rating": 7.2,
+        "rating": 7.085,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -17565,12 +17210,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0234215",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2189532924,
         "fileModifiedAt": "2026-09-05T23:24:04.841Z",
-        "lastIndexedAt": "2026-09-06T00:26:41.705Z",
+        "lastIndexedAt": "2026-09-06T23:57:22.773Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17587,7 +17232,9 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:22.572Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 465,
@@ -17595,7 +17242,7 @@ const movies = [
         "originalTitle": "The Matrix Revolutions",
         "year": 2003,
         "duration": "2h 09min",
-        "rating": 6.7,
+        "rating": 6.758,
         "contentRating": "R",
         "quality": "Local",
         "genres": [
@@ -17615,12 +17262,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0242653",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2174749217,
         "fileModifiedAt": "2026-09-05T23:24:31.476Z",
-        "lastIndexedAt": "2026-09-06T00:26:42.536Z",
+        "lastIndexedAt": "2026-09-06T23:57:22.954Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17637,15 +17284,17 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:22.774Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 466,
         "title": "Top Gun",
         "originalTitle": "Top Gun",
         "year": 1986,
-        "duration": "1h 50min",
-        "rating": 7,
+        "duration": "1h 49min",
+        "rating": 7.072,
         "contentRating": "PG",
         "quality": "Local",
         "genres": [
@@ -17664,12 +17313,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt0092099",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 2764114213,
         "fileModifiedAt": "2026-09-05T23:18:02.130Z",
-        "lastIndexedAt": "2026-09-06T00:26:43.328Z",
+        "lastIndexedAt": "2026-09-06T23:57:23.140Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17685,15 +17334,17 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:22.955Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 467,
-        "title": "Top Gun: Maverick",
-        "originalTitle": "Top Gun: Maverick",
+        "title": "Top Gun Maverick",
+        "originalTitle": "Top Gun Maverick",
         "year": 2022,
-        "duration": "2h 10min",
-        "rating": 8.2,
+        "duration": "2h 11min",
+        "rating": 8.159,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -17711,12 +17362,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt1745960",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 6210491750,
         "fileModifiedAt": "2026-09-05T23:26:11.237Z",
-        "lastIndexedAt": "2026-09-06T00:26:44.134Z",
+        "lastIndexedAt": "2026-09-06T23:57:23.338Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17732,15 +17383,17 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:23.141Z",
+        "lastMetadataAttemptConfigured": true
     },
     {
         "id": 468,
-        "title": "Star Wars: The Mandalorian and Grogu",
-        "originalTitle": "Star Wars: The Mandalorian and Grogu",
+        "title": "Star Wars The Mandalorian and Grogu",
+        "originalTitle": "Star Wars The Mandalorian and Grogu",
         "year": 2026,
         "duration": "2h 12min",
-        "rating": 6.8,
+        "rating": 7.484,
         "contentRating": "PG-13",
         "quality": "Local",
         "genres": [
@@ -17759,12 +17412,12 @@ const movies = [
         "featured": false,
         "themes": [],
         "imdbId": "tt30825738",
-        "identificationConfidence": "high",
-        "identificationReason": "IMDb ID confirmado.",
+        "identificationConfidence": "medium",
+        "identificationReason": "Metadados complementados pelo TMDb.",
         "metadataStatus": "complete",
         "fileSize": 13434583070,
         "fileModifiedAt": "2026-09-05T22:41:52.235Z",
-        "lastIndexedAt": "2026-09-06T00:28:20.397Z",
+        "lastIndexedAt": "2026-09-06T23:57:23.557Z",
         "subtitles": [
             {
                 "label": "English",
@@ -17780,7 +17433,9 @@ const movies = [
             }
         ],
         "fileStatus": "available",
-        "playable": true
+        "playable": true,
+        "lastMetadataAttemptAt": "2026-09-06T23:57:23.339Z",
+        "lastMetadataAttemptConfigured": true
     }
 ];
 

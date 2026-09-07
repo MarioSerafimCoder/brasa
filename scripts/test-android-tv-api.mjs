@@ -11,7 +11,7 @@ const services = {
     home: async () => ({ profile: { id: "adult" }, rows: [{ id: "movies", title: "Filmes", items: [] }] }),
     search: async (_device, _profile, query) => [{ mediaKey: "movie:42", title: query }],
     playback: async (_device, _profile, key, capabilities, fallback, prepare, positionMs) => ({ mediaKey: key, playbackUrl: `/api/tv/stream/${key}`, capabilities, fallback, prepare, positionMs }),
-    progress: async () => null, saveProgress: async () => ({}), saveFavorite: async () => ({ favorite: true }), verifyPin: async () => true, stream: async () => {}
+    progress: async () => null, saveProgress: async () => ({}), saveFavorite: async () => ({ favorite: true }), saveSignal: async (_profile, key, action, enabled) => ({ key, action, enabled }), savePreferences: async (_profile, value) => value, resetPersonalization: async () => ({ reset: true }), verifyPin: async () => true, stream: async () => {}
 };
 const controller = createDeviceController({
     pairing: { start: async () => ({}), status: () => ({}), list: () => [], approve: async () => ({}), reject: () => ({}) },
@@ -37,6 +37,8 @@ await controller.handle(request, response, new URL("http://brasa/api/v1/tv/home?
 assert.equal(sent.pop().body.data.rows[0].id, "movies");
 await controller.handle(request, response, new URL("http://brasa/api/v1/tv/search?profileId=adult&q=Superman"));
 assert.equal(sent.pop().body.data[0].title, "Superman");
+request.method = "PUT"; await controller.handle(request, response, new URL("http://brasa/api/tv/profiles/adult/favorites/series:show")); assert.equal(sent.pop().body.data.favorite, true);
+await controller.handle(request, response, new URL("http://brasa/api/v1/tv/profiles/adult/actions/like/movie:42")); assert.equal(sent.pop().body.data.action, "like"); request.method = "GET";
 const videoCapabilities=[{codec:"hevc",maxWidth:3840,maxHeight:2160,maxBitrate:80000000,hardware:true,profiles:["main10"]}];
 request.headers={"x-brasa-playback-containers":"matroska,mp4","x-brasa-video-codecs":"hevc,hevc-main10,dolby-vision","x-brasa-audio-codecs":"aac,eac3","x-brasa-hdr-types":"hdr10,dolby-vision","x-brasa-video-capabilities":JSON.stringify(videoCapabilities),"x-brasa-max-video-width":"3840","x-brasa-max-video-height":"2160"};
 await controller.handle(request, response, new URL("http://brasa/api/v1/tv/playback/movie:42?profileId=adult&fallback=transcode&positionMs=1234567"));

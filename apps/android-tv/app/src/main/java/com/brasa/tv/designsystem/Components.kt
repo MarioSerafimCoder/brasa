@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import com.brasa.tv.core.model.CatalogItem
+import com.brasa.tv.core.model.isWatched
 import java.util.Locale
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -142,6 +143,7 @@ fun BrasaTopBar(
     onMovies: (() -> Unit)? = null,
     onSeries: (() -> Unit)? = null,
     onCollections: (() -> Unit)? = null,
+    onMyList: (() -> Unit)? = null,
     onSearch: (() -> Unit)? = null,
     onProfiles: (() -> Unit)? = null,
     onSettings: (() -> Unit)? = null,
@@ -161,6 +163,7 @@ fun BrasaTopBar(
         if (onMovies != null) NavItem("Filmes", active == "Filmes", onMovies)
         if (onSeries != null) NavItem("Séries", active == "Séries", onSeries)
         if (onCollections != null) NavItem("Coleções", active == "Coleções", onCollections)
+        if (onMyList != null) NavItem("Minha lista", active == "Minha lista", onMyList)
         Spacer(Modifier.weight(1f))
         if (onSearch != null) NavItem("⌕  Buscar", active == "Buscar", onSearch)
         if (onSettings != null) NavItem("⚙", active == "Configurações", onSettings)
@@ -239,6 +242,15 @@ fun MediaCard(
                     Text(metadata(item), color = BrasaTextMuted, fontSize = 13.sp, maxLines = 1)
                 }
             }
+            val badge = when {
+                item.newEpisode -> "NOVO EPISÓDIO"
+                item.isWatched() -> "ASSISTIDO"
+                item.type == "series" && item.actionLabel.isNotBlank() -> item.actionLabel.uppercase()
+                item.remainingMinutes != null -> "FALTAM ${item.remainingMinutes} MIN"
+                else -> ""
+            }
+            if (badge.isNotBlank()) Text(badge, modifier = Modifier.align(Alignment.TopStart).padding(9.dp).background(BrasaBackground.copy(alpha = .88f), RoundedCornerShape(50)).padding(horizontal = 9.dp, vertical = 5.dp), color = if (item.newEpisode) BrasaOrange else BrasaText, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            if (item.favorite || item.inMyList) Text("✓ LISTA", modifier = Modifier.align(Alignment.TopEnd).padding(9.dp).background(BrasaOrange.copy(alpha = .92f), RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 5.dp), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
             item.progress?.takeIf { it.percentage > 0 }?.let { progress ->
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = .18f))) {
                     Box(
@@ -264,6 +276,7 @@ fun metadata(item: CatalogItem): String = buildList {
     item.year?.let { add(it.toString()) }
     item.rating?.let { add("★ ${String.format(Locale.ROOT, "%.1f", it)}") }
     if (item.duration.isNotBlank()) add(item.duration)
+    if (item.contentRating.isNotBlank()) add(item.contentRating)
 }.joinToString("  ·  ")
 
 @Composable

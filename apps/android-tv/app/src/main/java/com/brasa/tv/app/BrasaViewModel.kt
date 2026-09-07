@@ -40,6 +40,9 @@ data class BrasaUiState(
     val previewMode: Boolean = false,
     val libraryScanning: Boolean = false,
     val libraryScanMessage: String = "",
+    val reconnecting: Boolean = false,
+    val searching: Boolean = false,
+    val searchError: String = "",
 )
 
 class BrasaViewModel(
@@ -111,6 +114,17 @@ class BrasaViewModel(
         val home = repository.home(profile.id)
         if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = home)
     }
+    fun loadHome() {
+        val profile = mutable.value.profile ?: return
+        viewModelScope.launch {
+            if (mutable.value.home == null) repository.cachedHome(profile.id)?.let { cached ->
+                if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = cached, reconnecting = true)
+            }
+            runCatching { repository.home(profile.id) }
+                .onSuccess { home -> if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = home, reconnecting = false, message = "") }
+                .onFailure { failure -> if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(reconnecting = false, message = failure.message ?: "Não foi possível atualizar a página inicial.") }
+        }
+    }
     fun refreshCatalog() = launch {
         val profile = mutable.value.profile ?: return@launch
         val catalog = repository.catalog(profile.id)
@@ -170,10 +184,13 @@ class BrasaViewModel(
             mutable.value = mutable.value.copy(searchResults = PreviewCatalog.search(query))
             return
         }
+        mutable.value = mutable.value.copy(searching = query.isNotBlank(), searchError = "")
         searchJob = viewModelScope.launch {
             delay(150)
             val profile = mutable.value.profile ?: return@launch
-            runCatching { repository.search(profile.id, query) }.onSuccess { mutable.value = mutable.value.copy(searchResults = it) }.onFailure(::error)
+            runCatching { repository.search(profile.id, query) }
+                .onSuccess { mutable.value = mutable.value.copy(searchResults = it, searching = false) }
+                .onFailure { mutable.value = mutable.value.copy(searching = false, searchError = it.message ?: "Não foi possível buscar agora.") }
         }
     }
 
@@ -185,9 +202,32 @@ class BrasaViewModel(
         if (mutable.value.previewMode) return@launch
         runCatching { repository.favorite(profile.id, item.mediaKey, next) }.onFailure { mutable.value = mutable.value.copy(selected = item); error(it) }
         refreshHome()
+        refreshCatalog()
     }
 
-    fun loadPlayback(item: CatalogItem, onReady: () -> Unit) = launch {
+    fun signal(action: String, enabled: Boolean = true) = launch {
+        val profile = mutable.value.profile ?: return@launch
+        val item = mutable.value.selected ?: return@launch
+        if (!mutable.value.previewMode) repository.signal(profile.id, item.mediaKey, action, enabled)
+        val reaction = when { !enabled && action in setOf("like", "not-for-me") -> ""; action in setOf("like", "not-for-me") -> action; else -> item.reaction }
+        mutable.value = mutable.value.copy(selected = item.copy(reaction = reaction, hiddenSuggestion = if (action == "hide") enabled else item.hiddenSuggestion), message = when (action) { "hide" -> if(enabled) "Sugestão ocultada. Você pode desfazer nos detalhes." else "Sugestão restaurada."; "dismiss-continue" -> "Removido de Continuar assistindo."; "mark-watched" -> "Marcado como assistido."; else -> "Preferência salva." })
+        refreshHome()
+        refreshCatalog()
+    }
+
+    fun resetPersonalization() = launch {
+        val profile = mutable.value.profile ?: return@launch
+        if (!mutable.value.previewMode) repository.resetPersonalization(profile.id)
+        mutable.value = mutable.value.copy(message = "Personalização reiniciada. Favoritos e progresso foram preservados.")
+        refreshHome()
+    }
+
+    fun saveAutoplayNext(enabled: Boolean) = viewModelScope.launch {
+        val profile = mutable.value.profile ?: return@launch
+        runCatching { repository.savePreferences(profile.id, enabled) }
+    }
+
+    fun loadPlayback(item: CatalogItem, fromBeginning: Boolean = false, onReady: () -> Unit) = launch {
         metadataPrefetchJob?.cancel()
         mediaPreloadJob?.cancel()
         cancelPlaybackPreparation()
@@ -198,7 +238,8 @@ class BrasaViewModel(
             return@launch
         }
         val profile = mutable.value.profile ?: return@launch
-        val playback = repository.playback(profile.id, item.mediaKey, forceRefresh = true)
+        if (fromBeginning) repository.saveProgress(profile.id, item.mediaKey, WatchProgress(mediaType = if (item.type == "episode") "episode" else "movie", mediaId = item.id, seriesId = item.seriesId, duration = item.progress?.duration ?: 0.0))
+        val playback = repository.playback(profile.id, item.mediaKey, forceRefresh = true, positionMs = if (fromBeginning) 0 else null)
         mutable.value = mutable.value.copy(selected = item, playback = playback)
         onReady()
         if (playback.preparationStatus !in setOf("ready", "failed")) playbackPreparationJob = viewModelScope.launch poll@ {

@@ -15,6 +15,8 @@ A preferência local `uiScale` redimensiona toda a interface e oferece 80%, 90%,
 
 Busca e PIN não recebem foco de digitação ao abrir uma tela. O PIN usa um painel numérico próprio. Setas, Enter e Voltar navegam pelos controles; o player fecha antes do aplicativo e mantém o ponto de reprodução.
 
+A página inicial é personalizada por perfil no computador servidor, com continuidade separada do histórico, recomendações locais, novos episódios e `Minha lista` para filmes e séries. O destaque permanece estável durante a navegação. A busca ignora acentos, tolera um pequeno erro, oferece histórico local e usa reconhecimento de voz somente quando a TV o disponibiliza. Consulte [`docs/android-tv-personalizacao.md`](../../docs/android-tv-personalizacao.md) para regras, controles e limites de validação.
+
 ## Reprodução adaptativa
 
 O APK detecta decoders de vídeo por hardware, perfis, limites de bitrate/resolução e tipos HDR do Google TV e envia essas capacidades ao servidor. Um MKV grande realmente compatível usa direct play autenticado com Range; Dolby Vision direto fica restrito a MP4, enquanto perfil 8.1 com camada HDR10 compatível usa remux HLS preservando resolução e HDR. Incompatibilidade apenas de áudio usa remux HLS, e uma falha real do decoder aciona automaticamente HLS transcodificado. As telas mostram “Analisando mídia” e “Preparando reprodução” somente quando algum processamento é necessário.
