@@ -7,6 +7,7 @@ let passed = 0;
 suites.push("test-hls-session-lifecycle.mjs");
 suites.push("test-library-scan.mjs");
 suites.push("test-new-episode-scan.mjs");
+suites.push("test-playback-diagnostics.mjs");
 for (const suite of suites) { const code = await run(suite); if (code !== 0) { console.error(`\nFALHOU: ${suite}`); process.exitCode = 1; } else passed++; }
 console.log(`\nResumo: ${passed}/${suites.length} suítes aprovadas.`);
 function run(suite) { return new Promise((resolve) => { console.log(`\n→ ${suite}`); const child = spawn(process.execPath, [`scripts/${suite}`], { stdio: "inherit", windowsHide: true }); child.on("error", () => resolve(1)); child.on("close", resolve); }); }

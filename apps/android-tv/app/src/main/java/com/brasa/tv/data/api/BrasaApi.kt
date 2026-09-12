@@ -1,6 +1,8 @@
 package com.brasa.tv.data.api
 
 import com.brasa.tv.core.model.*
+import com.brasa.tv.core.playback.PlaybackBatch
+import com.brasa.tv.core.playback.PlaybackHistoryEntry
 import com.brasa.tv.core.network.BrasaHttpClient
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -10,6 +12,9 @@ import java.net.URLEncoder
 
 class BrasaApi(private val http:BrasaHttpClient,private val json:Json,private val capabilities:()->ClientCapabilities={ClientCapabilities()}){
     suspend fun bootstrap(base:String)=http.get(base,"/api/v1/bootstrap",ServerInfo.serializer(),false)
+    suspend fun playbackHistory(base: String, profileId: String) = http.get(base, "/api/v1/tv/playback-history?profileId=${enc(profileId)}", ListSerializer(PlaybackHistoryEntry.serializer()))
+    suspend fun playbackHistoryDetail(base: String, profileId: String, id: String) = http.get(base, "/api/v1/tv/playback-history/${enc(id)}?profileId=${enc(profileId)}", PlaybackHistoryEntry.serializer())
+    suspend fun sendPlaybackEvents(base: String, profileId: String, batch: PlaybackBatch) = http.post(base, "/api/v1/tv/playback-history?profileId=${enc(profileId)}", json.encodeToString(PlaybackBatch.serializer(), batch), kotlinx.serialization.json.JsonObject.serializer())
     suspend fun startPairing(base:String,name:String)=http.post(base,"/api/device-pairing/start",json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(),buildJsonObject{put("name",name);put("type","tv")}),PairingRequest.serializer(),false)
     suspend fun pairingStatus(base:String,id:String)=http.get(base,"/api/device-pairing/status/${enc(id)}",PairingStatus.serializer(),false)
     suspend fun profiles(base:String)=http.get(base,"/api/tv/profiles",ListSerializer(Profile.serializer()))

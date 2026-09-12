@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
 import { spawn } from "node:child_process";
-import { createQualityLadder, createStartupLadder, encoderFor, estimateHlsCacheBytes, HLS_LIMITS } from "./transcoding-profiles.mjs";
+import { createQualityLadder, createAdaptiveLadder, encoderFor, estimateHlsCacheBytes, HLS_LIMITS } from "./transcoding-profiles.mjs";
 
 export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess = spawn }) {
     const root = path.join(rootDir, "data", "prepared-media", "hls");
@@ -25,7 +25,9 @@ export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess
     async function ensureSession(mediaKey, input, probe, settings = {}, plan = {}) {
         const mode = plan.mode === "remux" ? "remux" : "transcode";
         const segmentSeconds = clamp(settings.hlsSegmentSeconds, 1, 6, HLS_LIMITS.segmentSeconds);
-        const profileKey = `v4:${mode}:${plan.audioAction || "aac"}:${plan.stripDolbyVision ? "hdr10" : "native"}:${segmentSeconds}`;
+        const tools = await getTools();
+        const adaptiveLadder = createAdaptiveLadder(probe, settings, tools.hardwareAcceleration || {}, plan.capabilities);
+        const profileKey = `v5-abr:${mode}:${plan.audioAction || "aac"}:${plan.stripDolbyVision ? "hdr10" : "native"}:${segmentSeconds}:${adaptiveLadder.map(q => `${q.width}x${q.height}`).join(",")}`;
         const startPositionMs = normalizeStartPosition(plan.startPositionMs, probe?.duration, segmentSeconds);
         const id = hlsSessionId(mediaKey, probe?.fingerprint, profileKey, startPositionMs);
         currentByMedia.set(mediaKey, id);
@@ -44,15 +46,14 @@ export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess
             }
             console.warn(`BRasa HLS ${mediaKey}: cache incompleto descartado (${output.reason}).`);
         }
-        const tools = await getTools();
         if (!tools.ffmpegAvailable) return { id, mediaKey, state: "failed", progress: 0, qualities: [], errorType: "processing", error: "FFmpeg não está disponível para preparar este vídeo." };
         const ladder = mode === "remux"
             ? [{ id: "original", width: Number(probe?.video?.width || 0), height: Number(probe?.video?.height || 0), bitrate: Number(probe?.bitrate || 0), audioBitrate: 192_000 }]
-            : createStartupLadder(probe);
+            : adaptiveLadder;
         const minimumStartBufferSeconds = mode === "remux" ? 8 : 12;
         const startBufferSeconds = clamp(Math.max(Number(settings.hlsStartBufferSeconds || 0), minimumStartBufferSeconds), segmentSeconds, 30, minimumStartBufferSeconds);
         const session = {
-            id, mediaKey, directory, mode, ladder,
+            id, mediaKey, directory, mode, ladder, capabilities: plan.capabilities,
             audioAction: plan.audioAction || "aac",
             stripDolbyVision: plan.stripDolbyVision === true,
             segmentSeconds,
@@ -86,6 +87,7 @@ export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess
                     session.progress = 0;
                     session.fallbackReason = error.message;
                     session.stderr = "";
+                    session.ladder = createAdaptiveLadder(probe, { acceleration: "cpu" }, {}, session.capabilities);
                     await recreateDirectory(session);
                     await persist(session);
                     await updateCurrent(session, { status: "processing", progress: 0, encoder: "libx264", decoder: "software", pipeline: "fallback por CPU", error: "" });
@@ -151,8 +153,10 @@ export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess
                         if (videoFrames && !session.firstFrameAt) session.firstFrameAt = new Date().toISOString();
                         continue;
                     }
+                    if (name === "speed") { session.encodingSpeed = Math.max(0, Number(String(value).replace(/x$/, "")) || 0); continue; }
                     if (name !== "out_time_ms") continue;
                     const outputSeconds = Number(value) / 1e6;
+                    session.outputSeconds = Math.max(0, outputSeconds || 0);
                     if (session.mode !== "remux" && !videoFrames && outputSeconds >= 20 && !stoppedForNoVideo) {
                         stoppedForNoVideo = true;
                         stderr += "\nNenhum quadro de vídeo foi decodificado nos primeiros 20 segundos.";
@@ -207,6 +211,12 @@ export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess
         return { file, stat, session: saved };
     }
 
+    // Diagnostic uploads must not re-scan thousands of already validated segments.
+    async function diagnostics(id) {
+        const session = active.get(id) || await readState(safeDirectory(id));
+        return session.id ? publicState(session) : null;
+    }
+
     async function remove(id) { const directory = safeDirectory(id);const session=active.get(id);if(session){cancelSession(session);await session.completion;}if(session&&currentByMedia.get(session.mediaKey)===id)currentByMedia.delete(session.mediaKey);lastAccess.delete(id);await fs.rm(directory, { recursive: true, force: true }); }
     function protectedSessionIds() {
         for (const [id, accessedAt] of lastAccess) if (Date.now() - accessedAt > 180_000) lastAccess.delete(id);
@@ -217,7 +227,7 @@ export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess
     function isCurrent(session) { return currentByMedia.get(session.mediaKey) === session.id; }
     async function updateCurrent(session, patch) { if (isCurrent(session)) await store.update(session.mediaKey, patch); }
     function safeDirectory(id) { if (!/^[a-f0-9]{24}$/.test(id)) throw new Error("Sessão HLS inválida."); return path.join(root, id); }
-    return { ensure, status, resolve, remove, protectedSessionIds, estimate: (probe) => estimateHlsCacheBytes(probe.duration, createQualityLadder(probe)), snapshot:()=>[...active.values()].map((session)=>({id:session.id,mediaKey:session.mediaKey,state:session.state,progress:session.progress})) };
+    return { ensure, status, diagnostics, resolve, remove, protectedSessionIds, estimate: (probe) => estimateHlsCacheBytes(probe.duration, createQualityLadder(probe)), snapshot:()=>[...active.values()].map((session)=>({id:session.id,mediaKey:session.mediaKey,state:session.state,progress:session.progress})) };
 }
 
 export function buildHlsArgs(input, directory, ladder, encoder = "libx264", probe = {}, options = {}) {
@@ -241,6 +251,7 @@ export function buildHlsArgs(input, directory, ladder, encoder = "libx264", prob
         args.push("-map", `[v${index}o]`, "-map", "0:a:0?", `-c:v:${index}`, encoder, `-b:v:${index}`, String(quality.bitrate), `-maxrate:v:${index}`, String(quality.maxrate), `-bufsize:v:${index}`, String(quality.buffer));
         const gop = String(Math.max(24, Math.round(Number(probe?.video?.frameRate || 24) * segmentSeconds)));
         args.push(`-g:v:${index}`, gop, `-keyint_min:v:${index}`, gop, `-sc_threshold:v:${index}`, "0");
+        args.push(`-force_key_frames:v:${index}`, `expr:gte(t,n_forced*${segmentSeconds})`);
         if (!cuda || probe?.video?.hdr) args.push(`-pix_fmt:v:${index}`, "yuv420p");
         if (hasAudio) args.push(`-c:a:${index}`, "aac", `-b:a:${index}`, String(quality.audioBitrate), `-ac:a:${index}`, "2");
         if (encoder === "libx264") args.push(`-preset:v:${index}`, "superfast", `-profile:v:${index}`, "high");
@@ -354,15 +365,16 @@ async function replacePlaylist(file, text) {
 async function readState(directory) { return fs.readFile(path.join(directory, "session.json"), "utf8").then(JSON.parse).catch(() => ({})); }
 async function recreateDirectory(session) { await session.persistQueue?.catch(() => {});await fs.rm(session.directory, { recursive: true, force: true });await fs.mkdir(session.directory, { recursive: true });for (const quality of session.ladder) await fs.mkdir(path.join(session.directory, quality.id), { recursive: true }); }
 function persist(session) {
+    const diagnostics = { encodingSpeed: session.encodingSpeed || 0, outputSeconds: session.outputSeconds || 0 };
     const data = { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress.toFixed(1)), ladder: session.ladder, mode: session.mode, stripDolbyVision: session.stripDolbyVision === true, encoder: session.encoder || "", decoder: session.decoder || "", pipeline: session.pipeline || "", segmentSeconds: session.segmentSeconds, startSegments: session.startSegments, startPositionMs: Number(session.startPositionMs || 0), expectedDurationSeconds: Number(session.expectedDurationSeconds || 0), error: session.error, errorType: session.errorType, stderr: session.stderr?.slice(-1200) || "", fallbackReason: session.fallbackReason?.slice(-1200) || "", startedAt: session.startedAt, attemptStartedAt: session.attemptStartedAt || "", firstFrameAt: session.firstFrameAt || "", firstPlayableAt: session.firstPlayableAt || "", completedAt: session.completedAt || "", estimatedBytes: session.estimatedBytes || 0 };
     session.persistQueue = (session.persistQueue || Promise.resolve()).catch(() => {}).then(async () => {
         const file = path.join(session.directory, "session.json"), temp = `${file}.${process.pid}.tmp`;
-        await fs.writeFile(temp, `${JSON.stringify(data, null, 2)}\n`);
+        await fs.writeFile(temp, `${JSON.stringify({ ...data, ...diagnostics }, null, 2)}\n`);
         await fs.rename(temp, file);
     });
     return session.persistQueue;
 }
-function publicState(session) { return { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress || 0), qualities: (session.ladder || []).map((item) => item.id), startPositionMs: Number(session.startPositionMs || 0), error: session.error || "", errorType: session.errorType || "", technical: session.state === "failed" ? { ffmpegStderr: session.stderr?.slice(-800) || "" } : undefined }; }
+function publicState(session) { return { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress || 0), qualities: (session.ladder || []).map((item) => item.id), startPositionMs: Number(session.startPositionMs || 0), encoder: session.encoder || "", encodingSpeed: Number(session.encodingSpeed || 0), outputSeconds: Number(session.outputSeconds || 0), error: session.error || "", errorType: session.errorType || "", technical: session.state === "failed" ? { ffmpegStderr: session.stderr?.slice(-800) || "" } : undefined }; }
 function markPlayable(session) { if (!session.firstPlayableAt) { session.firstPlayableAt = new Date().toISOString();persist(session).catch(() => {}); }return publicState({ ...session, state: "ready" }); }
 function clamp(value, minimum, maximum, fallback) { const number=Number(value);return Number.isFinite(number)?Math.round(Math.min(maximum,Math.max(minimum,number))):fallback; }
 function inputSeek(value) { const seconds=Number(value);return Number.isFinite(seconds)&&seconds>0?["-ss",String(Number(seconds.toFixed(3)))]:[]; }

@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { createDeviceStore } from "../server/device-store.mjs";
 
 const mediaKey = process.argv[2] || "movie:437";
@@ -41,6 +42,24 @@ try {
         await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
     if (playback?.preparationStatus !== "ready") throw new Error(playback?.errorMessage || "A preparação não ficou pronta.");
+    if (process.argv.includes("--diagnostics")) {
+        const historyUrl = `${baseUrl}/api/v1/tv/playback-history?profileId=${encodeURIComponent(profile.id)}`;
+        if ((await fetch(historyUrl)).status !== 401) throw new Error("Histórico deve exigir autenticação.");
+        const id = randomUUID();
+        const batch = { id, mediaKey: playback.mediaKey, events: [
+            { sequence: 1, elapsedMs: 0, kind: "start", mode: playback.playbackMode },
+            { sequence: 2, elapsedMs: 1, kind: "sample", mode: playback.playbackMode, hlsSessionId: playback.hlsSessionId || "" },
+            { sequence: 3, elapsedMs: 2, kind: "end", mode: playback.playbackMode },
+        ] };
+        const posted = await fetch(historyUrl, { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify(batch) });
+        if (!posted.ok) throw new Error(`Diagnóstico recusado: ${posted.status} ${await posted.text()}`);
+        const list = await (await fetch(historyUrl, { headers })).json();
+        if (!list.data?.some(entry => entry.id === id)) throw new Error("Histórico não retornou a sessão gravada.");
+        const detail = await (await fetch(`${baseUrl}/api/v1/tv/playback-history/${id}?profileId=${encodeURIComponent(profile.id)}`, { headers })).json();
+        if (detail.data?.events?.length !== 3 || !detail.data.ended || JSON.stringify(detail).includes(created.token)) throw new Error("Detalhes do diagnóstico inválidos.");
+        if (playback.hlsSessionId && !detail.data.events[1].server?.encoder) throw new Error("Conversão não correlacionada com o histórico.");
+        console.log("Histórico HTTP: gravação, consulta, detalhes, autenticação e contexto do encoder aprovados (dispositivo temporário).");
+    }
     if (playback.playbackMode === "direct") {
         if (forceHls) throw new Error("O fallback explícito não retornou HLS.");
         const url = new URL(playback.playbackUrl, `${baseUrl}/`).toString();

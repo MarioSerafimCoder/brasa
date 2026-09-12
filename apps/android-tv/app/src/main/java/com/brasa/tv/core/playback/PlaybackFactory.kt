@@ -15,6 +15,8 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.trackselection.AdaptiveTrackSelection
+import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import com.brasa.tv.core.model.PlaybackInfo
 import com.brasa.tv.core.network.BrasaHttpClient
 import com.brasa.tv.core.network.LocalServerAddress
@@ -67,6 +69,7 @@ class PlaybackFactory(
             .build()
         val renderers = DefaultRenderersFactory(context).setEnableDecoderFallback(true)
         return ExoPlayer.Builder(context, renderers)
+            .setTrackSelector(DefaultTrackSelector(context, adaptiveTrackSelectionFactory()))
             .setLoadControl(loadControl)
             .setMediaSourceFactory(DefaultMediaSourceFactory(dataSource).setLoadErrorHandlingPolicy(DefaultLoadErrorHandlingPolicy(6)))
             .build()
@@ -84,3 +87,6 @@ class PlaybackFactory(
     fun playbackIdentity(baseUrl: String, info: PlaybackInfo) = cacheKey(baseUrl, info)
 
 }
+
+// Leave network headroom and require a stable buffer before raising quality.
+internal fun adaptiveTrackSelectionFactory() = AdaptiveTrackSelection.Factory(15_000, 25_000, 25_000, 0.70f)

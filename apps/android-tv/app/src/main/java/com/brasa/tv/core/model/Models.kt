@@ -22,6 +22,7 @@ typealias Series = CatalogItem
 typealias Episode = CatalogItem
 @Serializable data class Collection(val id:String="",val title:String="",val subtitle:String="",val banner:String="",val items:List<CatalogItem> = emptyList())
 @Serializable data class PlaybackInfo(
+    val hlsSessionId:String="",
     val mediaId:String="",val mediaKey:String="",val playbackUrl:String="",val mimeType:String="video/*",val container:String="",val videoCodec:String="",val audioCodec:String="",
     val supportsRange:Boolean=true,@Serializable(with=FlexibleNullableLongSerializer::class) val duration:Long?=null,@Serializable(with=FlexibleLongSerializer::class) val resumePosition:Long=0,@Serializable(with=FlexibleLongSerializer::class) val playbackOffset:Long=0,@Serializable(with=FlexibleLongSerializer::class) val bitrate:Long=0,@Serializable(with=FlexibleIntSerializer::class) val width:Int=0,@Serializable(with=FlexibleIntSerializer::class) val height:Int=0,val playbackRevision:String="",
     val subtitles:List<SubtitleTrack> = emptyList(),val audioTracks:List<AudioTrack> = emptyList(),val nextEpisode:CatalogItem?=null,val preparationStatus:String="ready",

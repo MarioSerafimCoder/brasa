@@ -34,6 +34,12 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (path === "/api/v1/tv/home" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.home(device, profileId)); }
         if (path === "/api/v1/tv/search" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.search(device, profileId, url.searchParams.get("q") || "")); }
         const playback = path.match(/^\/api\/v1\/tv\/playback\/(movie|episode|series):([^/]+)$/);
+        const diagnostics = path.match(/^\/api\/v1\/tv\/playback-history(?:\/([a-f0-9-]{36}))?$/);
+        if (diagnostics && ["GET", "POST"].includes(method)) {
+            const profileId = auth.requireProfile(device, url.searchParams.get("profileId"));
+            if (method === "POST" && !diagnostics[1]) return success(response, await tvServices.playbackDiagnostics.append(device, profileId, await readBody(request)));
+            if (method === "GET") return success(response, await tvServices.playbackDiagnostics.read(device, profileId, diagnostics[1]));
+        }
         if (playback && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.playback(device, profileId, `${playback[1]}:${playback[2]}`, playbackCapabilities(request.headers), fallbackMode(url.searchParams.get("fallback")), url.searchParams.get("prepare") !== "0", playbackPosition(url.searchParams.get("positionMs")))); }
         const progress = path.match(/^\/api\/tv\/profiles\/([a-z0-9-]+)\/progress\/(movie|episode):([^/]+)$/);
         if (progress) { const profileId = auth.requireProfile(device, progress[1]), mediaKey = `${progress[2]}:${progress[3]}`; if (method === "GET") return success(response, await tvServices.progress(profileId, mediaKey)); if (method === "PUT") return success(response, await tvServices.saveProgress(profileId, mediaKey, await readBody(request))); }

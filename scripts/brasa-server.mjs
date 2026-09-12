@@ -9,6 +9,7 @@ import { getMediaToolsStatus } from "../server/media-tools.mjs";
 import { createMediaStateStore } from "../server/media-state.mjs";
 import { createMediaQueue } from "../server/media-queue.mjs";
 import { createHlsSessionManager } from "../server/hls-session.mjs";
+import { createPlaybackDiagnostics, validatePlaybackBatch } from "../server/playback-diagnostics.mjs";
 import { createMediaCache } from "../server/media-cache.mjs";
 import { selectTvPlaybackPlan, shouldUseAdaptiveHls, stabilizeTvPlaybackPlan } from "../server/transcoding-profiles.mjs";
 import { createLibraryHealthStore } from "../server/library-health-store.mjs";
@@ -89,8 +90,25 @@ const pairingService = createPairingService({ deviceStore, getSettings: () => ne
 const deviceAuth = createDeviceAuth(deviceStore);
 const androidTvUpdateService=createAndroidTvUpdateService({updatesRoot:androidTvUpdatesRoot,deviceStore,serveFile:serveMediaFile});
 const networkDiagnostics = createNetworkDiagnostics();
+const playbackHistory = createPlaybackDiagnostics({ rootDir });
+const tvPlaybackDiagnostics = {
+    async read(device, profileId, id) {
+        const state = await readUserState();
+        if (!state.profiles.some(profile => profile.id === profileId)) throw new ForbiddenError("Perfil indisponível.");
+        return id ? playbackHistory.detail(device.id, profileId, id) : playbackHistory.list(device.id, profileId);
+    },
+    async append(device, profileId, input) {
+        const batch = validatePlaybackBatch(input);
+        const state = await readUserState(), profile = state.profiles.find(profile => profile.id === profileId);
+        const media = await getTvMediaItem(batch.mediaKey);
+        if (!profile || !media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil.");
+        const sessionId = batch.events.findLast(event => event.hlsSessionId)?.hlsSessionId;
+        const session = sessionId ? await hlsSessions.diagnostics(sessionId) : null;
+        return playbackHistory.append(device.id, profileId, media.title || media.name || batch.mediaKey, batch, session?.mediaKey === batch.mediaKey ? session : null);
+    },
+};
 const networkInspector = createWindowsNetworkInspector();
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, saveSignal: tvSaveSignal, savePreferences: tvSavePreferences, resetPersonalization: tvResetPersonalization, verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls, scan: () => libraryScan.request("tv"), scanStatus: () => libraryScan.status() },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { playbackDiagnostics: tvPlaybackDiagnostics, profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, saveSignal: tvSaveSignal, savePreferences: tvSavePreferences, resetPersonalization: tvResetPersonalization, verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls, scan: () => libraryScan.request("tv"), scanStatus: () => libraryScan.status() },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -542,7 +560,7 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
     const detectedPlan = selectTvPlaybackPlan(probe, clientCapabilities);
     const clientPlan = stabilizeTvPlaybackPlan(
         requestedFallback === "transcode"
-            ? { mode: "transcode", videoAction: "h264", audioAction: "aac", reasons: ["fallback solicitado após falha do decoder", ...detectedPlan.reasons] }
+            ? { mode: "transcode", videoAction: "h264", audioAction: "aac", capabilities: detectedPlan.capabilities, reasons: ["stream adaptativo solicitado para recuperar a reprodução", ...detectedPlan.reasons] }
             : detectedPlan,
         { resumePosition: base.resumePosition, probe },
     );
@@ -551,15 +569,15 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
     if (["remux", "transcode"].includes(clientPlan.mode)) {
         const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings(), { ...clientPlan, startPositionMs: base.resumePosition });
         const timeline = hlsTimeline(base.resumePosition, session.startPositionMs);
-        if (session.state === "ready") return { ...base, ...codecs, ...timeline, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities, adaptiveReasons: clientPlan.reasons };
-        return { ...base, ...codecs, ...timeline, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: clientPlan.reasons };
+        if (session.state === "ready") return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities, adaptiveReasons: clientPlan.reasons };
+        return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: clientPlan.reasons };
     }
     const adaptive = shouldUseAdaptiveHls(probe, { browserCompatible: true });
     if (adaptive.useHls) {
         const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings(), { startPositionMs: base.resumePosition });
         const timeline = hlsTimeline(base.resumePosition, session.startPositionMs);
-        if (session.state === "ready") return { ...base, ...codecs, ...timeline, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities };
-        return { ...base, ...codecs, ...timeline, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: adaptive.reasons };
+        if (session.state === "ready") return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities };
+        return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: adaptive.reasons };
     }
     if (mediaState.status === "failed") return { ...base, ...codecs, preparationStatus: "failed", errorType: "processing", errorMessage: mediaState.error || "A mídia não pôde ser preparada." };
     if (mediaState.strategy === "direct-play") return { ...base, ...codecs, playbackUrl: item.streamUrl, mimeType: contentTypes[extension] || "video/*", preparationStatus: "ready", preparationProgress: 100, playbackMode: "direct" };

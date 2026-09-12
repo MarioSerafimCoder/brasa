@@ -40,6 +40,10 @@ try {
         await fs.writeFile(path.join(variant, name), Buffer.alloc(32, 1));
     }
     await fs.writeFile(path.join(variant, "index.m3u8"), playlist);
+    for (const quality of ["480p", "720p"]) {
+        for (let n = 0; n < 6; n++) await fs.writeFile(path.join(directory, quality, `seg-${String(n).padStart(6, "0")}.ts`), Buffer.alloc(32, 1));
+        await fs.writeFile(path.join(directory, quality, "index.m3u8"), playlist);
+    }
     await fs.writeFile(path.join(variant, "seg-000006.ts.tmp"), "still encoding");
     assert.equal((await manager.ensure("movie:race", "source.mkv", probe)).state, "ready");
     assert.ok(await manager.resolve(id, "1080p/seg-000000.ts"));
@@ -54,6 +58,13 @@ try {
     assert.ok((await fs.stat(path.join(variant, "seg-000000.ts"))).size);
     assert.ok(manager.protectedSessionIds().has(id), "sessão recentemente lida deve permanecer protegida após fim do encoder");
     await manager.remove(id);
+    const cpuFallback = await manager.ensure("movie:cpu-fallback", "source.mkv", probe);
+    await waitFor(() => children.length === 2);
+    children[1].stderr.write("simulated hardware unavailable before publication");
+    children[1].emit("close", 1);
+    await waitFor(() => children.length === 3);
+    assert.deepEqual((await manager.ensure("movie:cpu-fallback", "source.mkv", probe)).qualities, ["480p", "720p"], "fallback CPU reduz a carga antes de publicar segmentos");
+    await manager.remove(cpuFallback.id);
     console.log("Ciclo HLS: concorrência, cache ativo e falha de encoder sem sobrescrita aprovados.");
 } finally {
     for (const session of manager.snapshot()) await manager.remove(session.id);

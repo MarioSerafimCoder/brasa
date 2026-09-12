@@ -141,6 +141,28 @@ export function createStartupLadder(probe) {
     return [ladder.find((quality) => quality.height >= 1080) || ladder.at(-1)];
 }
 
+// Keep simultaneous encoding bounded. CPU-only machines prepare at most 720p;
+// accelerated machines can retain 1080p alongside two network-safe alternatives.
+export function createAdaptiveLadder(probe, settings = {}, hardware = {}, capabilities = {}) {
+    const sourceHeight = Math.max(2, Number(probe?.video?.height || 720));
+    const sourceWidth = Math.max(2, Number(probe?.video?.width || sourceHeight * 16 / 9));
+    const maximum = encoderFor(settings, hardware) === "libx264" ? 720 : 1080;
+    const decoder = capabilities.videoCapabilities?.find(item => item.codec === "h264" && item.hardware);
+    const maximumWidth = Math.min(Number(capabilities.maxWidth) || Infinity, Number(decoder?.maxWidth) || Infinity);
+    const height = Math.min(sourceHeight, maximum, Number(capabilities.maxHeight) || Infinity,
+        Number(decoder?.maxHeight) || Infinity, maximumWidth * sourceHeight / sourceWidth);
+    const levels = [{ height: 360, bitrate: 650_000 }, { height: 480, bitrate: 1_200_000 },
+        { height: 720, bitrate: 3_200_000 }, { height: 1080, bitrate: 6_500_000 }];
+    let selected = levels.filter((level) => level.height <= height);
+    // 480/720 for CPU, 480/720/1080 for GPU, 360/480 for smaller sources.
+    if (height >= 720) selected = selected.filter((level) => level.height >= 480);
+    if (!selected.length) selected = [{ height: even(height), bitrate: 500_000 }];
+    return selected.map((level) => ({ id: `${level.height}p`, height: even(level.height),
+        width: even(Math.min(sourceWidth, level.height * sourceWidth / sourceHeight)),
+        bitrate: level.bitrate, maxrate: Math.round(level.bitrate * 1.2),
+        buffer: level.bitrate * 2, audioBitrate: 128_000 }));
+}
+
 export function encoderFor(settings = {}, hardware = {}) {
     const mode = settings.acceleration || "auto";
     if ((mode === "auto" || mode === "nvidia") && hardware.nvenc) return "h264_nvenc";

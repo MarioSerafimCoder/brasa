@@ -70,6 +70,9 @@ import com.brasa.tv.core.model.playableItem
 import com.brasa.tv.core.playback.PlaybackTimeline
 import com.brasa.tv.core.playback.SeekPolicy
 import com.brasa.tv.core.playback.PlaybackRecovery
+import com.brasa.tv.core.playback.PlaybackDiagnosticsRecorder
+import com.brasa.tv.core.playback.PlaybackDiagnosticsAttachment
+import com.brasa.tv.core.playback.PlaybackEvent
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
@@ -102,6 +105,14 @@ fun PlayerScreen(
     val info = state.playback
     val recovery = remember(info?.mediaKey) { PlaybackRecovery() }
     val settings by container.settings.values.collectAsState(initial = AppSettings())
+    val diagnostics = remember(info?.mediaKey, state.profile?.id, settings.serverBaseUrl) {
+        val mediaKey = info?.mediaKey
+        val profileId = state.profile?.id
+        if (mediaKey == null || profileId == null || settings.serverBaseUrl.isBlank()) null
+        else PlaybackDiagnosticsRecorder(mediaKey) { batch -> container.api.sendPlaybackEvents(settings.serverBaseUrl, profileId, batch) }
+    }
+    DisposableEffect(diagnostics) { onDispose { diagnostics?.finish() } }
+    LaunchedEffect(info, diagnostics) { if (info != null) diagnostics?.source(info) }
     if (info == null || settings.serverBaseUrl.isBlank()) {
         BackHandler(onBack = onBack)
         Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
@@ -121,7 +132,7 @@ fun PlayerScreen(
         key(identity) {
             val selected = state.selected
             val related = state.catalog?.let { catalog -> (catalog.movies + catalog.series).filter { it.mediaKey != selected?.mediaKey && it.genres.any(selected?.genres.orEmpty()::contains) }.take(2) }.orEmpty()
-            PlayerContent(info, identity, selected, related, settings.serverBaseUrl, settings, container, recovery, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onSignal, onBack)
+            PlayerContent(info, identity, selected, related, settings.serverBaseUrl, settings, container, recovery, diagnostics, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onSignal, onBack)
         }
     }
 }
@@ -158,6 +169,7 @@ private fun PlayerContent(
     settings: AppSettings,
     container: AppContainer,
     recovery: PlaybackRecovery,
+    diagnostics: PlaybackDiagnosticsRecorder?,
     onProgress: (String, WatchProgress) -> Unit,
     onPlaybackFallback: (String) -> Unit,
     onRemoteSeek: (String, Long) -> Unit,
@@ -231,6 +243,7 @@ private fun PlayerContent(
     var trackNotice by remember { mutableStateOf("") }
     var centerNotice by remember { mutableStateOf("") }
     var selectedQuality by remember { mutableStateOf("Automática") }
+    var actualHeight by remember(player) { mutableIntStateOf(player.videoFormat?.height ?: 0) }
     var timelineFocused by remember(player) { mutableStateOf(false) }
     var seekPreview by remember(player) { mutableLongStateOf(-1L) }
     var remoteSeekTarget by remember(player) { mutableLongStateOf(-1L) }
@@ -251,6 +264,7 @@ private fun PlayerContent(
     }
 
     fun retryPlayback() {
+        diagnostics?.record(PlaybackEvent(kind = "retry"))
         loadError = ""
         val resumePlayback = player.playWhenReady
         // This is local player time, including when resuming an offset HLS playlist.
@@ -298,8 +312,10 @@ private fun PlayerContent(
         controlsVisible = true
         interaction++
     }
-    fun requestRemoteSeek(targetPosition: Long, recovery: Boolean = false) {
+    fun requestRemoteSeek(targetPosition: Long, recovery: Boolean = false, adaptive: Boolean = false) {
         if (recoveryRequested) return
+        if (recovery || adaptive) diagnostics?.conversion(if (adaptive) "network" else "recovery")
+        else diagnostics?.record(PlaybackEvent(kind = "seek", positionMs = targetPosition.coerceAtLeast(0), reason = "seek"))
         pendingRetry?.cancel()
         pendingRetry = null
         val total = duration.takeIf { it > 0 } ?: info.duration ?: Long.MAX_VALUE
@@ -334,6 +350,13 @@ private fun PlayerContent(
     }
 
     BackHandler { exit() }
+    val diagnosticsAttachment = remember(player, diagnostics) {
+        diagnostics?.let { recorder -> PlaybackDiagnosticsAttachment(player, info, recorder,
+            onAdaptiveFallback = { requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true, adaptive = true) },
+            onQuality = { actualHeight = it }) }
+    }
+    DisposableEffect(diagnosticsAttachment) { onDispose { diagnosticsAttachment?.detach() } }
+    LaunchedEffect(diagnosticsAttachment) { while (true) { delay(15_000); diagnosticsAttachment?.sample() } }
     DisposableEffect(player) {
         val activity = context as? Activity
         activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -626,7 +649,7 @@ private fun PlayerContent(
                 }
                 Text(
                     if (timelineFocused) "← → escolha o ponto  •  OK para carregar"
-                    else "Qualidade: $selectedQuality  •  Buffer: ${((buffered - position).coerceAtLeast(0) / 1000)}s",
+                    else "Qualidade: $selectedQuality${if (actualHeight > 0) " · ${actualHeight}p" else ""}  •  Buffer: ${((buffered - position).coerceAtLeast(0) / 1000)}s",
                     color = if (timelineFocused) BrasaOrange else BrasaTextMuted,
                     fontSize = 13.sp,
                 )

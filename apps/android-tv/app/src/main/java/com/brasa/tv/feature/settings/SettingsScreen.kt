@@ -54,6 +54,7 @@ fun SettingsScreen(
     lastUpdateCheckAt: Long,
     onUpdates: () -> Unit,
     onNetworkDiagnostics: () -> Unit,
+    onPlaybackHistory: () -> Unit,
     onScanLibrary: () -> Unit,
     onProfiles: () -> Unit,
     onClearCache: () -> Unit,
@@ -92,6 +93,8 @@ fun SettingsScreen(
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Reprodução") {
+                BrasaButton("Histórico de reprodução e pausas", onPlaybackHistory, Modifier.fillMaxWidth())
+                Spacer(Modifier.height(BrasaSpacing.x1))
                 StatusLine("Cache utilizado", formatBytes(state.cacheBytes))
                 BrasaButton(if (state.loading) "Limpando cache…" else "Limpar cache", onClearCache, Modifier.fillMaxWidth(), enabled = !state.loading)
                 Spacer(Modifier.height(BrasaSpacing.x1))
