@@ -6,6 +6,113 @@
 
 const seriesData = [
     {
+        "id": "lanternas",
+        "title": "Lanternas",
+        "type": "series",
+        "kids": false,
+        "audience": "general",
+        "genres": [
+            "Drama",
+            "Mistério",
+            "Sci-Fi & Fantasy"
+        ],
+        "contentRating": "",
+        "poster": "assets/posters/lanternas-2026-poster.jpg",
+        "backdrop": "assets/backdrops/lanternas-2026-backdrop.jpg",
+        "overview": "Dois policiais intergalácticos, o recruta novato John Stewart e o lendário Lanterna Verde Hal Jordan, se veem envolvidos em um mistério sombrio que se passa na Terra enquanto investigam um assassinato no coração dos Estados Unidos.",
+        "addedAt": "2026-09-07T15:40:31.228Z",
+        "seasons": [
+            {
+                "seasonNumber": 1,
+                "episodes": [
+                    {
+                        "id": "series-lanternas-s1-e1-lanternas-s01e01-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "seriesId": "lanternas",
+                        "seasonNumber": 1,
+                        "episodeNumber": 1,
+                        "title": "Piloto",
+                        "video": "assets/series/Lanternas/Lanternas.S01E01.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-23T00:33:07.027Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e1.jpg",
+                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e1.jpg",
+                        "nextEpisodeId": "series-lanternas-s1-e2-lanternas-s01e02-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "tmdbId": 4988115,
+                        "overview": "Após um tiroteio fatal, o Lanterna Verde Hal Jordan e o novo recruta John Stewart partem para provar que se tratou de um evento extraterrestre.",
+                        "durationMinutes": 57
+                    },
+                    {
+                        "id": "series-lanternas-s1-e2-lanternas-s01e02-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "seriesId": "lanternas",
+                        "seasonNumber": 1,
+                        "episodeNumber": 2,
+                        "title": "Salto no Escuro",
+                        "video": "assets/series/Lanternas/Lanternas.S01E02.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-08-28T23:01:26.732Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e2.jpg",
+                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e2.jpg",
+                        "nextEpisodeId": "series-lanternas-s1-e3-lanternas-s01e03-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "tmdbId": 7007714,
+                        "overview": "Enquanto a missão insignificante de John acaba sendo crucial, Hal causa alvoroço em Rushville, o que o leva a investigar mais a fundo.",
+                        "durationMinutes": 52
+                    },
+                    {
+                        "id": "series-lanternas-s1-e3-lanternas-s01e03-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "seriesId": "lanternas",
+                        "seasonNumber": 1,
+                        "episodeNumber": 3,
+                        "title": "Isolado",
+                        "video": "assets/series/Lanternas/Lanternas.S01E03.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-09-01T23:08:30.065Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e3.jpg",
+                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e3.jpg",
+                        "nextEpisodeId": "series-lanternas-s1-e4-lanternas-s01e04-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "tmdbId": 7179884,
+                        "overview": "Após uma vida inteira de preparação, John finalmente tem a oportunidade de ser entrevistado pelos Guardiões.",
+                        "durationMinutes": 54
+                    },
+                    {
+                        "id": "series-lanternas-s1-e4-lanternas-s01e04-web-dl-1080p-x264-dual-5-1-starckfilmes",
+                        "seriesId": "lanternas",
+                        "seasonNumber": 1,
+                        "episodeNumber": 4,
+                        "title": "⁨O Ícone⁩",
+                        "video": "assets/series/Lanternas/Lanternas.S01E04.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
+                        "quality": "1080p",
+                        "audience": "general",
+                        "addedAt": "2026-09-07T15:40:31.228Z",
+                        "progress": 0,
+                        "subtitles": [],
+                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e4.jpg",
+                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e4.jpg",
+                        "nextEpisodeId": "",
+                        "tmdbId": 7179885,
+                        "overview": "John e Hal apresentam à xerife Kane seu novo plano para desmascarar o Caçador Cósmico.",
+                        "durationMinutes": 53
+                    }
+                ]
+            }
+        ],
+        "seasonCount": 1,
+        "episodeCount": 4,
+        "tmdbId": 95350,
+        "imdbId": "tt26545992",
+        "originalTitle": "Lanterns",
+        "year": 2026,
+        "rating": 8.3
+    },
+    {
         "id": "witch-hat-atelier",
         "title": "Witch Hat Atelier",
         "type": "series",
@@ -277,99 +384,11 @@ const seriesData = [
         ],
         "seasonCount": 1,
         "episodeCount": 13,
-        "tmdbId": 196950,
-        "imdbId": "tt32550889",
         "originalTitle": "とんがり帽子のアトリエ",
         "year": 2026,
-        "rating": 8.7
-    },
-    {
-        "id": "lanternas",
-        "title": "Lanternas",
-        "type": "series",
-        "kids": false,
-        "audience": "general",
-        "genres": [
-            "Drama",
-            "Mistério",
-            "Sci-Fi & Fantasy"
-        ],
-        "contentRating": "",
-        "poster": "assets/posters/lanternas-2026-poster.jpg",
-        "backdrop": "assets/backdrops/lanternas-2026-backdrop.jpg",
-        "overview": "Dois policiais intergalácticos, o recruta novato John Stewart e o lendário Lanterna Verde Hal Jordan, se veem envolvidos em um mistério sombrio que se passa na Terra enquanto investigam um assassinato no coração dos Estados Unidos.",
-        "addedAt": "2026-09-01T23:08:30.065Z",
-        "seasons": [
-            {
-                "seasonNumber": 1,
-                "episodes": [
-                    {
-                        "id": "series-lanternas-s1-e1-lanternas-s01e01-web-dl-1080p-x264-dual-5-1-starckfilmes",
-                        "seriesId": "lanternas",
-                        "seasonNumber": 1,
-                        "episodeNumber": 1,
-                        "title": "Piloto",
-                        "video": "assets/series/Lanternas/Lanternas.S01E01.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
-                        "quality": "1080p",
-                        "audience": "general",
-                        "addedAt": "2026-08-23T00:33:07.027Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e1.jpg",
-                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e1.jpg",
-                        "nextEpisodeId": "series-lanternas-s1-e2-lanternas-s01e02-web-dl-1080p-x264-dual-5-1-starckfilmes",
-                        "tmdbId": 4988115,
-                        "overview": "Após um tiroteio fatal, o Lanterna Verde Hal Jordan e o novo recruta John Stewart partem para provar que se tratou de um evento extraterrestre.",
-                        "durationMinutes": 57
-                    },
-                    {
-                        "id": "series-lanternas-s1-e2-lanternas-s01e02-web-dl-1080p-x264-dual-5-1-starckfilmes",
-                        "seriesId": "lanternas",
-                        "seasonNumber": 1,
-                        "episodeNumber": 2,
-                        "title": "Salto no Escuro",
-                        "video": "assets/series/Lanternas/Lanternas.S01E02.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
-                        "quality": "1080p",
-                        "audience": "general",
-                        "addedAt": "2026-08-28T23:01:26.732Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e2.jpg",
-                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e2.jpg",
-                        "nextEpisodeId": "series-lanternas-s1-e3-lanternas-s01e03-web-dl-1080p-x264-dual-5-1-starckfilmes",
-                        "tmdbId": 7007714,
-                        "overview": "Enquanto a missão insignificante de John acaba sendo crucial, Hal causa alvoroço em Rushville, o que o leva a investigar mais a fundo.",
-                        "durationMinutes": 52
-                    },
-                    {
-                        "id": "series-lanternas-s1-e3-lanternas-s01e03-web-dl-1080p-x264-dual-5-1-starckfilmes",
-                        "seriesId": "lanternas",
-                        "seasonNumber": 1,
-                        "episodeNumber": 3,
-                        "title": "Isolado",
-                        "video": "assets/series/Lanternas/Lanternas.S01E03.WEB-DL.1080p.x264.DUAL.5.1-STARCKFILMES.mkv",
-                        "quality": "1080p",
-                        "audience": "general",
-                        "addedAt": "2026-09-01T23:08:30.065Z",
-                        "progress": 0,
-                        "subtitles": [],
-                        "thumbnail": "assets/episode-thumbnails/lanternas-s1-e3.jpg",
-                        "backdrop": "assets/episode-thumbnails/lanternas-s1-e3.jpg",
-                        "nextEpisodeId": "",
-                        "tmdbId": 7179884,
-                        "overview": "Após uma vida inteira de preparação, John finalmente tem a oportunidade de ser entrevistado pelos Guardiões.",
-                        "durationMinutes": 54
-                    }
-                ]
-            }
-        ],
-        "seasonCount": 1,
-        "episodeCount": 3,
-        "tmdbId": 95350,
-        "imdbId": "tt26545992",
-        "originalTitle": "Lanterns",
-        "year": 2026,
-        "rating": 8.3
+        "rating": 8.7,
+        "imdbId": "tt32550889",
+        "tmdbId": 196950
     },
     {
         "id": "star-wars-visions-apresenta-a-nona-jedi",
@@ -552,7 +571,7 @@ const seriesData = [
         "imdbId": "tt43337681",
         "originalTitle": "スター・ウォーズ：ビジョンズ／九人目のジェダイ",
         "year": 2026,
-        "rating": 7.617
+        "rating": 7.6
     },
     {
         "id": "x-men-97",
@@ -565,7 +584,7 @@ const seriesData = [
             "Action & Adventure",
             "Sci-Fi & Fantasy"
         ],
-        "contentRating": "",
+        "contentRating": "TV-14",
         "poster": "assets/posters/x-men-97-2024-poster.jpg",
         "backdrop": "assets/backdrops/x-men-97-2024-backdrop.jpg",
         "overview": "X-Men ’97 revisita a era icônica dos anos 1990, quando os X-Men, um grupo de mutantes que usam seus dons extraordinários para proteger um mundo que os odeia e teme, são desafiados como nunca antes, forçados a enfrentar um novo futuro perigoso e inesperado.",
@@ -693,11 +712,11 @@ const seriesData = [
         ],
         "seasonCount": 1,
         "episodeCount": 6,
-        "tmdbId": 138502,
-        "imdbId": "tt16026746",
         "originalTitle": "X-Men '97",
         "year": 2024,
-        "rating": 8.696
+        "rating": 8.698,
+        "imdbId": "tt16026746",
+        "tmdbId": 138502
     },
     {
         "id": "eu-a-patroa-e-as-criancas",
@@ -1655,7 +1674,7 @@ const seriesData = [
         "imdbId": "tt0273855",
         "originalTitle": "My Wife and Kids",
         "year": 2001,
-        "rating": 7.43
+        "rating": 7.431
     },
     {
         "id": "yellowstone",
@@ -1667,7 +1686,7 @@ const seriesData = [
             "Faroeste",
             "Drama"
         ],
-        "contentRating": "",
+        "contentRating": "TV-MA",
         "poster": "assets/posters/yellowstone-2018-poster.jpg",
         "backdrop": "assets/backdrops/yellowstone-2018-backdrop.jpg",
         "overview": "John Dutton tenta proteger seu rancho, o maior dos Estados Unidos, de um mundo corrupto.",
@@ -1990,11 +2009,11 @@ const seriesData = [
         ],
         "seasonCount": 2,
         "episodeCount": 16,
-        "tmdbId": 73586,
-        "imdbId": "tt4236770",
         "originalTitle": "Yellowstone",
         "year": 2018,
-        "rating": 8.27
+        "rating": 8.269,
+        "imdbId": "tt4236770",
+        "tmdbId": 73586
     },
     {
         "id": "tartarugas-ninjas-historias-mutantes",
@@ -2268,7 +2287,7 @@ const seriesData = [
             "Action & Adventure",
             "Sci-Fi & Fantasy"
         ],
-        "contentRating": "",
+        "contentRating": "TV-MA",
         "poster": "assets/posters/demon-slayer-kimetsu-no-yaiba-2019-poster.jpg",
         "backdrop": "assets/backdrops/demon-slayer-kimetsu-no-yaiba-2019-backdrop.jpg",
         "overview": "Japão, era Taisho. Tanjiro, um bondoso jovem que ganha a vida vendendo carvão, descobre que sua família foi massacrada por um demônio. E pra piorar, Nezuko, sua irmã mais nova e única sobrevivente, também foi transformada num demônio. Arrasado com esta sombria realidade, Tanjiro decide se tornar um matador de demônios para fazer sua irmã voltar a ser humana, e para matar o demônio que matou sua família. Um triste conto sobre dois irmãos, onde os destinos dos humanos e dos demônios se entrelaçam, começa agora.",
@@ -2757,11 +2776,11 @@ const seriesData = [
         ],
         "seasonCount": 1,
         "episodeCount": 25,
-        "tmdbId": 85937,
-        "imdbId": "tt9335498",
         "originalTitle": "鬼滅の刃",
         "year": 2019,
-        "rating": 8.639
+        "rating": 8.637,
+        "imdbId": "tt9335498",
+        "tmdbId": 85937
     },
     {
         "id": "avatar-a-lenda-de-aang",
@@ -3961,7 +3980,7 @@ const seriesData = [
         "imdbId": "tt0417299",
         "originalTitle": "Avatar: The Last Airbender",
         "year": 2005,
-        "rating": 8.78
+        "rating": 8.8
     },
     {
         "id": "o-urso",
@@ -5967,7 +5986,7 @@ const seriesData = [
         "imdbId": "tt0259141",
         "originalTitle": "Jackie Chan Adventures",
         "year": 2000,
-        "rating": 8.16
+        "rating": 8.149
     }
 ];
 
