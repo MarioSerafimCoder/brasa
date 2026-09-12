@@ -1,8 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-export function createMediaCache({ rootDir, store }) {
+export function createMediaCache({ rootDir, store, protectedHlsSessions = () => new Set() }) {
     const preparedRoot = path.join(rootDir, "data", "prepared-media");
+    function isProtected(file) {
+        const relative = path.relative(path.join(preparedRoot, "hls"), file);
+        return protectedHlsSessions().has(relative.split(path.sep)[0]);
+    }
     async function inspect() {
         const files = await walk(preparedRoot);
         const sizeBytes = files.reduce((sum, item) => sum + item.size, 0);
@@ -13,17 +17,23 @@ export function createMediaCache({ rootDir, store }) {
         const limit = Number(maxBytes || settings.maxHlsGb * 1024 ** 3 || 160 * 1024 ** 3);
         const files = await walk(preparedRoot);
         const removed = [];
-        for (const item of files.filter((entry) => /\.(?:part|tmp)$/i.test(entry.path))) { await fs.rm(item.path, { force: true });removed.push(item.path); }
+        for (const item of files.filter((entry) => /\.(?:part|tmp)$/i.test(entry.path))) { if (isProtected(item.path)) continue;await fs.rm(item.path, { force: true });removed.push(item.path); }
         const sessionDirs = await hlsDirectories(preparedRoot);
         let used = sessionDirs.reduce((sum, item) => sum + item.size, 0);
         const free = await freeBytes(preparedRoot);
         for (const session of sessionDirs.sort((a, b) => a.lastUsed - b.lastUsed)) {
+            if (isProtected(session.path)) continue;
             if (used <= limit && free + (sessionDirs.reduce((sum, item) => item.removed ? item.size : 0)) >= minimumFreeBytes) break;
             await fs.rm(session.path, { recursive: true, force: true });session.removed = true;used -= session.size;removed.push(session.path);
         }
         return { removed, sizeBytes: used };
     }
-    async function clearHls() { const target=path.join(preparedRoot,"hls");await fs.rm(target,{recursive:true,force:true});await fs.mkdir(target,{recursive:true});return inspect(); }
+    async function clearHls() {
+        for (const session of await hlsDirectories(preparedRoot)) {
+            if (!isProtected(session.path)) await fs.rm(session.path, { recursive: true, force: true });
+        }
+        return inspect();
+    }
     return { inspect, cleanup, clearHls };
 }
 

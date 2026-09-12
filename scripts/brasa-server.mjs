@@ -80,7 +80,7 @@ const tvLibraryCache = createTvLibraryCache(rootDir);
 const metadataRetryStore = createMetadataRetryStore(rootDir);
 const mediaQueue = createMediaQueue({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir), resolveMedia });
 const hlsSessions = createHlsSessionManager({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir) });
-const mediaCache = createMediaCache({ rootDir, store: mediaStore });
+const mediaCache = createMediaCache({ rootDir, store: mediaStore, protectedHlsSessions: hlsSessions.protectedSessionIds });
 const libraryHealthStore = createLibraryHealthStore(rootDir);
 const syncHistoryStore = createSyncHistory(rootDir);
 const libraryHealth = createLibraryHealth({ rootDir, store: libraryHealthStore, mediaStore, mediaQueue, syncHistory: syncHistoryStore });
@@ -544,7 +544,7 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
         requestedFallback === "transcode"
             ? { mode: "transcode", videoAction: "h264", audioAction: "aac", reasons: ["fallback solicitado após falha do decoder", ...detectedPlan.reasons] }
             : detectedPlan,
-        { resumePosition: base.resumePosition },
+        { resumePosition: base.resumePosition, probe },
     );
     if (clientPlan.mode === "direct") return { ...base, ...codecs, playbackUrl: originalStreamUrl(item.streamUrl, playbackRevision), mimeType: contentTypes[extension] || "video/*", preparationStatus: "ready", preparationProgress: 100, playbackMode: "direct", adaptiveReasons: clientPlan.reasons };
     if (!allowPreparation) return { ...base, ...codecs, preparationStatus: "idle", preparationProgress: 0, playbackMode: clientPlan.mode, adaptiveReasons: clientPlan.reasons };
@@ -591,7 +591,23 @@ async function tvSavePreferences(profileId, input) { const state = await readUse
 async function tvResetPersonalization(profileId) { const state = await readUserState(); if (!state.profiles.some((item) => item.id === profileId)) throw new NotFoundError("Perfil não encontrado."); const current = validateProfileState(state.states[profileId] || {}); state.states[profileId] = { ...current, ratings: {}, hiddenSuggestions: [], continueDismissed: {}, activityEvents: [], updatedAt: new Date().toISOString() }; await queueUserStateWrite(state); return { reset: true }; }
 async function tvVerifyPin(profileId, pin) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); return !profile.pinHash || verifyPinHash(profile, String(pin || "")); }
 async function tvStream(request, response, mediaKey, profileId, sourceMode = "") { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), item = await getTvMediaItem(mediaKey); if (!profile || !item || !canTvAccess(item, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const mediaState=await mediaStore.get(mediaKey),cacheKey=`${mediaKey}:${sourceMode}`,cached=tvStreamFileCache.get(cacheKey);let resolved=cached?.expiresAt>Date.now()?cached.path:"",stat=cached?.expiresAt>Date.now()?cached.stat:null;if(!resolved||!stat){const media = await resolveMedia(mediaKey), candidates = [...new Set((sourceMode==="original"?[media?.originalPath,item.originalVideo,item.video]:[mediaState?.preparedPath,media?.originalPath,item.originalVideo,item.video]).filter(Boolean))];for (const candidate of candidates) { const safe = String(candidate).startsWith("data/prepared-media/")?path.resolve(rootDir,candidate):resolvePathInsideLibrary(rootDir, candidate).path, candidateStat = await fs.stat(safe).catch(() => null); if (candidateStat?.isFile()) { resolved = safe; stat = candidateStat; break; } }if(resolved&&stat)tvStreamFileCache.set(cacheKey,{path:resolved,stat,expiresAt:Date.now()+30_000});} if (!resolved || !stat) throw new NotFoundError("Arquivo de mídia não encontrado."); return serveMediaFile(resolved, stat, request, response, { "Content-Type": contentTypes[path.extname(resolved).toLowerCase()] || "application/octet-stream", "Cache-Control": "private, no-transform" }); }
-async function tvHls(request, response, device, sessionId, requested) { const resolved=await hlsSessions.resolve(sessionId,requested);if(!resolved)throw new NotFoundError("Segmento de streaming ainda não está disponível.");const media=await getTvMediaItem(resolved.session?.mediaKey||"");const state=await readUserState(),profiles=state.profiles.filter((profile)=>!device.allowedProfileIds.length||device.allowedProfileIds.includes(profile.id));if(!media||!profiles.some((profile)=>canTvAccess(media,profile)))throw new ForbiddenError("Conteúdo indisponível para este dispositivo.");const extension=path.extname(resolved.file).toLowerCase();return serveMediaFile(resolved.file,resolved.stat,request,response,{"Content-Type":contentTypes[extension]||"application/octet-stream","Cache-Control":extension===".m3u8"?"private, no-cache, max-age=0":"private, max-age=86400, immutable"});}
+async function tvHls(request, response, device, sessionId, requested) {
+    const resolved = await hlsSessions.resolve(sessionId, requested);
+    if (!resolved) throw new NotFoundError("Segmento de streaming ainda não está disponível.");
+    const media = await getTvMediaItem(resolved.session?.mediaKey || "");
+    const state = await readUserState();
+    const profiles = state.profiles.filter(profile => !device.allowedProfileIds.length || device.allowedProfileIds.includes(profile.id));
+    if (!media || !profiles.some(profile => canTvAccess(media, profile))) throw new ForbiddenError("Conteúdo indisponível para este dispositivo.");
+    const extension = path.extname(resolved.file).toLowerCase();
+    if (extension === ".m3u8") {
+        // FFmpeg replaces EVENT playlists while the TV polls. Read one snapshot:
+        // an earlier stat's Content-Length can truncate a newer, larger playlist.
+        const playlist = await fs.readFile(resolved.file);
+        response.writeHead(200, { "Content-Type": contentTypes[extension], "Cache-Control": "private, no-cache, max-age=0", "Content-Length": playlist.length });
+        return response.end(request.method === "HEAD" ? undefined : playlist);
+    }
+    return serveMediaFile(resolved.file, resolved.stat, request, response, { "Content-Type": contentTypes[extension] || "application/octet-stream", "Cache-Control": "private, max-age=86400, immutable" });
+}
 async function getTvMediaItem(mediaKey) { const [type, id] = String(mediaKey).split(":"), library = await tvLibraryCache.load(); if (type === "movie") return library.movieById.get(id) || null; if (type === "episode") return library.episodeById.get(id)?.episode || null; if (type === "series") return library.series.find((item) => String(item.id) === id) || null; return null; }
 function canTvAccess(item, profile) { const sourceOffline=item?.fileStatus==="source-offline";if (!item || (!sourceOffline && (item.playable === false || item.fileStatus === "missing-file")) || (!Array.isArray(item.seasons) && !item.video)) return false; if (profile.kind !== "kids") return item.audience !== "adult" || profile.kind === "adult"; const audience = item.audience || (item.kids ? "kids" : "general"); if (audience === "kids") return true; if (audience === "adult") return false; const level = tvRatingLevel(item.contentRating); return level !== null && level <= Number(profile.maxContentRating ?? 10); }
 function tvRatingLevel(value) { const key = String(value || "").trim().toUpperCase().replace(/\s+/g, ""), levels = { L:0,LIVRE:0,G:0,"TV-Y":0,"TV-Y7":7,"TV-G":0,10:10,"10ANOS":10,12:12,14:14,16:16,18:18,PG:12,"PG-13":13,R:17,"TV-PG":12,"TV-14":14,"TV-MA":18 }; return Object.prototype.hasOwnProperty.call(levels, key) ? levels[key] : null; }

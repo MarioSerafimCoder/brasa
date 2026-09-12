@@ -14,6 +14,9 @@ object SeekPolicy {
     ): Boolean {
         if (!seekable || targetMs < offsetMs) return false
         if (playbackMode != "hls" && supportsRange) return true
+        // The server publishes EVENT playlists: earlier segments remain on disk,
+        // so rewind does not require another transcode merely for leaving RAM.
+        if (playbackMode == "hls") return targetMs <= bufferedMs - 2_000
         return targetMs >= maxOf(offsetMs, currentMs - backBufferMs) && targetMs <= bufferedMs - 2_000
     }
 }

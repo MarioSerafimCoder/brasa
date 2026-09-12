@@ -29,6 +29,10 @@ assert.ok(args.includes("independent_segments+temp_file"), "segmentos devem usar
 assert.ok(args.includes("master.m3u8"), "manifesto principal obrigatório");
 assert.ok(args.some((value) => value.includes("%v") && value.includes("seg-%06d.ts")), "segmentos variantes obrigatórios");
 assert.ok(args.includes("event"), "playlist deve permanecer disponível durante o processamento");
+const silentArgs = buildHlsArgs("silent.mkv", path.resolve("cache"), ladder1080, "libx264", probe({ audioTracks: [] }));
+assert.doesNotMatch(silentArgs[silentArgs.indexOf("-var_stream_map") + 1], /a:/, "vídeo sem áudio não pode referenciar uma faixa inexistente");
+const audioArgs = buildHlsArgs("audio.mkv", path.resolve("cache"), ladder1080, "libx264", probe());
+assert.match(audioArgs[audioArgs.indexOf("-var_stream_map") + 1], /a:0.*a:1/, "vídeos com áudio mantêm as faixas nas variantes");
 const cudaArgs = buildHlsArgs("movie.mkv", path.resolve("cache"), ladder1080, "h264_nvenc", probe());
 assert.deepEqual(cudaArgs.slice(0, 5), ["-y", "-hwaccel", "cuda", "-hwaccel_output_format", "cuda"]);
 assert.ok(cudaArgs.some((value) => value.includes("scale_cuda")), "NVENC deve manter redimensionamento na GPU");
@@ -60,6 +64,9 @@ assert.equal(stableRemuxPlan.videoAction, "h264", "segmentação estável deve n
 assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv)).mode, "direct", "direct play compatível não deve ser alterado");
 assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv), { resumePosition: 2_145_000 }).mode, "transcode", "retomada deve receber um quadro-chave seguro mesmo quando direct play seria compatível");
 assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv), { resumePosition: 0 }).mode, "direct", "reprodução desde o início deve preservar direct play compatível");
+const witchHat = probe({ container: "matroska", bitrate: 8_389_759, duration: 1420.053 });
+assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan(witchHat, googleTv), { resumePosition: 600_000, probe: witchHat }).mode, "direct", "retomar H.264 SDR compatível não deve iniciar conversão desnecessária");
+assert.equal(stabilizeTvPlaybackPlan({ mode: "transcode", videoAction: "h264" }, { resumePosition: 600_000, probe: witchHat }).mode, "transcode", "fallback explícito após falha deve continuar disponível");
 assert.equal(selectTvPlaybackPlan(superman, { ...googleTv, videoCodecs: ["h264"], hdrTypes: [] }).mode, "transcode", "TV sem HEVC/HDR deve receber transcodificação");
 assert.equal(selectTvPlaybackPlan(hdr10Mkv, { ...googleTv, videoCapabilities: googleTv.videoCapabilities.map((item) => item.codec === "hevc" ? { ...item, maxWidth: 1920, maxHeight: 1080 } : item) }).mode, "transcode", "limite do decoder HEVC deve ser aplicado por codec");
 assert.equal(selectTvPlaybackPlan(hdr10Mkv, { ...googleTv, videoCapabilities: googleTv.videoCapabilities.filter((item) => item.codec !== "hevc") }).mode, "transcode", "codec sem decoder de hardware não deve usar direct play");

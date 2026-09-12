@@ -6,6 +6,7 @@ import { createDeviceStore } from "../server/device-store.mjs";
 const mediaKey = process.argv[2] || "movie:437";
 const profileName = process.argv[3] || "Mario";
 const requestedPositionMs = Number.isFinite(Number(process.argv[4])) ? Math.max(0, Math.round(Number(process.argv[4]))) : null;
+const forceHls = process.argv.includes("--hls");
 const baseUrl = process.env.BRASA_URL || "http://127.0.0.1:4173";
 const store = createDeviceStore(process.cwd());
 const created = await store.create({ name: "Diagnóstico temporário de reprodução", type: "tv" });
@@ -31,7 +32,7 @@ try {
 
     let playback;
     for (let attempt = 0; attempt < 90; attempt++) {
-        const position = requestedPositionMs == null ? "" : `&positionMs=${requestedPositionMs}`;
+        const position = (requestedPositionMs == null ? "" : `&positionMs=${requestedPositionMs}`) + (forceHls ? "&fallback=transcode" : "");
         const response = await fetch(`${baseUrl}/api/v1/tv/playback/${mediaKey}?profileId=${encodeURIComponent(profile.id)}${position}`, { headers });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error?.message || "Falha ao preparar a reprodução.");
@@ -40,7 +41,29 @@ try {
         await new Promise((resolve) => setTimeout(resolve, 1_000));
     }
     if (playback?.preparationStatus !== "ready") throw new Error(playback?.errorMessage || "A preparação não ficou pronta.");
-    if (playback.playbackMode !== "hls") throw new Error(`O teste esperava HLS, mas recebeu ${playback.playbackMode}.`);
+    if (playback.playbackMode === "direct") {
+        if (forceHls) throw new Error("O fallback explícito não retornou HLS.");
+        const url = new URL(playback.playbackUrl, `${baseUrl}/`).toString();
+        const range = await fetch(url, { headers: { ...headers, Range: "bytes=0-1023" } });
+        const body = await range.arrayBuffer();
+        if (range.status !== 206 || body.byteLength !== 1024) throw new Error("Range progressivo inválido.");
+        await decodeHttp(path.resolve("tools", "ffmpeg", "ffmpeg.exe"), url, created.token, Number(requestedPositionMs || 0) / 1000);
+        console.log(JSON.stringify({ mediaKey, playbackMode: playback.playbackMode, requestedPositionMs, resumePosition: playback.resumePosition, rangeVerified: true, decodedThroughServer: true }, null, 2));
+    } else {
+    if (playback.playbackMode !== "hls") throw new Error(`Modo de reprodução inesperado: ${playback.playbackMode}.`);
+
+    const manifestUrl = new URL(playback.playbackUrl, `${baseUrl}/`).toString();
+    for (let attempt = 0; attempt < 8; attempt++) {
+        const response = await fetch(manifestUrl, { headers });
+        const body = Buffer.from(await response.arrayBuffer());
+        if (!response.ok || Number(response.headers.get("content-length")) !== body.length || !body.toString().startsWith("#EXTM3U")) throw new Error("Manifesto HLS truncado ou inválido.");
+        for (const relative of body.toString().split(/\r?\n/).filter(line => line && !line.startsWith("#"))) {
+            const variant = await fetch(new URL(relative, manifestUrl), { headers });
+            const bytes = Buffer.from(await variant.arrayBuffer());
+            const text = bytes.toString();
+            if (!variant.ok || Number(variant.headers.get("content-length")) !== bytes.length || !text.startsWith("#EXTM3U") || !text.endsWith("\n")) throw new Error("Playlist de segmentos truncada ou inválida.");
+        }
+    }
 
     const sessionId = playback.playbackUrl.match(/\/hls\/([a-f0-9]{24})\//)?.[1];
     if (!sessionId) throw new Error("A sessão HLS não foi identificada.");
@@ -97,13 +120,14 @@ try {
         sessionRoot,
         playlistPath,
     }, null, 2));
+    }
 } finally {
     await store.remove(created.device.id);
 }
 
 function decode(ffmpegPath, playlistPath) {
     return new Promise((resolve, reject) => {
-        const child = spawn(ffmpegPath, ["-v", "error", "-i", playlistPath, "-f", "null", "NUL"], {
+        const child = spawn(ffmpegPath, ["-v", "error", "-xerror", "-i", playlistPath, "-f", "null", "NUL"], {
             windowsHide: true,
             stdio: ["ignore", "ignore", "pipe"],
         });
@@ -114,11 +138,12 @@ function decode(ffmpegPath, playlistPath) {
     });
 }
 
-function decodeHttp(ffmpegPath, playbackUrl, token) {
+function decodeHttp(ffmpegPath, playbackUrl, token, startSeconds = 0) {
     return new Promise((resolve, reject) => {
         const child = spawn(ffmpegPath, [
-            "-v", "error",
+            "-v", "error", "-xerror",
             "-headers", `X-BRasa-Device-Token: ${token}\r\n`,
+            ...(startSeconds > 0 ? ["-ss", String(startSeconds)] : []),
             "-i", playbackUrl,
             "-t", "60",
             "-f", "null", "NUL",
@@ -127,6 +152,8 @@ function decodeHttp(ffmpegPath, playbackUrl, token) {
             stdio: ["ignore", "ignore", "pipe"],
         });
         let errorText = "";
+        const timeout = setTimeout(() => { child.kill(); reject(new Error("Teste HTTP excedeu três minutos.")); }, 180_000);
+        child.once("close", () => clearTimeout(timeout));
         child.stderr.on("data", (chunk) => { errorText += chunk.toString(); });
         child.once("error", reject);
         child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(errorText.trim() || `FFmpeg HTTP encerrou com código ${code}.`)));

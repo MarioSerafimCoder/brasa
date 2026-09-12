@@ -57,6 +57,7 @@ class BrasaViewModel(
     private var metadataPrefetchJob: Job? = null
     private var mediaPreloadJob: Job? = null
     private var playbackPreparationJob: Job? = null
+    private var playbackGeneration = 0L
     private var preloadMediaKey: String = ""
 
     fun enablePreview(page: String = "home") {
@@ -231,6 +232,7 @@ class BrasaViewModel(
         metadataPrefetchJob?.cancel()
         mediaPreloadJob?.cancel()
         cancelPlaybackPreparation()
+        val requestGeneration = playbackGeneration
         mutable.value = mutable.value.copy(playback = null, message = "")
         if (mutable.value.previewMode) {
             mutable.value = mutable.value.copy(selected = item, playback = PreviewCatalog.playback(item))
@@ -240,16 +242,19 @@ class BrasaViewModel(
         val profile = mutable.value.profile ?: return@launch
         if (fromBeginning) repository.saveProgress(profile.id, item.mediaKey, WatchProgress(mediaType = if (item.type == "episode") "episode" else "movie", mediaId = item.id, seriesId = item.seriesId, duration = item.progress?.duration ?: 0.0))
         val playback = repository.playback(profile.id, item.mediaKey, forceRefresh = true, positionMs = if (fromBeginning) 0 else null)
+        if (requestGeneration != playbackGeneration || mutable.value.profile?.id != profile.id) return@launch
         mutable.value = mutable.value.copy(selected = item, playback = playback)
         onReady()
         if (playback.preparationStatus !in setOf("ready", "failed")) playbackPreparationJob = viewModelScope.launch poll@ {
             repeat(MAX_PREPARATION_POLLS) {
                 delay(1_000)
-                val next = runCatching { repository.playback(profile.id, item.mediaKey, forceRefresh = true) }.getOrElse {
+                val next = runCatching { repository.playback(profile.id, item.mediaKey, forceRefresh = true, positionMs = playback.playbackOffset + playback.resumePosition) }.getOrElse {
+                    if (it is CancellationException) throw it
+                    if (requestGeneration != playbackGeneration) return@poll
                     mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível receber os dados do servidor."))
                     return@poll
                 }
-                if (mutable.value.selected?.mediaKey != item.mediaKey) return@poll
+                if (requestGeneration != playbackGeneration || mutable.value.selected?.mediaKey != item.mediaKey) return@poll
                 mutable.value = mutable.value.copy(playback = next)
                 if (next.preparationStatus in setOf("ready", "failed")) return@poll
             }
@@ -265,6 +270,7 @@ class BrasaViewModel(
         playbackPreparationJob = viewModelScope.launch poll@ {
             repeat(MAX_PREPARATION_POLLS) {
                 val next = runCatching { repository.playback(profile.id, mediaKey, forceRefresh = true, fallbackMode = "transcode") }.getOrElse {
+                    if (it is CancellationException) throw it
                     if (mutable.value.playback?.mediaKey == mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível preparar a versão compatível."))
                     return@poll
                 }
@@ -281,7 +287,8 @@ class BrasaViewModel(
         if (mutable.value.previewMode || mutable.value.playback?.mediaKey != mediaKey) return
         val profile = mutable.value.profile ?: return
         val target = positionMs.coerceAtLeast(0)
-        playbackPreparationJob?.cancel()
+        cancelPlaybackPreparation()
+        val requestGeneration = playbackGeneration
         mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(playbackUrl = "", preparationStatus = "preparing", preparationProgress = 0.0, playbackMode = "hls", errorType = "", errorMessage = ""))
         playbackPreparationJob = viewModelScope.launch poll@ {
             repeat(MAX_PREPARATION_POLLS) {
@@ -294,10 +301,12 @@ class BrasaViewModel(
                         positionMs = target,
                     )
                 }.getOrElse {
+                    if (it is CancellationException) throw it
+                    if (requestGeneration != playbackGeneration) return@poll
                     if (mutable.value.playback?.mediaKey == mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível carregar o ponto escolhido."))
                     return@poll
                 }
-                if (mutable.value.playback?.mediaKey != mediaKey) return@poll
+                if (requestGeneration != playbackGeneration || mutable.value.playback?.mediaKey != mediaKey) return@poll
                 mutable.value = mutable.value.copy(playback = next)
                 if (next.preparationStatus in setOf("ready", "failed")) return@poll
                 delay(1_000)
@@ -342,6 +351,7 @@ class BrasaViewModel(
     }
 
     fun cancelPlaybackPreparation() {
+        playbackGeneration++
         playbackPreparationJob?.cancel()
         playbackPreparationJob = null
     }

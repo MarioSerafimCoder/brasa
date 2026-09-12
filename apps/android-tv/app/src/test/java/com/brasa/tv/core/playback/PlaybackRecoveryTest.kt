@@ -4,6 +4,27 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PlaybackRecoveryTest {
+    @Test fun refillingBufferIsNotMistakenForFrozenDecoder() {
+        val recovery = PlaybackRecovery()
+        for (time in 0L..90_000L step 2_000L) {
+            assertFalse(recovery.sample(time, 60_000, true, buffering = true, bufferedPositionMs = 60_000 + time / 2))
+        }
+        assertFalse(recovery.sample(92_000, 62_000, true))
+    }
+    @Test fun bufferingWithoutIncomingDataEventuallyReconnects() {
+        val recovery = PlaybackRecovery()
+        for (time in 0L..46_000L step 2_000L) assertFalse(recovery.sample(time, 60_000, true, true, 61_000))
+        assertTrue(recovery.sample(48_000, 60_000, true, true, 61_000))
+    }
+    @Test fun tricklingConnectionCannotBufferForever() {
+        val recovery = PlaybackRecovery()
+        for (time in 0L..120_000L step 2_000L) assertFalse(recovery.sample(time, 0, true, true, time / 2))
+        assertTrue(recovery.sample(122_000, 0, true, true, 61_000))
+    }
+    @Test fun pauseDuringBufferingNeverReconnects() {
+        val recovery = PlaybackRecovery()
+        for (time in 0L..180_000L step 2_000L) assertFalse(recovery.sample(time, 0, false, true, 1_000))
+    }
     @Test fun frozenPositionTriggersRecoveryEvenIfPlayerReportsPlaying() {
         val recovery = PlaybackRecovery()
         for (time in 0L..12_000L step 2_000L) assertFalse(recovery.sample(time, 552_104, true))

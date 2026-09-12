@@ -12,7 +12,7 @@ class SeekPolicyTest {
     }
     @Test fun hlsOutsidePreparedWindowStillUsesServer() {
         assertFalse(SeekPolicy.canSeekLocally("hls", true, true, 3_600_000, 0, 60_000, 90_000))
-        assertFalse(SeekPolicy.canSeekLocally("hls", true, true, 20_000, 0, 60_000, 90_000))
+        assertTrue(SeekPolicy.canSeekLocally("hls", true, true, 20_000, 0, 60_000, 90_000))
     }
     @Test fun hlsBufferedSeekPreservesAbsoluteOffset() {
         assertTrue(SeekPolicy.canSeekLocally("hls", true, true, 1_750_000, 1_700_000, 1_760_000, 1_800_000))

@@ -4,6 +4,7 @@ suites.splice(suites.indexOf("test-profiles.mjs") + 1, 0, "test-tv-personalizati
 suites.splice(suites.indexOf("test-adaptive-streaming.mjs"), 0, "test-media-tools.mjs", "test-media-state.mjs", "test-media-priority.mjs", "test-hls-playlist-recovery.mjs", "test-recently-added.mjs");
 suites.splice(suites.indexOf("test-media-compatibility.mjs") + 1, 0, "test-media-integrity.mjs");
 let passed = 0;
+suites.push("test-hls-session-lifecycle.mjs");
 suites.push("test-library-scan.mjs");
 suites.push("test-new-episode-scan.mjs");
 for (const suite of suites) { const code = await run(suite); if (code !== 0) { console.error(`\nFALHOU: ${suite}`); process.exitCode = 1; } else passed++; }

@@ -201,8 +201,16 @@ private fun PlayerContent(
     }
     val session = remember(player) { MediaSession.Builder(context, player).build() }
     var firstFrameRendered by remember(player) { mutableStateOf(false) }
+    var retrySequence by remember(player) { mutableIntStateOf(0) }
     val rootFocus = remember { FocusRequester() }
     val playFocus = remember { FocusRequester() }
+    val errorFocus = remember { FocusRequester() }
+    LaunchedEffect(loadError) {
+        if (loadError.isNotBlank()) {
+            withFrameNanos { }
+            runCatching { errorFocus.requestFocus() }
+        }
+    }
     var ended by remember { mutableStateOf(false) }
     var autoNextSeconds by remember(info.mediaKey) { mutableIntStateOf(10) }
     var autoNextCancelled by remember(info.mediaKey) { mutableStateOf(false) }
@@ -216,6 +224,7 @@ private fun PlayerContent(
     var controlsVisible by remember { mutableStateOf(true) }
     var interaction by remember { mutableIntStateOf(0) }
     var isPlaying by remember { mutableStateOf(player.isPlaying) }
+    var playRequested by remember(player) { mutableStateOf(player.playWhenReady) }
     var position by remember { mutableLongStateOf(PlaybackTimeline.absolutePosition(info, player.currentPosition)) }
     var duration by remember { mutableLongStateOf(PlaybackTimeline.absoluteDuration(info, 0)) }
     var buffered by remember { mutableLongStateOf(PlaybackTimeline.absolutePosition(info, player.bufferedPosition)) }
@@ -243,12 +252,19 @@ private fun PlayerContent(
 
     fun retryPlayback() {
         loadError = ""
+        val resumePlayback = player.playWhenReady
         // This is local player time, including when resuming an offset HLS playlist.
         retryPositionOverride = player.currentPosition.coerceAtLeast(0)
         recovery.resetSampling()
-        // DisposableEffect owns release; releasing here too races the old listener/session.
-        acquiredPlayer = null
-        loadAttempt++
+        // Reprepare the owned player. Reacquiring the same identity can return the
+        // old instance just as Compose disposes it, leaving a released player on screen.
+        pendingRetry = null
+        firstFrameRendered = false
+        retrySequence++
+        player.stop()
+        player.seekTo(retryPositionOverride)
+        player.prepare()
+        player.playWhenReady = resumePlayback
     }
 
     fun saveAt(absolutePosition: Long, completed: Boolean = false) {
@@ -327,6 +343,7 @@ private fun PlayerContent(
         var rebufferCount = 0
         val listener = object : Player.Listener {
             override fun onTracksChanged(tracks: Tracks) { currentTracks = tracks }
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) { playRequested = playWhenReady }
             override fun onIsPlayingChanged(value: Boolean) { isPlaying = value; revealControls() }
             override fun onPlaybackStateChanged(playbackState: Int) {
                 val now = SystemClock.elapsedRealtime()
@@ -399,15 +416,20 @@ private fun PlayerContent(
             container.playback.release(player, completed = ended)
         }
     }
-    LaunchedEffect(player, info.playbackMode) {
-        delay(20_000)
-        if (!firstFrameRendered && player.playbackState == Player.STATE_BUFFERING) {
+    LaunchedEffect(player, info.playbackMode, retrySequence) {
+        val startup = PlaybackRecovery()
+        while (!firstFrameRendered && !recoveryRequested && loadError.isBlank()) {
+            delay(2_000)
+            val waitingForFrame = player.playWhenReady && player.playerError == null &&
+                player.playbackSuppressionReason == Player.PLAYBACK_SUPPRESSION_REASON_NONE &&
+                pendingRetry?.isActive != true && player.playbackState in setOf(Player.STATE_BUFFERING, Player.STATE_READY)
+            if (!startup.sample(SystemClock.elapsedRealtime(), 0, waitingForFrame,
+                    buffering = player.playbackState == Player.STATE_BUFFERING,
+                    bufferedPositionMs = player.bufferedPosition)) continue
             if (info.playbackMode == "direct" && !fallbackRequested) {
                 fallbackRequested = true
                 loadError = ""
-                save()
-                player.pause()
-                onPlaybackFallback(info.mediaKey)
+                requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true)
                 Log.w(TAG, "Fallback HLS solicitado: buffer recebido sem primeiro quadro para ${info.mediaKey}")
             } else if (recovery.beginRetry()) {
                 retryCount = recovery.attempts
@@ -418,9 +440,10 @@ private fun PlayerContent(
                 player.pause()
                 Log.e(TAG, "Retomada sem primeiro quadro após $retryCount tentativas para ${info.mediaKey}")
             }
+            break
         }
     }
-    LaunchedEffect(player, firstFrameRendered) {
+    LaunchedEffect(player, firstFrameRendered, retrySequence) {
         if (!firstFrameRendered) return@LaunchedEffect
         recovery.resetSampling()
         while (!recoveryRequested && !ended) {
@@ -429,7 +452,9 @@ private fun PlayerContent(
             val shouldAdvance = player.playWhenReady && player.playbackState != Player.STATE_ENDED &&
                 player.playbackSuppressionReason == Player.PLAYBACK_SUPPRESSION_REASON_NONE &&
                 player.playerError == null && pendingRetry?.isActive != true && loadError.isBlank()
-            if (recovery.sample(SystemClock.elapsedRealtime(), currentPosition, shouldAdvance)) {
+            if (recovery.sample(SystemClock.elapsedRealtime(), currentPosition, shouldAdvance,
+                    buffering = player.playbackState == Player.STATE_BUFFERING,
+                    bufferedPositionMs = player.bufferedPosition)) {
                 val absolute = PlaybackTimeline.absolutePosition(info, currentPosition)
                 Log.w(TAG, "Reprodução sem avanço em ${info.mediaKey}: position=$absolute, state=${player.playbackState}, isPlaying=${player.isPlaying}")
                 if (recovery.beginRetry()) {
@@ -486,7 +511,9 @@ private fun PlayerContent(
                 when (event.nativeKeyEvent.keyCode) {
                     KeyEvent.KEYCODE_MEDIA_REWIND -> { seekBy(-10_000); true }
                     KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { seekBy(10_000); true }
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { if (player.isPlaying) { player.pause(); centerNotice = "Pausado" } else { player.play(); centerNotice = "Reproduzindo" }; true }
+                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> { if (player.playWhenReady) { player.pause(); centerNotice = "Pausado" } else { player.play(); centerNotice = "Reproduzindo" }; true }
+                    KeyEvent.KEYCODE_MEDIA_PAUSE -> { player.pause(); centerNotice = "Pausado"; true }
+                    KeyEvent.KEYCODE_MEDIA_PLAY -> { player.play(); centerNotice = "Reproduzindo"; true }
                     else -> !wasVisible
                 }
             }
@@ -521,7 +548,7 @@ private fun PlayerContent(
                 Text(loadError, color = BrasaTextMuted, fontSize = 17.sp)
                 Spacer(Modifier.height(18.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    BrasaButton("Tentar novamente", ::retryPlayback, style = BrasaButtonStyle.Primary)
+                    BrasaButton("Tentar novamente", { player.playWhenReady = true; retryPlayback() }, Modifier.focusRequester(errorFocus), style = BrasaButtonStyle.Primary)
                     BrasaButton("Voltar", ::exit)
                 }
             }
@@ -612,11 +639,11 @@ private fun PlayerContent(
                     BrasaButton("10s", { seekBy(-10_000) }, leading = "↶")
                     Spacer(Modifier.width(11.dp))
                     BrasaButton(
-                        if (isPlaying) "Pausar" else "Reproduzir",
-                        { if (player.isPlaying) { player.pause(); centerNotice = "Pausado" } else { player.play(); centerNotice = "Reproduzindo" } },
+                        if (playRequested) "Pausar" else "Reproduzir",
+                        { if (player.playWhenReady) { player.pause(); centerNotice = "Pausado" } else { player.play(); centerNotice = "Reproduzindo" } },
                         Modifier.focusRequester(playFocus),
                         style = BrasaButtonStyle.Primary,
-                        leading = if (isPlaying) "Ⅱ" else "▶",
+                        leading = if (playRequested) "Ⅱ" else "▶",
                     )
                     Spacer(Modifier.width(11.dp))
                     BrasaButton("10s", { seekBy(10_000) }, leading = "↷")

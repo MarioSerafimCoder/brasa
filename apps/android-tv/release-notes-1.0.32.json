@@ -1,0 +1,7 @@
+[
+  "Buffer ajustado à memória da TV, com reserva maior para oscilações da rede e menor retenção de vídeo pesado.",
+  "Recuperação distingue carregamento em andamento de congelamento e reconecta sem disputar a liberação do player.",
+  "Retomada de H.264 SDR compatível preserva a reprodução direta; retrocesso no streaming reutiliza os segmentos existentes.",
+  "Pausa pelo controle remoto funciona também durante o carregamento; pré-carregamento respeita a opção de assistir do início.",
+  "Solicitações antigas de preparação não substituem o vídeo atual, e o ponto escolhido é mantido durante a preparação."
+]

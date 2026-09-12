@@ -110,7 +110,7 @@ const seriesData = [
         "imdbId": "tt26545992",
         "originalTitle": "Lanterns",
         "year": 2026,
-        "rating": 8.3
+        "rating": 8.283
     },
     {
         "id": "witch-hat-atelier",
@@ -2054,7 +2054,7 @@ const seriesData = [
                         "nextEpisodeId": "series-tartarugas-ninjas-historias-mutantes-s1-e2-tartarugas-ninjas-historias-mutantes-s01e02",
                         "tmdbId": 4604136,
                         "overview": "As Tartarugas Ninja estão fugindo e... sozinhas.",
-                        "durationMinutes": 21
+                        "durationMinutes": 22
                     },
                     {
                         "id": "series-tartarugas-ninjas-historias-mutantes-s1-e2-tartarugas-ninjas-historias-mutantes-s01e02",
@@ -2073,7 +2073,7 @@ const seriesData = [
                         "nextEpisodeId": "series-tartarugas-ninjas-historias-mutantes-s1-e3-tartarugas-ninjas-historias-mutantes-s01e03",
                         "tmdbId": 5403569,
                         "overview": "Para salvar os irmãos, Mikey precisa da ajuda do estagiário de Bishop, Rod.",
-                        "durationMinutes": 21
+                        "durationMinutes": 23
                     },
                     {
                         "id": "series-tartarugas-ninjas-historias-mutantes-s1-e3-tartarugas-ninjas-historias-mutantes-s01e03",
@@ -2130,7 +2130,7 @@ const seriesData = [
                         "nextEpisodeId": "series-tartarugas-ninjas-historias-mutantes-s1-e6-tartarugas-ninjas-historias-mutantes-s01e06",
                         "tmdbId": 5403572,
                         "overview": "A origem da mulher chamada BISHOP! Por que ela não gosta de mutantes?",
-                        "durationMinutes": 22
+                        "durationMinutes": 23
                     },
                     {
                         "id": "series-tartarugas-ninjas-historias-mutantes-s1-e6-tartarugas-ninjas-historias-mutantes-s01e06",
@@ -2187,7 +2187,7 @@ const seriesData = [
                         "nextEpisodeId": "series-tartarugas-ninjas-historias-mutantes-s1-e9-tartarugas-ninjas-historias-mutantes-s01e09",
                         "tmdbId": 5403575,
                         "overview": "Mikey e Genghis Rã precisam enfrentar a tempestade e ir até o supermercado, onde encontram Lee, a Enguia!",
-                        "durationMinutes": 22
+                        "durationMinutes": 23
                     },
                     {
                         "id": "series-tartarugas-ninjas-historias-mutantes-s1-e9-tartarugas-ninjas-historias-mutantes-s01e09",
@@ -2206,7 +2206,7 @@ const seriesData = [
                         "nextEpisodeId": "series-tartarugas-ninjas-historias-mutantes-s1-e10-tartarugas-ninjas-historias-mutantes-s01e10",
                         "tmdbId": 5403576,
                         "overview": "Quando o esconderijo fica inundado, April vai salvar Splinter, mas ele não quer sair do esgoto.",
-                        "durationMinutes": 22
+                        "durationMinutes": 23
                     },
                     {
                         "id": "series-tartarugas-ninjas-historias-mutantes-s1-e10-tartarugas-ninjas-historias-mutantes-s01e10",
@@ -2225,7 +2225,7 @@ const seriesData = [
                         "nextEpisodeId": "series-tartarugas-ninjas-historias-mutantes-s1-e11-tartarugas-ninjas-historias-mutantes-s01e11",
                         "tmdbId": 5403577,
                         "overview": "Donnie e Wingnut vão religar a energia do Esconderijo, mas são encurralados pelo Trio de East River!",
-                        "durationMinutes": 22
+                        "durationMinutes": 23
                     },
                     {
                         "id": "series-tartarugas-ninjas-historias-mutantes-s1-e11-tartarugas-ninjas-historias-mutantes-s01e11",
@@ -3980,7 +3980,7 @@ const seriesData = [
         "imdbId": "tt0417299",
         "originalTitle": "Avatar: The Last Airbender",
         "year": 2005,
-        "rating": 8.8
+        "rating": 8.778
     },
     {
         "id": "o-urso",

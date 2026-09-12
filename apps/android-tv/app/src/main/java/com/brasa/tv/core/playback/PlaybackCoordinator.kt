@@ -63,8 +63,9 @@ class PlaybackCoordinator(
                 preloadMonitor = null
                 existing.preloading = false
                 existing.startedAtMs = SystemClock.elapsedRealtime()
+                // The user may choose "from beginning" after preloading a saved point.
+                if (existing.player.currentPosition != info.resumePosition) existing.player.seekTo(info.resumePosition)
                 if (existing.player.playbackState == Player.STATE_IDLE) {
-                    existing.player.seekTo(info.resumePosition)
                     existing.player.prepare()
                 }
                 existing.player.playWhenReady = true

@@ -89,7 +89,9 @@ export function selectTvPlaybackPlan(probe, rawCapabilities = {}) {
 
 export function stabilizeTvPlaybackPlan(plan = {}, context = {}) {
     const resumePosition = Math.max(0, Number(context.resumePosition || 0));
-    if (plan.mode === "direct" && resumePosition >= 5_000) {
+    const video = context.probe?.video;
+    const indexedSdrAvc = normalizeVideo(video?.codec) === "h264" && Number(video?.bitDepth || 8) <= 8 && !video?.hdr && !video?.hdrType && !video?.dolbyVision;
+    if (plan.mode === "direct" && resumePosition >= 5_000 && !indexedSdrAvc) {
         return {
             ...plan,
             mode: "transcode",

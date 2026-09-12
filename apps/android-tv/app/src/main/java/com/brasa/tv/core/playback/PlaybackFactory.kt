@@ -3,6 +3,7 @@
 package com.brasa.tv.core.playback
 
 import android.content.Context
+import android.app.ActivityManager
 import android.util.Log
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -24,7 +25,6 @@ class PlaybackFactory(
 ) {
     private companion object {
         const val TAG = "BRasaPlayback"
-        const val BACK_BUFFER_MS = 30_000
     }
 
     fun create(baseUrl: String, info: PlaybackInfo, cache: SimpleCache?, autoPlay: Boolean): ExoPlayer {
@@ -52,7 +52,8 @@ class PlaybackFactory(
             .setSubtitleConfigurations(subtitles)
         if (info.playbackMode != "hls") mediaItemBuilder.setCustomCacheKey(cacheKey(baseUrl, info))
         val mediaItem = mediaItemBuilder.build()
-        val buffer = bufferProfile(info)
+        val memory = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val buffer = PlaybackBufferPolicy.select(info.playbackMode, info.bitrate, info.height, memory.memoryClass, memory.isLowRamDevice)
         val loadControl = DefaultLoadControl.Builder()
             .setBufferDurationsMs(
                 buffer.minMs,
@@ -60,9 +61,9 @@ class PlaybackFactory(
                 buffer.startMs,
                 buffer.rebufferMs,
             )
-            .setTargetBufferBytes(C.LENGTH_UNSET)
-            .setPrioritizeTimeOverSizeThresholds(true)
-            .setBackBuffer(BACK_BUFFER_MS, true)
+            .setTargetBufferBytes(buffer.targetBytes)
+            .setPrioritizeTimeOverSizeThresholds(false)
+            .setBackBuffer(buffer.backBufferMs, false)
             .build()
         val renderers = DefaultRenderersFactory(context).setEnableDecoderFallback(true)
         return ExoPlayer.Builder(context, renderers)
@@ -82,11 +83,4 @@ class PlaybackFactory(
 
     fun playbackIdentity(baseUrl: String, info: PlaybackInfo) = cacheKey(baseUrl, info)
 
-    private fun bufferProfile(info: PlaybackInfo): BufferProfile = when {
-        info.playbackMode == "hls" -> BufferProfile(20_000, 120_000, 8_000, 15_000)
-        info.bitrate >= 20_000_000L || info.height >= 2160 -> BufferProfile(20_000, 120_000, 5_000, 12_000)
-        else -> BufferProfile(10_000, 90_000, 3_000, 8_000)
-    }
-
-    private data class BufferProfile(val minMs: Int, val maxMs: Int, val startMs: Int, val rebufferMs: Int)
 }
