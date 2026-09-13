@@ -30,6 +30,7 @@ class BrasaRepository(
     private val tokens: SecureTokenStore,
     private val http: BrasaHttpClient,
     private val cache: TvCacheStore,
+    private val progressSync: ProgressSync,
 ) {
     private val playbackCache = ConcurrentHashMap<String, Pair<Long, PlaybackInfo>>()
     @Volatile private var profileCache: Pair<Long, List<com.brasa.tv.core.model.Profile>>? = null
@@ -43,6 +44,7 @@ class BrasaRepository(
         require(info.apiVersion == 1) { "Servidor incompatível." }
         settings.saveServer(base, info.name)
         http.bindServer(base)
+        bindProgress(base)
         return info
     }
 
@@ -50,6 +52,7 @@ class BrasaRepository(
         val current = settings()
         if (current.serverBaseUrl.isBlank() || !tokens.hasToken()) return null
         http.bindServer(current.serverBaseUrl)
+        bindProgress(current.serverBaseUrl)
         return runCatching {
             coroutineScope {
                 val info = async { api.bootstrap(current.serverBaseUrl) }
@@ -75,6 +78,7 @@ class BrasaRepository(
                     return DeviceSession(status.device?.id.orEmpty(), token).also { session ->
                         tokens.save(session)
                         http.bindServer(base)
+                        bindProgress(base)
                     }
                 }
                 "rejected" -> error("Pareamento recusado no computador.")
@@ -134,13 +138,18 @@ class BrasaRepository(
         val cacheKey = "$profileId:$key:$fallbackMode:$prepare:${positionMs ?: "saved"}"
         val cached = playbackCache[cacheKey]
         if (!forceRefresh && cached != null && System.currentTimeMillis() - cached.first < PLAYBACK_CACHE_MS) return cached.second
-        val value = api.playback(requireServer(), profileId, key, fallbackMode, prepare, positionMs)
+        if (positionMs == null && progressSync.pending(profileId, key) != null) progressSync.flush(profileId, key)
+        val localProgress = if (positionMs == null) progressSync.pending(profileId, key) else null
+        val resume = positionMs ?: localProgress?.takeUnless { it.completed }?.let { (it.currentTime * 1000).toLong() }
+        val value = api.playback(requireServer(), profileId, key, fallbackMode, prepare, resume)
         if (value.preparationStatus == "ready") playbackCache[cacheKey] = System.currentTimeMillis() to value else playbackCache.remove(cacheKey)
         return value
     }
 
     suspend fun prefetchPlayback(profileId: String, key: String) { runCatching { playback(profileId, key, prepare = false) } }
-    suspend fun saveProgress(profileId: String, key: String, value: WatchProgress) = api.progress(requireServer(), profileId, key, value)
+    suspend fun saveProgress(profileId: String, key: String, value: WatchProgress) = progressSync.save(profileId, key, value).also { playbackCache.clear() }
+    fun enqueueProgress(profileId: String, key: String, value: WatchProgress): kotlinx.coroutines.Job { playbackCache.clear(); return progressSync.enqueue(profileId, key, value) }
+    private fun bindProgress(base: String) { tokens.load()?.let { progressSync.bind(com.brasa.tv.data.storage.ProgressDestination(base, it.deviceId)) } }
     suspend fun favorite(profileId: String, key: String, enabled: Boolean) = api.favorite(requireServer(), profileId, key, enabled)
     suspend fun signal(profileId: String, key: String, action: String, enabled: Boolean = true) = api.signal(requireServer(), profileId, key, action, enabled)
     suspend fun savePreferences(profileId: String, autoplayNext: Boolean) = api.preferences(requireServer(), profileId, autoplayNext)
@@ -153,6 +162,7 @@ class BrasaRepository(
     suspend fun cancelNetworkTest(id: String) = api.cancelNetworkTest(requireServer(), id)
 
     suspend fun forget() {
+        progressSync.forget()
         tokens.clear()
         settings.forgetServer()
         playbackCache.clear()

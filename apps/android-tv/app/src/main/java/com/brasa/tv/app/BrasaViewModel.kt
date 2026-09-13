@@ -356,10 +356,10 @@ class BrasaViewModel(
         playbackPreparationJob = null
     }
 
-    fun saveProgress(mediaKey: String, progress: WatchProgress) = viewModelScope.launch {
-        if (mutable.value.previewMode) return@launch
-        val profile = mutable.value.profile ?: return@launch
-        runCatching { repository.saveProgress(profile.id, mediaKey, progress) }
+    fun saveProgress(mediaKey: String, progress: WatchProgress) {
+        if (mutable.value.previewMode) return
+        val profile = mutable.value.profile ?: return
+        repository.enqueueProgress(profile.id, mediaKey, progress)
     }
 
     fun verifyPin(pin: String, onResult: (Boolean) -> Unit) = launch {

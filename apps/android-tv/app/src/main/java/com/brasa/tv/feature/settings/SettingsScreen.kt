@@ -63,6 +63,7 @@ fun SettingsScreen(
     onAutoplayNext: (Boolean) -> Unit,
     onForget: () -> Unit,
     onBack: () -> Unit,
+    progressStatus: String = "",
 ) {
     var confirmForget by remember { mutableStateOf(false) }
     val deviceSettings by settingsStore.values.collectAsState(initial=AppSettings())
@@ -93,6 +94,7 @@ fun SettingsScreen(
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Reprodução") {
+                if (progressStatus.isNotBlank()) Text(progressStatus, color = BrasaTextMuted, fontSize = BrasaType.metadata)
                 BrasaButton("Histórico de reprodução e pausas", onPlaybackHistory, Modifier.fillMaxWidth())
                 Spacer(Modifier.height(BrasaSpacing.x1))
                 StatusLine("Cache utilizado", formatBytes(state.cacheBytes))

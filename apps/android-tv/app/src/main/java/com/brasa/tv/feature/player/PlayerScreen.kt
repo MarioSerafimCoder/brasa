@@ -70,6 +70,11 @@ import com.brasa.tv.core.model.playableItem
 import com.brasa.tv.core.playback.PlaybackTimeline
 import com.brasa.tv.core.playback.SeekPolicy
 import com.brasa.tv.core.playback.PlaybackRecovery
+import com.brasa.tv.core.playback.PlaybackErrorPolicy
+import com.brasa.tv.core.playback.PlaybackErrorAction
+import com.brasa.tv.core.playback.PlaybackLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
 import com.brasa.tv.core.playback.PlaybackDiagnosticsRecorder
 import com.brasa.tv.core.playback.PlaybackDiagnosticsAttachment
 import com.brasa.tv.core.playback.PlaybackEvent
@@ -178,6 +183,8 @@ private fun PlayerContent(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var appForeground by remember { mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) }
     val keyboard = LocalSoftwareKeyboardController.current
     LaunchedEffect(Unit) { keyboard?.hide() }
     var acquiredPlayer by remember(playbackIdentity, serverBaseUrl) { mutableStateOf<ExoPlayer?>(null) }
@@ -227,8 +234,8 @@ private fun PlayerContent(
     var autoNextSeconds by remember(info.mediaKey) { mutableIntStateOf(10) }
     var autoNextCancelled by remember(info.mediaKey) { mutableStateOf(false) }
     val endFocus = remember { FocusRequester() }
-    LaunchedEffect(ended, settings.autoplayNext, autoNextCancelled, info.nextEpisode?.mediaKey) {
-        if (!ended || !settings.autoplayNext || autoNextCancelled || info.nextEpisode == null) return@LaunchedEffect
+    LaunchedEffect(ended, settings.autoplayNext, autoNextCancelled, info.nextEpisode?.mediaKey, appForeground) {
+        if (!appForeground || !ended || !settings.autoplayNext || autoNextCancelled || info.nextEpisode == null) return@LaunchedEffect
         runCatching { endFocus.requestFocus() }
         while (autoNextSeconds > 0) { delay(1_000); autoNextSeconds-- }
         if (!autoNextCancelled) onNext(info.nextEpisode)
@@ -252,6 +259,7 @@ private fun PlayerContent(
     var restoreTrackFocus by remember(player) { mutableStateOf(false) }
     var currentTracks by remember(player) { mutableStateOf(player.currentTracks) }
     val playbackScope = rememberCoroutineScope()
+    val progressStatus by container.progressSync.state.collectAsState()
     LaunchedEffect(player) {
         player.trackSelectionParameters = applyPlaybackPreferences(player.trackSelectionParameters, settings)
     }
@@ -264,6 +272,7 @@ private fun PlayerContent(
     }
 
     fun retryPlayback() {
+        if (!appForeground) return
         diagnostics?.record(PlaybackEvent(kind = "retry"))
         loadError = ""
         val resumePlayback = player.playWhenReady
@@ -350,6 +359,14 @@ private fun PlayerContent(
     }
 
     BackHandler { exit() }
+    DisposableEffect(player, lifecycleOwner) {
+        val lifecycle = PlaybackLifecycle(player, { save() }, {
+            pendingRetry?.cancel(); pendingRetry = null; recovery.resetSampling()
+        }, { appForeground = it; if (!it) controlsVisible = true })
+        lifecycleOwner.lifecycle.addObserver(lifecycle)
+        if (!lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) lifecycle.background()
+        onDispose { lifecycleOwner.lifecycle.removeObserver(lifecycle); lifecycle.detach() }
+    }
     val diagnosticsAttachment = remember(player, diagnostics) {
         diagnostics?.let { recorder -> PlaybackDiagnosticsAttachment(player, info, recorder,
             onAdaptiveFallback = { requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true, adaptive = true) },
@@ -404,28 +421,25 @@ private fun PlayerContent(
                 Log.i(TAG, "Primeiro frame ${info.mediaKey} em ${SystemClock.elapsedRealtime() - startedAt}ms")
             }
             override fun onPlayerError(error: PlaybackException) {
-                val recoverable = error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED ||
-                    error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
-                    error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ||
-                    error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ||
-                    error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ||
-                    error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW
-                if (info.playbackMode == "direct" && isCompatibilityError(error) && !fallbackRequested) {
-                    fallbackRequested = true
-                    loadError = ""
-                    requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true)
-                    Log.w(TAG, "Fallback HLS solicitado para ${info.mediaKey}: ${error.errorCodeName}", error)
-                } else if (recoverable && pendingRetry?.isActive == true) {
-                    return
-                } else if (recoverable && recovery.beginRetry()) {
-                    retryCount = recovery.attempts
-                    loadError = ""
-                    pendingRetry = playbackScope.launch { delay(1_500L * retryCount); retryPlayback() }
-                    Log.w(TAG, "Tentativa $retryCount para ${info.mediaKey}: ${error.errorCodeName}", error)
-                } else {
-                    loadError = publicPlaybackError(error)
-                    Log.e(TAG, "Falha ${info.mediaKey}: ${error.errorCodeName}", error)
+                val decision = PlaybackErrorPolicy.decide(error, info.playbackMode == "hls")
+                when {
+                    !appForeground -> { loadError = decision.message; player.pause() }
+                    decision.action == PlaybackErrorAction.TRANSCODE && !fallbackRequested -> {
+                        fallbackRequested = true; loadError = ""
+                        requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true)
+                    }
+                    decision.action == PlaybackErrorAction.RENEW_STREAM && recovery.beginSourceRenewal() -> {
+                        loadError = ""
+                        requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true)
+                    }
+                    decision.action == PlaybackErrorAction.RETRY && pendingRetry?.isActive == true -> Unit
+                    decision.action == PlaybackErrorAction.RETRY && recovery.beginRetry() -> {
+                        retryCount = recovery.attempts; loadError = ""
+                        pendingRetry = playbackScope.launch { delay((decision.delayMs * retryCount).coerceAtMost(30_000)); retryPlayback() }
+                    }
+                    else -> { loadError = decision.message; controlsVisible = true; player.pause() }
                 }
+                Log.w(TAG, "Falha de reprodução: ${error.errorCodeName}; ação=${decision.action}")
             }
         }
         player.addListener(listener)
@@ -443,7 +457,7 @@ private fun PlayerContent(
         val startup = PlaybackRecovery()
         while (!firstFrameRendered && !recoveryRequested && loadError.isBlank()) {
             delay(2_000)
-            val waitingForFrame = player.playWhenReady && player.playerError == null &&
+            val waitingForFrame = appForeground && player.playWhenReady && player.playerError == null &&
                 player.playbackSuppressionReason == Player.PLAYBACK_SUPPRESSION_REASON_NONE &&
                 pendingRetry?.isActive != true && player.playbackState in setOf(Player.STATE_BUFFERING, Player.STATE_READY)
             if (!startup.sample(SystemClock.elapsedRealtime(), 0, waitingForFrame,
@@ -472,7 +486,7 @@ private fun PlayerContent(
         while (!recoveryRequested && !ended) {
             delay(2_000)
             val currentPosition = player.currentPosition
-            val shouldAdvance = player.playWhenReady && player.playbackState != Player.STATE_ENDED &&
+            val shouldAdvance = appForeground && player.playWhenReady && player.playbackState != Player.STATE_ENDED &&
                 player.playbackSuppressionReason == Player.PLAYBACK_SUPPRESSION_REASON_NONE &&
                 player.playerError == null && pendingRetry?.isActive != true && loadError.isBlank()
             if (recovery.sample(SystemClock.elapsedRealtime(), currentPosition, shouldAdvance,
@@ -653,6 +667,7 @@ private fun PlayerContent(
                     color = if (timelineFocused) BrasaOrange else BrasaTextMuted,
                     fontSize = 13.sp,
                 )
+                if (progressStatus.pending > 0 || progressStatus.message.startsWith("Não foi")) Text(progressStatus.message, color = BrasaTextMuted, fontSize = 13.sp)
                 Spacer(Modifier.height(17.dp))
                 Row(
                     Modifier.fillMaxWidth(),
@@ -769,19 +784,3 @@ private fun cycleQuality(player: ExoPlayer, info: PlaybackInfo, current: String)
     player.trackSelectionParameters = if (next == "Automática") builder.clearVideoSizeConstraints().build() else builder.setMaxVideoSize(Int.MAX_VALUE, next.filter(Char::isDigit).toIntOrNull() ?: 2160).build()
     return next
 }
-
-private fun publicPlaybackError(error: PlaybackException): String = when (error.errorCode) {
-    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED, PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT, PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS, PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND -> "Não foi possível receber os dados do servidor."
-    PlaybackException.ERROR_CODE_DECODING_FAILED, PlaybackException.ERROR_CODE_DECODER_INIT_FAILED, PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED -> "O dispositivo não conseguiu decodificar este vídeo."
-    PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED, PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED, PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED -> "O formato original não é compatível com este dispositivo."
-    else -> "Não foi possível reproduzir esta mídia."
-}
-
-private fun isCompatibilityError(error: PlaybackException): Boolean = error.errorCode in setOf(
-    PlaybackException.ERROR_CODE_DECODING_FAILED,
-    PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
-    PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED,
-    PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED,
-    PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
-    PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
-)

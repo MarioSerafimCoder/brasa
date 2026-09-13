@@ -38,7 +38,7 @@ assert.match(settings, /floatPreferencesKey\("ui_scale"\)/);
 assert.match(settings, /floatPreferencesKey\("card_density"\)/);
 assert.match(theme, /LocalDensity provides scaledDensity/);
 assert.match(http, /readTimeout\(60,TimeUnit\.SECONDS\)/);
-assert.match(factory, /DefaultLoadErrorHandlingPolicy\(6\)/);
+assert.match(factory, /TvLoadErrorHandlingPolicy\(info.playbackMode == "hls"\)/);
 assert.match(factory, /setEnableDecoderFallback\(true\)/);
 assert.match(factory, /info\.playbackMode == "hls"/);
 assert.match(factory, /PlaybackBufferPolicy\.select/);
@@ -51,7 +51,7 @@ assert.doesNotMatch(player.match(/fun retryPlayback\(\) \{[\s\S]*?\n    \}/)?.[0
 assert.match(player, /container\.playback\.acquire\(serverBaseUrl, info\.copy\(resumePosition = retryPositionOverride\)\)/);
 assert.match(player, /Player\.STATE_ENDED[\s\S]*?PlaybackRecovery\.isPrematureEnd\(absolute, total\)[\s\S]*?requestRemoteSeek\(absolute, recovery = true\)/, "fim prematuro direto ou HLS deve preservar o progresso");
 assert.doesNotMatch(player, /player\.setMediaItem\(mediaItem/);
-assert.match(player, /ERROR_CODE_BEHIND_LIVE_WINDOW/);
+assert.match(await fs.readFile(`${root}/core/playback/PlaybackErrorPolicy.kt`, "utf8"), /ERROR_CODE_BEHIND_LIVE_WINDOW/);
 assert.match(player, /startup\.sample/);
 assert.match(player, /buffer recebido sem primeiro quadro/);
 assert.match(player, /bufferedPositionMs = player\.bufferedPosition/);

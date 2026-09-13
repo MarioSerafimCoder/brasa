@@ -1,4 +1,5 @@
 import http from "node:http";
+import { createUserStateStore, progressWriteTime, mergeImportedProfileState } from "../server/user-state-store.mjs";
 import fs from "node:fs/promises";
 import { createReadStream, rmSync } from "node:fs";
 import path from "node:path";
@@ -68,14 +69,20 @@ const systemCollectionIds = new Set(["mcu", "dc", "spider-man", "star-wars", "lo
 const tmdbImageCache = new Map();
 const tvStreamFileCache = new Map();
 const pinAttempts = new Map();
-let userStateWriteQueue = Promise.resolve();
-let profileRequestQueue = Promise.resolve();
+
 let userCollectionsWriteQueue = Promise.resolve();
 let libraryWatcher = null;
 let dailyRecoveryTimer = null;
 let pendingRecoveryTimer = null;
 let serviceDiscovery = null;
 let activeMediaStreams = 0;
+const userStateStore = createUserStateStore({ file: userStateFile, backupFile: userStateBackupFile, defaults: defaultUserState,
+    normalize: parsed => {
+        if (!Array.isArray(parsed?.profiles) || !parsed?.states) throw new TypeError("Estado de perfis inválido.");
+        return { ...parsed, states: Object.fromEntries(parsed.profiles.map(profile => [profile.id, validateProfileState(parsed.states[profile.id] || {})])) };
+    },
+});
+const serializeProfileMutation = handler => (...args) => userStateStore.run(() => handler(...args));
 const mediaStore = createMediaStateStore(rootDir);
 const tvLibraryCache = createTvLibraryCache(rootDir);
 const metadataRetryStore = createMetadataRetryStore(rootDir);
@@ -108,7 +115,7 @@ const tvPlaybackDiagnostics = {
     },
 };
 const networkInspector = createWindowsNetworkInspector();
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { playbackDiagnostics: tvPlaybackDiagnostics, profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: tvSaveProgress, saveFavorite: tvSaveFavorite, saveSignal: tvSaveSignal, savePreferences: tvSavePreferences, resetPersonalization: tvResetPersonalization, verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls, scan: () => libraryScan.request("tv"), scanStatus: () => libraryScan.status() },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { playbackDiagnostics: tvPlaybackDiagnostics, profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: serializeProfileMutation(tvSaveProgress), saveFavorite: serializeProfileMutation(tvSaveFavorite), saveSignal: serializeProfileMutation(tvSaveSignal), savePreferences: serializeProfileMutation(tvSavePreferences), resetPersonalization: serializeProfileMutation(tvResetPersonalization), verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls, scan: () => libraryScan.request("tv"), scanStatus: () => libraryScan.status() },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -123,7 +130,7 @@ const libraryScan = createLibraryScan({ coordinator: syncCoordinator, getProgres
 const adminAuth = createAdminAuthService({ rootDir });
 const adminLogs = createAdminLogService(rootDir);
 const getAdminTools=(options={})=>getMediaToolsStatus(rootDir,options);
-const adminServices = createAdminServices({ rootDir, mediaStore, mediaQueue, libraryHealth, libraryHealthStore, syncHistoryStore, syncCoordinator, getTools: getAdminTools, profileAdapter: { list: adminListProfiles, create: adminCreateProfile, update: adminUpdateProfile, remove: adminRemoveProfile, clear: adminClearProfile, relocate: adminRelocate }, collectionAdapter: { list: readUserCollections, create: adminCreateCollection, update: adminUpdateCollection, remove: adminRemoveCollection }, watcherStatus: () => ({ enabled: process.env.BRASA_WATCH_LIBRARY !== "0", active: Boolean(libraryWatcher), observedFiles: libraryWatcher?.getStates?.().length || 0 }) });
+const adminServices = createAdminServices({ rootDir, mediaStore, mediaQueue, libraryHealth, libraryHealthStore, syncHistoryStore, syncCoordinator, getTools: getAdminTools, profileAdapter: { list: adminListProfiles, create: serializeProfileMutation(adminCreateProfile), update: serializeProfileMutation(adminUpdateProfile), remove: serializeProfileMutation(adminRemoveProfile), clear: serializeProfileMutation(adminClearProfile), relocate: adminRelocate }, collectionAdapter: { list: readUserCollections, create: adminCreateCollection, update: adminUpdateCollection, remove: adminRemoveCollection }, watcherStatus: () => ({ enabled: process.env.BRASA_WATCH_LIBRARY !== "0", active: Boolean(libraryWatcher), observedFiles: libraryWatcher?.getStates?.().length || 0 }) });
 const handleAdminApi = createAdminController({ auth: adminAuth, logs: adminLogs, services: adminServices, readBody: readJsonBody, send: sendJson, syncCoordinator, libraryHealth, mediaQueue, mediaStore, deviceAdmin: deviceController.admin, getPort: () => activePort, getHost: () => host });
 
 const contentTypes = {
@@ -587,7 +594,7 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
 }
 
 async function tvProgress(profileId, mediaKey) { const state = await readUserState(); if (!state.profiles.some((item) => item.id === profileId)) throw new NotFoundError("Perfil não encontrado."); return validateProfileState(state.states[profileId] || {}).progress[mediaKey] || null; }
-async function tvSaveProgress(profileId, mediaKey, input) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); const media = await getTvMediaItem(mediaKey); if (!media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), previous = current.progress[mediaKey], now = new Date().toISOString(), incoming = validateProgress({ ...input, updatedAt: now }, mediaKey), next = mergeWatchProgress(previous, incoming), progress = { ...current.progress, [mediaKey]: next }, completed = next.completed ? [...new Set([...current.completed, mediaKey])] : current.completed.filter((key) => key !== mediaKey), priorBucket = Math.floor(Number(previous?.percentage || 0) / 10), nextBucket = Math.floor(Number(next.percentage || 0) / 10), activityEvents = (next.completed !== Boolean(previous?.completed) || nextBucket > priorBucket) ? [...current.activityEvents, { mediaKey, type: next.completed ? "completed" : "watched", at: now, seconds: Math.max(0, Math.round(next.currentTime - Number(previous?.currentTime || 0))) }].slice(-1000) : current.activityEvents; state.states[profileId] = { ...current, progress, completed, activityEvents, updatedAt: now }; await queueUserStateWrite(state); return next; }
+async function tvSaveProgress(profileId, mediaKey, input) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); const media = await getTvMediaItem(mediaKey); if (!media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), previous = current.progress[mediaKey], timing = progressWriteTime(previous, input), now = timing.updatedAt, incoming = validateProgress({ ...input, updatedAt: now }, mediaKey), next = mergeWatchProgress(previous, incoming), progress = { ...current.progress, [mediaKey]: next }, completed = next.completed ? [...new Set([...current.completed, mediaKey])] : current.completed.filter((key) => key !== mediaKey), priorBucket = Math.floor(Number(previous?.percentage || 0) / 10), nextBucket = Math.floor(Number(next.percentage || 0) / 10), activityEvents = (next.completed !== Boolean(previous?.completed) || nextBucket > priorBucket) ? [...current.activityEvents, { mediaKey, type: next.completed ? "completed" : "watched", at: now, seconds: Math.max(0, Math.round(next.currentTime - Number(previous?.currentTime || 0))) }].slice(-1000) : current.activityEvents; if (timing.stale) return previous; state.states[profileId] = { ...current, progress, completed, activityEvents, updatedAt: now }; await queueUserStateWrite(state); return next; }
 async function tvSaveFavorite(profileId, mediaKey, enabled) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), media = await getTvMediaItem(mediaKey); if (!profile || !media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), legacyId = mediaKey.split(":").slice(1).join(":"), favorites = enabled ? [...new Set([...current.favorites.filter((item) => item !== legacyId), mediaKey])] : current.favorites.filter((item) => item !== mediaKey && item !== legacyId); state.states[profileId] = { ...current, favorites, updatedAt: new Date().toISOString() }; await queueUserStateWrite(state); return { favorite: enabled }; }
 async function tvSaveSignal(profileId, mediaKey, action, enabled = true) {
     const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), media = await getTvMediaItem(mediaKey);
@@ -698,11 +705,7 @@ function isValidCollectionId(id) {
     return /^[a-z0-9][a-z0-9-]{2,63}$/.test(String(id || ""));
 }
 
-function queueProfileRequest(task) {
-    const next = profileRequestQueue.then(task, task);
-    profileRequestQueue = next.catch((error) => console.error("BRasa fila de perfil:", error.stack || error));
-    return next;
-}
+function queueProfileRequest(task) { return userStateStore.run(task); }
 
 async function handleProfilesApi(request, response, url) {
     const state = await readUserState();
@@ -721,7 +724,21 @@ async function handleProfilesApi(request, response, url) {
     if (!isValidProfileId(profileId) || !state.profiles.some((item) => item.id === profileId)) return sendJson(response, 404, { ok:false, message:"Perfil não encontrado." });
     const profileIndex = state.profiles.findIndex((item) => item.id === profileId);
     if (request.method === "GET" && resource === "state") return sendJson(response, 200, { state: state.states[profileId] || emptyProfileState() });
-    if (request.method === "PUT" && resource === "state") { state.states[profileId] = validateProfileState(await readJsonBody(request)); await queueUserStateWrite(state); return sendJson(response, 200, { state:state.states[profileId] }); }
+    if (request.method === "PUT" && resource === "preferences") {
+        const current = state.states[profileId], input = await readJsonBody(request);
+        state.states[profileId] = validateProfileState({ ...current, preferences: { ...current.preferences, ...input }, updatedAt: new Date().toISOString() });
+        await queueUserStateWrite(state); return sendJson(response, 200, { state: state.states[profileId] });
+    }
+    if (request.method === "PATCH" && resource === "state") {
+        state.states[profileId] = validateProfileState(mergeImportedProfileState(state.states[profileId], validateProfileState(await readJsonBody(request))));
+        await queueUserStateWrite(state); return sendJson(response, 200, { state: state.states[profileId] });
+    }
+    if (request.method === "PUT" && resource === "state") {
+        const input = await readJsonBody(request), current = state.states[profileId];
+        if ((input.updatedAt || "") !== (current.updatedAt || "")) return sendJson(response, 409, { ok: false, message: "Este perfil mudou em outro aparelho. Recarregue os dados antes de salvar." });
+        state.states[profileId] = validateProfileState({ ...current, ...input, updatedAt: new Date().toISOString() });
+        await queueUserStateWrite(state); return sendJson(response, 200, { state: state.states[profileId] });
+    }
     if (request.method === "PUT" && !resource) { state.profiles[profileIndex] = validateProfile({ ...state.profiles[profileIndex], ...(await readJsonBody(request)), id:profileId }, profileId); await queueUserStateWrite(state); return sendJson(response,200,{profile:publicProfile(state.profiles[profileIndex])}); }
     if (request.method === "DELETE" && !resource) {
         if (state.profiles[profileIndex].kind === "adult" && state.profiles.filter((item)=>item.kind==="adult").length === 1) return sendJson(response,409,{ok:false,message:"O último perfil adulto não pode ser excluído."});
@@ -735,7 +752,11 @@ async function handleProfilesApi(request, response, url) {
     }
     if (resource === "progress" && isValidMediaKey(resourceId)) {
         const current=state.states[profileId],progress={...current.progress};
-        if (request.method === "PUT") progress[resourceId] = validateProgress({ ...await readJsonBody(request), updatedAt: new Date().toISOString() }, resourceId);
+        if (request.method === "PUT") {
+            const input = await readJsonBody(request), timing = progressWriteTime(progress[resourceId], input);
+            if (timing.stale) return sendJson(response, 200, { ok: true });
+            progress[resourceId] = validateProgress({ ...input, updatedAt: timing.updatedAt }, resourceId);
+        }
         if (request.method === "DELETE") delete progress[resourceId];
         state.states[profileId]={...current,progress,updatedAt:new Date().toISOString()};
         await queueUserStateWrite(state); return sendJson(response,200,{ok:true});
@@ -753,15 +774,8 @@ function requiresAdminProfileSession(request,url){if(request.method==="POST"&&ur
 
 function defaultUserState() { const now=new Date().toISOString(); const profiles=[{id:"mario",name:"Mário",initials:"M",kind:"adult",avatar:{type:"initials",value:"M",color:"blue"},pinHash:"",createdAt:now,updatedAt:now},{id:"isabele",name:"Isabele",initials:"I",kind:"adult",avatar:{type:"initials",value:"I",color:"purple"},pinHash:"",createdAt:now,updatedAt:now},{id:"laura",name:"Laura",initials:"L",kind:"kids",maxContentRating:10,avatar:{type:"initials",value:"L",color:"pink"},pinHash:"",createdAt:now,updatedAt:now}]; return {version:1,profiles,states:Object.fromEntries(profiles.map((p)=>[p.id,emptyProfileState()]))}; }
 function emptyProfileState(){return {favorites:[],progress:{},history:[],completed:[],preferences:{},updatedAt:""};}
-async function readUserState(){
-    const content=await fs.readFile(userStateFile,"utf8").catch((error)=>error.code==="ENOENT"?"":"__ERROR__");
-    if (!content){const initial=defaultUserState();await queueUserStateWrite(initial);return initial;}
-    try {const parsed=JSON.parse(content);if(!parsed?.profiles||!parsed?.states)throw new Error();parsed.states=Object.fromEntries(parsed.profiles.map((profile)=>[profile.id,validateProfileState(parsed.states[profile.id]||{})]));return parsed;} catch {
-        await fs.copyFile(userStateFile,`${userStateFile}.corrupt-${Date.now()}`).catch(()=>{});
-        const backup=await fs.readFile(userStateBackupFile,"utf8").then(JSON.parse).catch(()=>null); const recovered=backup?.profiles?backup:defaultUserState(); await queueUserStateWrite(recovered); return recovered;
-    }
-}
-function queueUserStateWrite(state){userStateWriteQueue=userStateWriteQueue.then(async()=>{const temp=`${userStateFile}.${process.pid}.tmp`;const existing=await fs.readFile(userStateFile,"utf8").catch(()=>"");if(existing)await fs.writeFile(userStateBackupFile,existing,"utf8");await fs.writeFile(temp,`${JSON.stringify(state,null,2)}\n`,"utf8");await fs.rename(temp,userStateFile);});return userStateWriteQueue;}
+async function readUserState() { return userStateStore.read(); }
+function queueUserStateWrite(state) { return userStateStore.write(state); }
 function publicProfile(profile){const {pinHash,...safe}=profile;return {...safe,hasPin:Boolean(pinHash)};} function publicProfiles(items){return items.map(publicProfile);}
 function validateProfile(input,forcedId=""){const id=forcedId||String(input.id||"");if(!isValidProfileId(id))throw new ValidationError("Identificador de perfil inválido.");const name=String(input.name||"").trim().slice(0,40);if(!name)throw new ValidationError("Informe o nome do perfil.");const now=new Date().toISOString(),kind=input.kind==="kids"?"kids":"adult";return {id,name,initials:String(input.initials||name[0]).trim().slice(0,2).toUpperCase(),kind,maxContentRating:kind==="kids"?Math.min(18,Math.max(0,Number(input.maxContentRating??10))):undefined,avatar:{type:"initials",value:String(input.initials||name[0]).slice(0,2).toUpperCase(),color:String(input.avatar?.color||"blue").slice(0,16)},pinHash:String(input.pinHash||""),createdAt:String(input.createdAt||now),updatedAt:now};}
 function validateProfileState(input){return normalizeProfileState(input,{validateMediaKey:isValidMediaKey,validateProgress,validateHistory});}

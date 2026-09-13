@@ -10,6 +10,8 @@ class PlaybackRecovery {
     private var bufferingSince: Long? = null
     var attempts: Int = 0
         private set
+    private var sourceRenewals = 0
+    fun beginSourceRenewal(): Boolean { if (sourceRenewals >= 1) return false; sourceRenewals++; return true }
 
     fun sample(nowMs: Long, positionMs: Long, expectedToAdvance: Boolean,
                buffering: Boolean = false, bufferedPositionMs: Long = positionMs): Boolean {

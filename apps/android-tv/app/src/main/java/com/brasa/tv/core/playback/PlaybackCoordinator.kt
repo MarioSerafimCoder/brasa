@@ -27,14 +27,24 @@ class PlaybackCoordinator(
     private var current: Holder? = null
     private var preloadMonitor: Job? = null
     private var generation = 0L
+    private var foreground = true
+    fun setForeground(value: Boolean) {
+        foreground = value
+        if (!value) {
+            current?.player?.pause()
+            if (current?.preloading == true) releaseCurrent()
+        }
+    }
 
     suspend fun preload(baseUrl: String, info: PlaybackInfo) {
+        if (!foreground) return
         // A late focus/prefetch callback must never replace the movie being watched.
         if (current?.preloading == false) return
         val requestGeneration = ++generation
         val simpleCache = if (info.playbackMode == "hls") null else cache.getOrCreate()
         withContext(Dispatchers.Main.immediate) {
             if (requestGeneration != generation) return@withContext
+            if (!foreground) return@withContext
             if (current?.preloading == false) return@withContext
             val factory = PlaybackFactory(appContext, http)
             val identity = factory.playbackIdentity(baseUrl, info)
@@ -68,12 +78,12 @@ class PlaybackCoordinator(
                 if (existing.player.playbackState == Player.STATE_IDLE) {
                     existing.player.prepare()
                 }
-                existing.player.playWhenReady = true
+                existing.player.playWhenReady = foreground
                 Log.d(TAG, "Player de preload reutilizado: ${info.mediaKey}")
                 return@withContext existing.player
             }
             releaseCurrent()
-            val player = factory.create(baseUrl, info, simpleCache, autoPlay = true)
+            val player = factory.create(baseUrl, info, simpleCache, autoPlay = foreground)
             current = Holder(
                 baseUrl,
                 info.mediaKey,

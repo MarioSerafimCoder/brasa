@@ -1,0 +1,45 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
+import { createUserStateStore, progressWriteTime, mergeImportedProfileState } from "../server/user-state-store.mjs";
+const root = await fs.mkdtemp(path.join(os.tmpdir(), "brasa-state-lock-"));
+const file = path.join(root, "state.json"), backupFile = path.join(root, "backup.json");
+const defaults = () => ({ profiles: [{ id: "adult" }], states: { adult: { favorites: [], progress: {}, preferences: {}, completed: [], history: [] } } });
+const store = createUserStateStore({ file, backupFile, defaults });
+try {
+    const initial = await Promise.all(Array.from({ length: 8 }, () => store.read()));
+    assert.equal(initial.length, 8);
+    await Promise.all(Array.from({ length: 40 }, (_, index) => store.run(async () => {
+        const state = await store.read();
+        await new Promise(resolve => setTimeout(resolve, index % 3));
+        if (index % 2) state.states.adult.favorites.push(`movie:${index}`);
+        else state.states.adult.progress[`movie:${index}`] = { currentTime: index };
+        await store.write(state);
+    })));
+    const state = await store.read();
+    assert.equal(state.states.adult.favorites.length, 20);
+    assert.equal(Object.keys(state.states.adult.progress).length, 20);
+    assert.throws(() => store.write(defaults()), /transação/);
+    let fail = true;
+    const injected = createUserStateStore({ file, backupFile, defaults, io: { ...fs, rename: async (...args) => { if (fail) { fail = false; throw new Error("disk unavailable"); } return fs.rename(...args); } } });
+    await assert.rejects(injected.run(async () => { const next = await injected.read(); next.states.adult.preferences.audio = "en"; await injected.write(next); }));
+    assert.deepEqual((await injected.read()).states.adult.preferences, {});
+    await injected.run(async () => { const next = await injected.read(); next.states.adult.preferences.audio = "pt"; await injected.write(next); });
+    assert.equal((await injected.read()).states.adult.preferences.audio, "pt", "a fila continua após uma falha de gravação");
+    await fs.writeFile(file, "{corrupt");
+    const recovered = await injected.read();
+    assert.equal(recovered.states.adult.favorites.length, 20);
+    const recent = { currentTime: 800, updatedAt: "2026-09-12T20:00:00.000Z" };
+    const delayed = { currentTime: 500, updatedAt: "2026-09-12T19:00:00.000Z" };
+    const now = Date.parse("2026-09-12T21:00:00.000Z");
+    assert.equal(progressWriteTime(recent, delayed, now).stale, true);
+    assert.equal(progressWriteTime(recent, { currentTime: 0, updatedAt: "2026-09-12T20:01:00.000Z" }, now).stale, false, "reinício explícito recente preservado");
+    assert.equal(progressWriteTime(recent, { currentTime: 100 }, now).stale, false, "clientes antigos sem timestamp seguem suportados");
+    const merged = mergeImportedProfileState({ ...defaults().states.adult, favorites: ["movie:new"], progress: { "movie:1": recent }, preferences: { audio: "pt" }, ratings: { "movie:1": "like" } }, { ...defaults().states.adult, favorites: ["movie:old"], progress: { "movie:1": delayed }, preferences: { audio: "en" } });
+    assert.equal(merged.progress["movie:1"].currentTime, 800);
+    assert.equal(merged.preferences.audio, "pt");
+    assert.deepEqual(merged.favorites, ["movie:new", "movie:old"]);
+    assert.equal(merged.ratings["movie:1"], "like");
+    console.log("Perfis: 40 alterações concorrentes sem perda, gravação atômica, recuperação após erro, migração e reenvio antigo aprovados.");
+} finally { await fs.rm(root, { recursive: true, force: true }); }

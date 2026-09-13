@@ -13,6 +13,16 @@ import androidx.compose.runtime.getValue
 import com.brasa.tv.data.storage.AppSettings
 
 class MainActivity : ComponentActivity() {
+    override fun onResume() {
+        super.onResume()
+        val container = (application as BrasaApplication).container
+        container.playback.setForeground(true)
+        container.progressSync.retry()
+    }
+    override fun onPause() {
+        (application as BrasaApplication).container.playback.setForeground(false)
+        super.onPause()
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState); enableEdgeToEdge()
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
