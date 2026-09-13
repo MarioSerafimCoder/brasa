@@ -77,6 +77,8 @@ fun LibraryScreen(
         orderCatalog(if (selectedGenre == "Todos") source else source.filter { selectedGenre in it.genres }, order, unwatchedOnly)
     }
     val kids = state.profile?.kind == "kids"
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    focusMemory.RestoreItems(items.map { it.mediaKey.ifBlank { it.id } }) { gridState.scrollToItem(it) }
     val cardDensity = LocalCardDensity.current
 
     Column(
@@ -130,6 +132,7 @@ fun LibraryScreen(
         }
         Spacer(Modifier.height(10.dp))
         LazyVerticalGrid(
+            state = gridState,
             modifier = Modifier.fillMaxSize(),
             columns = if (type != "series") GridCells.Fixed(if (cardDensity < .95f) 8 else 6) else GridCells.Adaptive(188.dp * cardDensity),
             contentPadding = PaddingValues(bottom = BrasaSpacing.x8),

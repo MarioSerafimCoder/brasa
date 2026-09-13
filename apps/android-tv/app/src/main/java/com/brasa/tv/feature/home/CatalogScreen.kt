@@ -36,6 +36,8 @@ fun CatalogScreen(state: BrasaUiState, onItem: (CatalogItem) -> Unit, onBack: ()
     val row = state.selectedRow
     val focusMemory = rememberCatalogFocus("row:${state.profile?.id}:${row?.id}")
     val cardDensity=LocalCardDensity.current
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    focusMemory.RestoreItems(row?.items.orEmpty().map { it.mediaKey.ifBlank { it.id } }) { gridState.scrollToItem(it) }
     Column(Modifier.fillMaxSize().background(BrasaBackground).padding(horizontal = BrasaSpacing.safe)) {
         BrasaTopBar(Modifier.padding(top = BrasaSpacing.x2), active = row?.title.orEmpty(), onHome = onBack, profileInitials = state.profile?.initials.orEmpty())
         Spacer(Modifier.height(BrasaSpacing.x4))
@@ -43,13 +45,15 @@ fun CatalogScreen(state: BrasaUiState, onItem: (CatalogItem) -> Unit, onBack: ()
         Text("${row?.items?.size ?: 0} títulos", color = BrasaTextMuted, fontSize = BrasaType.metadata)
         Spacer(Modifier.height(BrasaSpacing.x3))
         LazyVerticalGrid(
+            state = gridState,
             columns = GridCells.Adaptive(188.dp*cardDensity),
             contentPadding = PaddingValues(bottom = BrasaSpacing.x8),
             horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x3),
             verticalArrangement = Arrangement.spacedBy(BrasaSpacing.x4),
         ) {
             items(row?.items.orEmpty(), key = { it.mediaKey.ifBlank { it.id } }) { item ->
-                MediaCard(item, { focusMemory.select(item.mediaKey); onItem(item) }, modifier = focusMemory.modifier(item.mediaKey), format = MediaCardFormat.Poster)
+                val key = item.mediaKey.ifBlank { item.id }
+                MediaCard(item, { focusMemory.select(key); onItem(item) }, modifier = focusMemory.modifier(key), format = MediaCardFormat.Poster)
             }
         }
     }

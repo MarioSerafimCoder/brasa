@@ -135,13 +135,15 @@ class BrasaRepository(
     }
 
     suspend fun playback(profileId: String, key: String, forceRefresh: Boolean = false, fallbackMode: String = "", prepare: Boolean = true, positionMs: Long? = null): PlaybackInfo {
-        val cacheKey = "$profileId:$key:$fallbackMode:$prepare:${positionMs ?: "saved"}"
+        val stability = settings().prioritizeStability
+        val effectiveFallback = if (stability) "transcode" else fallbackMode
+        val cacheKey = "$profileId:$key:$effectiveFallback:$stability:$prepare:${positionMs ?: "saved"}"
         val cached = playbackCache[cacheKey]
         if (!forceRefresh && cached != null && System.currentTimeMillis() - cached.first < PLAYBACK_CACHE_MS) return cached.second
         if (positionMs == null && progressSync.pending(profileId, key) != null) progressSync.flush(profileId, key)
         val localProgress = if (positionMs == null) progressSync.pending(profileId, key) else null
         val resume = positionMs ?: localProgress?.takeUnless { it.completed }?.let { (it.currentTime * 1000).toLong() }
-        val value = api.playback(requireServer(), profileId, key, fallbackMode, prepare, resume)
+        val value = api.playback(requireServer(), profileId, key, effectiveFallback, prepare, resume, stability).copy(prioritizeStability = stability)
         if (value.preparationStatus == "ready") playbackCache[cacheKey] = System.currentTimeMillis() to value else playbackCache.remove(cacheKey)
         return value
     }

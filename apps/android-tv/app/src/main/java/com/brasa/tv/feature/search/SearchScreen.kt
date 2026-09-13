@@ -94,6 +94,8 @@ fun SearchScreen(
         if (selectedGenre == "Todos") base else base.filter { selectedGenre in it.genres }
     }
     val cardDensity = LocalCardDensity.current
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    focusMemory.RestoreItems(results.map { it.mediaKey }) { gridState.scrollToItem(it) }
     LaunchedEffect(query, state.profile?.id) { if (query.trim().length >= 2) { delay(800); state.profile?.id?.let { settingsStore.addRecentSearch(it, query) } } }
 
     Column(Modifier.fillMaxSize().background(BrasaBackground).padding(horizontal = BrasaSpacing.safe)) {
@@ -152,6 +154,7 @@ fun SearchScreen(
             Text("Sugestões para começar", color = BrasaTextMuted, fontSize = BrasaType.metadata)
         }
         LazyVerticalGrid(
+            state = gridState,
             modifier = Modifier.fillMaxWidth(),
             columns = GridCells.Adaptive(188.dp * cardDensity),
             horizontalArrangement = Arrangement.spacedBy(18.dp),

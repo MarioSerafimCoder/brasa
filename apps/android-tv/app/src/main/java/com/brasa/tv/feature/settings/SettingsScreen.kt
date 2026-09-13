@@ -94,6 +94,8 @@ fun SettingsScreen(
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
             SettingsSection("Reprodução") {
+                BrasaButton(if (deviceSettings.prioritizeStability) "✓ Priorizar estabilidade" else "Priorizar estabilidade", { scope.launch { state.profile?.id?.let { settingsStore.saveStability(it, !deviceSettings.prioritizeStability) } } }, Modifier.fillMaxWidth(), style = if (deviceSettings.prioritizeStability) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
+                Text("Usa qualidade automática até 720p para consumir menos rede. Pode reduzir a nitidez e exigir conversão no computador. Vale para o próximo vídeo; não evita quedas totais de conexão.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
                 if (progressStatus.isNotBlank()) Text(progressStatus, color = BrasaTextMuted, fontSize = BrasaType.metadata)
                 BrasaButton("Histórico de reprodução e pausas", onPlaybackHistory, Modifier.fillMaxWidth())
                 Spacer(Modifier.height(BrasaSpacing.x1))

@@ -99,8 +99,14 @@ fun HomeScreen(
     val listState = rememberLazyListState()
     val focusMemory = rememberCatalogFocus("home:${state.profile?.id}")
     var initialFocusSet by rememberSaveable(state.profile?.id) { mutableStateOf(false) }
+    val restorationKeys = listOf("hero-play", "hero-details") + home.rows.flatMap { row -> listOf("row:${row.id}") + row.items.map { "${row.id}:${it.mediaKey.ifBlank { it.id }}" } }
+    focusMemory.RestoreItems(restorationKeys) { index ->
+        val key = restorationKeys[index]
+        val row = home.rows.indexOfFirst { key == "row:${it.id}" || key.startsWith("${it.id}:") }
+        listState.scrollToItem(if (row < 0) 0 else row + 1)
+    }
     LaunchedEffect(state.profile?.id, heroCandidates.isNotEmpty()) {
-        if (initialFocusSet) return@LaunchedEffect
+        if (initialFocusSet || focusMemory.selectedKey.isNotBlank()) return@LaunchedEffect
         listState.scrollToItem(0)
         if (hero != null) {
             runCatching { heroFocus.requestFocus() }
@@ -201,7 +207,9 @@ fun HomeScreen(
                     actionModifier = focusMemory.modifier("row:${row.id}"),
                 )
                 LazyRow(
-                    modifier = Modifier.focusRestorer(),
+                    state = rememberLazyListState().also { rowState ->
+                        focusMemory.RestoreItems(row.items.map { "${row.id}:${it.mediaKey.ifBlank { it.id }}" }, fallback = false) { rowState.scrollToItem(it) }
+                    },
                     contentPadding = PaddingValues(horizontal = BrasaSpacing.safe, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(if (posters) 18.dp else 16.dp),
                 ) {

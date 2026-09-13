@@ -88,6 +88,9 @@ fun CollectionsScreen(
         return
     }
 
+    if (selected == null) focusMemory.RestoreItems(catalog.collections.map { "collection:${it.id}" }) { overviewGridState.scrollToItem(it) }
+    else focusMemory.RestoreItems(selected.items.map { it.mediaKey.ifBlank { it.id } }) { movieGridState.scrollToItem(it) }
+
     Column(
         Modifier.fillMaxSize().background(
             Brush.verticalGradient(listOf(Color(0xFF111926), BrasaBackground)),
@@ -140,7 +143,8 @@ fun CollectionsScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 items(selected.items, key = { it.mediaKey.ifBlank { it.id } }) { movie ->
-                    MediaCard(movie, { focusMemory.select(movie.mediaKey); onItem(movie) }, modifier = focusMemory.modifier(movie.mediaKey), format = MediaCardFormat.CompactPoster)
+                    val key = movie.mediaKey.ifBlank { movie.id }
+                    MediaCard(movie, { focusMemory.select(key); onItem(movie) }, modifier = focusMemory.modifier(key), format = MediaCardFormat.CompactPoster)
                 }
             }
         }

@@ -82,6 +82,12 @@ fun KidsHomeScreen(
     val listState = rememberLazyListState()
     val focusMemory = rememberCatalogFocus("kids-home:${state.profile?.id}")
     var initialFocusSet by rememberSaveable(state.profile?.id) { mutableStateOf(false) }
+    val restorationKeys = listOf("hero-play", "hero-details") + home.rows.flatMap { row -> listOf("row:${row.id}") + row.items.map { "${row.id}:${it.mediaKey.ifBlank { it.id }}" } }
+    focusMemory.RestoreItems(restorationKeys) { index ->
+        val key = restorationKeys[index]
+        val row = home.rows.indexOfFirst { key == "row:${it.id}" || key.startsWith("${it.id}:") }
+        listState.scrollToItem(if (row < 0) 0 else row + 1)
+    }
     LaunchedEffect(heroes, state.profile?.id) {
         if (heroes.size > 1) while (true) {
             delay(12_000)
@@ -89,7 +95,7 @@ fun KidsHomeScreen(
         }
     }
     LaunchedEffect(state.profile?.id, heroes.isNotEmpty()) {
-        if (initialFocusSet || heroes.isEmpty()) return@LaunchedEffect
+        if (initialFocusSet || heroes.isEmpty() || focusMemory.selectedKey.isNotBlank()) return@LaunchedEffect
         listState.scrollToItem(0)
         delay(80)
         runCatching { firstFocus.requestFocus() }
@@ -158,7 +164,9 @@ fun KidsHomeScreen(
                     actionModifier = focusMemory.modifier("row:${row.id}"),
                 )
                 LazyRow(
-                    modifier = Modifier.focusRestorer(),
+                    state = rememberLazyListState().also { rowState ->
+                        focusMemory.RestoreItems(row.items.map { "${row.id}:${it.mediaKey.ifBlank { it.id }}" }, fallback = false) { rowState.scrollToItem(it) }
+                    },
                     contentPadding = PaddingValues(horizontal = BrasaSpacing.safe, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(20.dp),
                 ) {

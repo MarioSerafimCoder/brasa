@@ -76,6 +76,7 @@ class PlaybackFactory(
             .setMediaSourceFactory(DefaultMediaSourceFactory(dataSource).setLoadErrorHandlingPolicy(TvLoadErrorHandlingPolicy(info.playbackMode == "hls")))
             .build()
             .apply {
+                if (info.prioritizeStability) trackSelectionParameters = trackSelectionParameters.buildUpon().setMaxVideoSize(1280, 720).setMaxVideoBitrate(4_000_000).build()
                 setMediaItem(mediaItem)
                 seekTo(info.resumePosition)
                 playWhenReady = autoPlay

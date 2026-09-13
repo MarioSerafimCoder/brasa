@@ -34,6 +34,11 @@ export function createDeviceController({ pairing, auth, settingsStore, deviceSto
         if (path === "/api/v1/tv/home" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.home(device, profileId)); }
         if (path === "/api/v1/tv/search" && method === "GET") { const profileId = auth.requireProfile(device, url.searchParams.get("profileId")); return success(response, await tvServices.search(device, profileId, url.searchParams.get("q") || "")); }
         const playback = path.match(/^\/api\/v1\/tv\/playback\/(movie|episode|series):([^/]+)$/);
+        const thumbnail = path.match(/^\/api\/v1\/tv\/thumbnail\/(movie|episode):([^/]+)$/);
+        if (thumbnail && method === "GET") {
+            const profileId = auth.requireProfile(device, url.searchParams.get("profileId"));
+            return tvServices.thumbnail(request, response, profileId, `${thumbnail[1]}:${thumbnail[2]}`, url.searchParams.get("positionMs"), url.searchParams.get("allowGenerate") === "1");
+        }
         const diagnostics = path.match(/^\/api\/v1\/tv\/playback-history(?:\/([a-f0-9-]{36}))?$/);
         if (diagnostics && ["GET", "POST"].includes(method)) {
             const profileId = auth.requireProfile(device, url.searchParams.get("profileId"));

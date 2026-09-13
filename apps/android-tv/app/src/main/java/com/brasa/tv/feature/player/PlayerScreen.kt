@@ -73,6 +73,9 @@ import com.brasa.tv.core.playback.PlaybackRecovery
 import com.brasa.tv.core.playback.PlaybackErrorPolicy
 import com.brasa.tv.core.playback.PlaybackErrorAction
 import com.brasa.tv.core.playback.PlaybackLifecycle
+import com.brasa.tv.core.playback.PlaybackExtrasPolicy
+import com.brasa.tv.core.playback.SeekThumbnailLoader
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import com.brasa.tv.core.playback.PlaybackDiagnosticsRecorder
@@ -89,6 +92,7 @@ import com.brasa.tv.designsystem.BrasaTextMuted
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.isActive
 import java.util.Locale
 
 @Composable
@@ -260,6 +264,46 @@ private fun PlayerContent(
     var currentTracks by remember(player) { mutableStateOf(player.currentTracks) }
     val playbackScope = rememberCoroutineScope()
     val progressStatus by container.progressSync.state.collectAsState()
+    val thumbnailLoader = remember(container.http) { SeekThumbnailLoader(container.http) }
+    var seekThumbnail by remember(player) { mutableStateOf<android.graphics.Bitmap?>(null) }
+    val thumbnailPosition = if (seekPreview >= 0) PlaybackExtrasPolicy.previewBucket(seekPreview) else -1L
+    LaunchedEffect(player, thumbnailPosition, appForeground) {
+        seekThumbnail = null
+        if (!appForeground || thumbnailPosition < 0 || info.thumbnailPath.isBlank()) return@LaunchedEffect
+        delay(350)
+        val safe = !player.playWhenReady || (player.totalBufferedDuration >= 30_000 && !player.isLoading && player.playerError == null)
+        seekThumbnail = thumbnailLoader.load(serverBaseUrl, info.thumbnailPath, thumbnailPosition, safe)
+    }
+    LaunchedEffect(player, info.nextEpisode?.mediaKey, settings.autoplayNext, appForeground) {
+        val next = info.nextEpisode ?: return@LaunchedEffect
+        val profileId = settings.selectedProfileId
+        if (!appForeground || !settings.autoplayNext || profileId.isBlank()) return@LaunchedEffect
+        var stableSince = SystemClock.elapsedRealtime()
+        var attempted = false
+        var preparation: Job? = null
+        try {
+            while (true) {
+                delay(250)
+                val now = SystemClock.elapsedRealtime()
+                val bufferMs = player.totalBufferedDuration
+                if (!player.isPlaying || player.playbackState == Player.STATE_BUFFERING || bufferMs < 30_000) stableSince = now
+                val remaining = PlaybackTimeline.absoluteDuration(info, player.duration.coerceAtLeast(0)) - PlaybackTimeline.absolutePosition(info, player.currentPosition)
+                val allowed = PlaybackExtrasPolicy.canPrepareNext(appForeground, player.isPlaying, player.isLoading,
+                    player.playbackState == Player.STATE_BUFFERING, bufferMs, remaining, now - stableSince, seekPreview >= 0 || recoveryRequested)
+                if (!allowed) { preparation?.cancel(); preparation = null; container.playback.cancelNextPreparation() }
+                else if (!attempted) {
+                    attempted = true
+                    preparation = launch {
+                        runCatching {
+                            val ready = container.repository.playback(profileId, next.mediaKey, prepare = false)
+                            if (isActive && player.isPlaying && !player.isLoading && player.totalBufferedDuration >= 30_000)
+                                container.playback.prepareNext(serverBaseUrl, ready)
+                        }
+                    }
+                }
+            }
+        } finally { preparation?.cancel(); container.playback.cancelNextPreparation() }
+    }
     LaunchedEffect(player) {
         player.trackSelectionParameters = applyPlaybackPreferences(player.trackSelectionParameters, settings)
     }
@@ -509,8 +553,8 @@ private fun PlayerContent(
         }
     }
     LaunchedEffect(player) { while (true) { delay(12_000); if (player.isPlaying) save(); if (BuildConfig.DEBUG) Log.d(TAG, "Buffer ${info.mediaKey}: ${player.totalBufferedDuration}ms") } }
-    LaunchedEffect(controlsVisible, interaction, isPlaying, trackDialogType) {
-        if (controlsVisible && isPlaying && !ended && trackDialogType == null) {
+    LaunchedEffect(controlsVisible, interaction, isPlaying, trackDialogType, timelineFocused) {
+        if (controlsVisible && isPlaying && !ended && trackDialogType == null && !timelineFocused) {
             delay(4_000)
             controlsVisible = false
             runCatching { rootFocus.requestFocus() }
@@ -530,6 +574,10 @@ private fun PlayerContent(
             buffered = PlaybackTimeline.absolutePosition(info, player.bufferedPosition).coerceAtLeast(position)
             delay(if (controlsVisible) 500 else 1_500)
         }
+    }
+    val availableSkip = PlaybackExtrasPolicy.activeMarker(info.markers, position, duration)
+    LaunchedEffect(availableSkip?.kind, availableSkip?.startMs) {
+        if (availableSkip != null && appForeground) revealControls()
     }
     LaunchedEffect(trackNotice) {
         if (trackNotice.isNotBlank()) { delay(2_400); trackNotice = "" }
@@ -613,6 +661,21 @@ private fun PlayerContent(
                     Spacer(Modifier.height(9.dp))
                 }
                 val visiblePosition = seekPreview.takeIf { it >= 0 } ?: position
+                if (seekPreview >= 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        seekThumbnail?.let { bitmap -> androidx.compose.foundation.Image(bitmap.asImageBitmap(), "Prévia em ${formatTime(thumbnailPosition)}", Modifier.width(192.dp).height(108.dp)) }
+                        Text(if (seekThumbnail == null) "Prévia indisponível • vídeo em prioridade" else "Prévia: ${formatTime(thumbnailPosition)}", color = BrasaTextMuted, fontSize = 13.sp)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
+                val marker = PlaybackExtrasPolicy.activeMarker(info.markers, position, duration)
+                if (marker != null) {
+                    BrasaButton(if (marker.kind == "intro") "Pular abertura" else "Pular créditos", {
+                        if (marker.endMs >= duration - 1000) { saveAt(duration, completed = true); player.pause(); ended = true }
+                        else seekToPosition(marker.endMs)
+                    }, style = BrasaButtonStyle.Primary)
+                    Spacer(Modifier.height(8.dp))
+                }
                 val timelineModifier = Modifier
                     .fillMaxWidth()
                     .onFocusChanged {
@@ -781,6 +844,7 @@ private fun cycleQuality(player: ExoPlayer, info: PlaybackInfo, current: String)
     val options = listOf("Automática") + info.qualities
     val next = options[(options.indexOf(current).coerceAtLeast(0) + 1) % options.size]
     val builder = player.trackSelectionParameters.buildUpon()
-    player.trackSelectionParameters = if (next == "Automática") builder.clearVideoSizeConstraints().build() else builder.setMaxVideoSize(Int.MAX_VALUE, next.filter(Char::isDigit).toIntOrNull() ?: 2160).build()
+    val cap = if (info.prioritizeStability) 720 else 2160
+    player.trackSelectionParameters = if (next == "Automática" && !info.prioritizeStability) builder.clearVideoSizeConstraints().build() else builder.setMaxVideoSize(Int.MAX_VALUE, minOf(cap, next.filter(Char::isDigit).toIntOrNull() ?: cap)).build()
     return next
 }

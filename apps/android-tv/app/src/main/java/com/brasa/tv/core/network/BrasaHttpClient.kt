@@ -46,11 +46,12 @@ class BrasaHttpClient(private val tokenStore:SecureTokenStore,val json:Json=Json
         val elapsed=android.os.SystemClock.elapsedRealtime()-started
         com.brasa.tv.core.model.NetworkTransferMeasurement(bytes,elapsed,samples,failures)
     }
-    fun authenticatedMediaDataSource(baseUrl:String):OkHttpDataSource.Factory{
+    fun authenticatedMediaDataSource(baseUrl:String,background:Boolean=false):OkHttpDataSource.Factory{
         val normalized=LocalServerAddress.normalize(baseUrl)
         val token=tokenStore.load()?.deviceToken.orEmpty()
         if(pairedOrigin.isBlank()||pairedOrigin!=normalized||token.isBlank())throw IOException("Credencial de mídia indisponível para este servidor.")
-        return OkHttpDataSource.Factory(mediaClient).setDefaultRequestProperties(mapOf("X-BRasa-Device-Token" to token))
+        val transport = if(background) mediaClient.newBuilder().connectTimeout(1,TimeUnit.SECONDS).readTimeout(2,TimeUnit.SECONDS).callTimeout(3,TimeUnit.SECONDS).retryOnConnectionFailure(false).build() else mediaClient
+        return OkHttpDataSource.Factory(transport).setDefaultRequestProperties(mapOf("X-BRasa-Device-Token" to token))
     }
     private suspend fun <T> execute(base:String,path:String,method:String,body:String?,serializer:KSerializer<T>,authenticated:Boolean,headers:Map<String,String> = emptyMap()):T=withContext(Dispatchers.IO){client.newCall(request(base,path,method,body,authenticated,headers)).execute().use{response->val text=response.body?.string().orEmpty();if(response.code==401)throw DeviceRevokedException();if(!response.isSuccessful)throw apiError(response,text);val envelope=try{json.decodeFromString(ApiEnvelope.serializer(serializer),text)}catch(error:SerializationException){throw BrasaApiException(response.code,"O servidor enviou dados incompatíveis. Atualize o BRasa e tente novamente.",error)};envelope.data?:throw BrasaApiException(response.code,"Resposta vazia do BRasa.")}}
     private fun apiError(response:Response,text:String=response.body?.string().orEmpty()):BrasaApiException{val envelope=runCatching{json.decodeFromString(ApiEnvelope.serializer(ApiError.serializer()),text)}.getOrNull();return BrasaApiException(response.code,envelope?.message?:envelope?.data?.message?:"Falha ao conectar ao BRasa.")}

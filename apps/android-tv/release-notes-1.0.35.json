@@ -1,0 +1,7 @@
+[
+  "Miniaturas na barra de tempo, com prévia a cada 10 segundos e geração limitada para priorizar a reprodução.",
+  "Preparação de até 512 KB do próximo episódio original, somente com reprodução estável, rede ociosa e restante do episódio já em buffer.",
+  "Retorno ao cartão pelo título selecionado, rolando até sua nova posição após atualização ou reordenação do catálogo.",
+  "Opção Priorizar estabilidade: qualidade adaptativa até 720p, com explicação sobre nitidez, rede e conversão no computador.",
+  "Botões Pular abertura e Pular créditos quando o arquivo contém capítulos explicitamente identificados, preservando cenas após o trecho marcado."
+]

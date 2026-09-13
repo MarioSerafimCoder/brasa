@@ -87,17 +87,25 @@ fun DetailsScreen(
     val focusMemory = rememberCatalogFocus("details:${state.profile?.id}:${item.mediaKey}")
     var initialFocusSet by rememberSaveable(item.mediaKey) { mutableStateOf(false) }
     val selectedSeason = item.seasons.firstOrNull { it.seasonNumber == selectedSeasonNumber } ?: item.seasons.firstOrNull()
+    val detailsListState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val episodesState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val episodeKeys = selectedSeason?.episodes.orEmpty().map { it.mediaKey }
+    focusMemory.RestoreItems(listOf("play") + episodeKeys) { index ->
+        detailsListState.scrollToItem(if (index == 0) 0 else 1)
+        if (index > 0) episodesState.scrollToItem(index - 1)
+    }
     val firstPlayable = if (item.type == "series") continuation else item
     var keepPreload by remember(item.mediaKey) { mutableStateOf(false) }
     var expandedOverview by rememberSaveable(item.mediaKey) { mutableStateOf(false) }
 
     LaunchedEffect(item.mediaKey, selectedSeasonNumber) {
         onPrefetch(firstPlayable)
-        if (!initialFocusSet) { runCatching { playFocus.requestFocus() }; initialFocusSet = true }
+        if (!initialFocusSet && focusMemory.selectedKey.isBlank()) { runCatching { playFocus.requestFocus() }; initialFocusSet = true }
     }
     DisposableEffect(item.mediaKey) { onDispose { if (!keepPreload) onCancelPreload() } }
 
     LazyColumn(
+        state = detailsListState,
         modifier = Modifier.fillMaxSize().background(BrasaBackground),
         contentPadding = PaddingValues(bottom = BrasaSpacing.x8),
     ) {
@@ -188,6 +196,7 @@ fun DetailsScreen(
                 Spacer(Modifier.height(10.dp))
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = BrasaSpacing.safe, vertical = 10.dp),
+                    state = episodesState,
                     horizontalArrangement = Arrangement.spacedBy(18.dp),
                 ) {
                     items(selectedSeason?.episodes.orEmpty(), key = { it.mediaKey }) { episode ->

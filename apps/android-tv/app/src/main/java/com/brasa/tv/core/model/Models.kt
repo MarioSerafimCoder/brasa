@@ -22,6 +22,7 @@ typealias Series = CatalogItem
 typealias Episode = CatalogItem
 @Serializable data class Collection(val id:String="",val title:String="",val subtitle:String="",val banner:String="",val items:List<CatalogItem> = emptyList())
 @Serializable data class PlaybackInfo(
+    val markers:List<PlaybackMarker> = emptyList(), val thumbnailPath:String="", val prioritizeStability:Boolean=false,
     val hlsSessionId:String="",
     val mediaId:String="",val mediaKey:String="",val playbackUrl:String="",val mimeType:String="video/*",val container:String="",val videoCodec:String="",val audioCodec:String="",
     val supportsRange:Boolean=true,@Serializable(with=FlexibleNullableLongSerializer::class) val duration:Long?=null,@Serializable(with=FlexibleLongSerializer::class) val resumePosition:Long=0,@Serializable(with=FlexibleLongSerializer::class) val playbackOffset:Long=0,@Serializable(with=FlexibleLongSerializer::class) val bitrate:Long=0,@Serializable(with=FlexibleIntSerializer::class) val width:Int=0,@Serializable(with=FlexibleIntSerializer::class) val height:Int=0,val playbackRevision:String="",
@@ -30,6 +31,7 @@ typealias Episode = CatalogItem
     val errorMessage:String="",val adaptiveReasons:List<String> = emptyList(),
 )
 @Serializable data class SubtitleTrack(val label:String="",val srclang:String="",val src:String="",val mimeType:String="text/vtt",val default:Boolean=false)
+@Serializable data class PlaybackMarker(val kind:String="", val startMs:Long=0, val endMs:Long=0, val source:String="")
 @Serializable data class AudioTrack(val id:String="",val label:String="",val language:String="",val codec:String="")
 @Serializable data class WatchProgress(val mediaType:String="movie",val mediaId:String="",val seriesId:String="",@Serializable(with=FlexibleDoubleSerializer::class) val currentTime:Double=0.0,@Serializable(with=FlexibleDoubleSerializer::class) val duration:Double=0.0,@Serializable(with=FlexibleDoubleSerializer::class) val percentage:Double=0.0,val completed:Boolean=false,val updatedAt:String="")
 @Serializable data class ActionResult(val action:String="",val enabled:Boolean=false)

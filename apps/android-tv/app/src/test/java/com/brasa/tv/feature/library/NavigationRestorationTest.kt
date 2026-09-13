@@ -20,6 +20,31 @@ import org.robolectric.annotation.Config
 class NavigationRestorationTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun scrollsToNewPositionAfterCatalogRefreshWhileInDetails() = refreshAndReturn(false)
+    @Test fun fallsBackToAvailableCardWhenSelectedTitleWasRemoved() = refreshAndReturn(true)
+
+    private fun refreshAndReturn(remove: Boolean) {
+        val profile = Profile(id = "refresh")
+        val original = (1..80).map { CatalogItem(id="$it", mediaKey="movie:$it", title="Item $it") }
+        compose.setContent {
+            val holder = rememberSaveableStateHolder()
+            var details by remember { mutableStateOf(false) }
+            var changed by remember { mutableStateOf(false) }
+            val movies = if (!changed) original else original.reversed().filterNot { remove && it.id == "65" }
+            BrasaTheme {
+                if (details) BrasaButton("Atualizar e voltar", { changed=true; details=false })
+                else holder.SaveableStateProvider("refresh-grid") {
+                    LibraryScreen(BrasaUiState(profile=profile,catalog=CatalogResponse(profile=profile,movies=movies)), "movie",
+                        onItem={details=true},onHome={},onMovies={},onSeries={},onCollections={},onSearch={},onProfiles={},onRefresh={})
+                }
+            }
+        }
+        compose.onAllNodes(hasScrollToIndexAction()).onLast().performScrollToIndex(64)
+        compose.onNodeWithText("Item 65").performClick()
+        compose.onNodeWithText("Atualizar e voltar").performClick()
+        compose.onNodeWithText(if(remove) "Item 80" else "Item 65").assertIsDisplayed().assertIsFocused()
+    }
+
     @Test fun restoresGenreSortAndSelectedCardAfterDetails() {
         val profile = Profile(id = "test")
         val items = listOf(CatalogItem(id="a", mediaKey="movie:a", title="Filme Z", genres=listOf("Aventura")),

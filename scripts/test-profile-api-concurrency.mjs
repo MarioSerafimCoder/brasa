@@ -16,10 +16,10 @@ try {
     await Promise.all(["scripts", "server", "js"].map(folder => fs.cp(path.join(source, folder), path.join(root, folder), { recursive: true })));
     await fs.writeFile(path.join(root, "package.json"), '{"type":"module"}');
     await fs.mkdir(path.join(root, "data"));
-    await fs.writeFile(path.join(root, "data/movies.js"), `export const getMovies = () => ${JSON.stringify(Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), title: `Test ${i + 1}`, audience: "general", video: `videos/test-${i + 1}.mp4`, playable: true })))};`);
+    await fs.writeFile(path.join(root, "data/movies.js"), `export const getMovies = () => ${JSON.stringify(Array.from({ length: 12 }, (_, i) => ({ id: String(i + 1), title: `Test ${i + 1}`, audience: "general", video: `assets/movies/test-${i + 1}.mp4`, playable: true })))};`);
     await fs.writeFile(path.join(root, "data/series.js"), 'export const getSeries = () => [];');
     await fs.writeFile(path.join(root, "data/collections.js"), 'export const collections = [];');
-    const device = await createDeviceStore(root).create({ name: "Test TV", type: "tv" });
+    const device = await createDeviceStore(root).create({ name: "Test TV", type: "tv", allowedProfileIds: ["mario"] });
     const reserve = net.createServer(); reserve.listen(0, "127.0.0.1"); await once(reserve, "listening");
     const port = reserve.address().port; await new Promise(resolve => reserve.close(resolve));
     child = spawn(process.execPath, [path.join(root, "scripts/brasa-server.mjs")], { cwd: root, windowsHide: true,
@@ -42,6 +42,14 @@ try {
         const payload = await response.json(); assert.equal(response.status, expected, JSON.stringify(payload)); return payload;
     }
     const initial = (await call("/api/profiles/mario/state")).state;
+    const thumbnailPath = "/api/v1/tv/thumbnail/movie:1?profileId=mario&positionMs=10000&allowGenerate=1";
+    assert.equal((await fetch(base + thumbnailPath)).status, 401);
+    const tvHeaders = { "x-brasa-device-token": device.token };
+    assert.equal((await fetch(base + thumbnailPath.replace("profileId=mario", "profileId=isabele"), { headers: tvHeaders })).status, 403);
+    assert.equal((await fetch(base + thumbnailPath, { headers: tvHeaders })).status, 204);
+    await call("/api/v1/tv/playback/movie:1?profileId=mario&prepare=0", "GET", undefined, true);
+    const mediaState = await fs.readFile(path.join(root, "data/media-state.json"), "utf8").then(JSON.parse).catch(() => ({ items: {} }));
+    assert.equal(Object.keys(mediaState.items).length, 0, "consulta antecipada não deve iniciar análise nem conversão");
     await Promise.all(Array.from({ length: 12 }, (_, i) => [
         call(`/api/tv/profiles/mario/progress/movie:${i + 1}`, "PUT", { currentTime: i + 10, duration: 100, percentage: i + 10 }, true),
         call(`/api/profiles/mario/favorites/${i + 1}`, "PUT", { enabled: true }),

@@ -28,9 +28,16 @@ class PlaybackCoordinator(
     private var preloadMonitor: Job? = null
     private var generation = 0L
     private var foreground = true
+    private val nextPreparer = NextEpisodePreparer(http, cache)
+    fun cancelNextPreparation() { nextPreparer.cancel() }
+    suspend fun prepareNext(base: String, info: PlaybackInfo) {
+        if (!foreground || current?.preloading != false) return
+        nextPreparer.prepare(base, info, PlaybackFactory(appContext, http).cacheKey(base, info))
+    }
     fun setForeground(value: Boolean) {
         foreground = value
         if (!value) {
+            cancelNextPreparation()
             current?.player?.pause()
             if (current?.preloading == true) releaseCurrent()
         }
@@ -60,6 +67,7 @@ class PlaybackCoordinator(
     }
 
     suspend fun acquire(baseUrl: String, info: PlaybackInfo): ExoPlayer {
+        cancelNextPreparation()
         val requestGeneration = ++generation
         val simpleCache = if (info.playbackMode == "hls") null else cache.getOrCreate()
         return withContext(Dispatchers.Main.immediate) {
@@ -158,6 +166,7 @@ class PlaybackCoordinator(
     }
 
     private fun releaseCurrent() {
+        cancelNextPreparation()
         preloadMonitor?.cancel()
         preloadMonitor = null
         current?.player?.run {

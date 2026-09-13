@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore("brasa_tv_settings")
 data class AppSettings(val serverBaseUrl:String="",val serverName:String="",val selectedProfileId:String="",val deviceDisplayName:String="BRasa Android TV",val uiScale:Float=.9f,val density:Float=1f,
-    val audioLanguage:String="",val subtitleLanguage:String="",val subtitleMode:String="auto",val subtitleSize:Float=1f,val subtitleStyle:String="outline",val autoplayNext:Boolean=false,val recentSearches:List<String> = emptyList())
+    val audioLanguage:String="",val subtitleLanguage:String="",val subtitleMode:String="auto",val subtitleSize:Float=1f,val subtitleStyle:String="outline",val autoplayNext:Boolean=false,val recentSearches:List<String> = emptyList(), val prioritizeStability:Boolean=false)
 class AppSettingsStore(private val context:Context){
     private object Keys{val server=stringPreferencesKey("server_base_url");val name=stringPreferencesKey("server_name");val profile=stringPreferencesKey("selected_profile_id");val device=stringPreferencesKey("device_display_name");val uiScale=floatPreferencesKey("ui_scale");val density=floatPreferencesKey("card_density")}
     private fun preference(profile:String, name:String)=stringPreferencesKey("playback_${profile}_$name")
@@ -19,9 +19,10 @@ class AppSettingsStore(private val context:Context){
         val profile=it[Keys.profile].orEmpty()
         AppSettings(it[Keys.server].orEmpty(),it[Keys.name].orEmpty(),profile,it[Keys.device]?:"BRasa Android TV",it[Keys.uiScale]?.coerceIn(.8f,1.1f)?:.9f,it[Keys.density]?.coerceIn(.8f,1.15f)?:1f,
             it[preference(profile,"audio")].orEmpty(),it[preference(profile,"subtitle")].orEmpty(),it[preference(profile,"subtitle_mode")]?:"auto",
-            it[preference(profile,"subtitle_size")]?.toFloatOrNull()?.coerceIn(.8f,1.4f)?:1f,it[preference(profile,"subtitle_style")]?:"outline",it[booleanPreferencesKey("playback_${profile}_autoplay_next")]?:false,it[preference(profile,"recent_searches")]?.split("\u001f")?.filter(String::isNotBlank).orEmpty())
+            it[preference(profile,"subtitle_size")]?.toFloatOrNull()?.coerceIn(.8f,1.4f)?:1f,it[preference(profile,"subtitle_style")]?:"outline",it[booleanPreferencesKey("playback_${profile}_autoplay_next")]?:false,it[preference(profile,"recent_searches")]?.split("\u001f")?.filter(String::isNotBlank).orEmpty(), it[booleanPreferencesKey("playback_${profile}_stability")]?:false)
     }
     suspend fun saveAudioLanguage(profileId:String,language:String)=context.dataStore.edit{it[preference(profileId,"audio")]=language}
+    suspend fun saveStability(profileId:String,enabled:Boolean)=context.dataStore.edit{it[booleanPreferencesKey("playback_${profileId}_stability")]=enabled}
     suspend fun saveSubtitleChoice(profileId:String,mode:String,language:String="")=context.dataStore.edit{it[preference(profileId,"subtitle_mode")]=mode;it[preference(profileId,"subtitle")]=language}
     suspend fun saveSubtitleSize(profileId:String,size:Float)=context.dataStore.edit{it[preference(profileId,"subtitle_size")]=size.coerceIn(.8f,1.4f).toString()}
     suspend fun saveSubtitleStyle(profileId:String,style:String)=context.dataStore.edit{it[preference(profileId,"subtitle_style")]=style}

@@ -68,7 +68,7 @@ export function createMediaQueue({ rootDir, store, getTools, resolveMedia, probe
             let probeData = item?.probe;
             const stat = await fs.stat(job.original);
             const reusablePrepared = isProbeStillValid(item, stat) && await preparedExists(item);
-            if (!probeData || Number(probeData.schemaVersion || 0) < 3 || !isProbeStillValid(item, stat)) {
+            if (!probeData || Number(probeData.schemaVersion || 0) < 3 || !Array.isArray(probeData.chapterMarkers) || !isProbeStillValid(item, stat)) {
                 await store.update(job.key, { status: "analyzing", progress: 0 });
                 const tools = await getTools();
                 probeData = await probe(job.original, tools.ffprobePath);

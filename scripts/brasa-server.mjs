@@ -1,4 +1,5 @@
 import http from "node:http";
+import { createTvThumbnails } from "../server/tv-thumbnails.mjs";
 import { createUserStateStore, progressWriteTime, mergeImportedProfileState } from "../server/user-state-store.mjs";
 import fs from "node:fs/promises";
 import { createReadStream, rmSync } from "node:fs";
@@ -88,6 +89,7 @@ const tvLibraryCache = createTvLibraryCache(rootDir);
 const metadataRetryStore = createMetadataRetryStore(rootDir);
 const mediaQueue = createMediaQueue({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir), resolveMedia });
 const hlsSessions = createHlsSessionManager({ rootDir, store: mediaStore, getTools: () => getMediaToolsStatus(rootDir) });
+const tvThumbnails = createTvThumbnails({ busy: () => mediaQueue.snapshot().active.length > 0 || hlsSessions.snapshot().some(session => session.state !== "failed" && session.progress < 100) });
 const mediaCache = createMediaCache({ rootDir, store: mediaStore, protectedHlsSessions: hlsSessions.protectedSessionIds });
 const libraryHealthStore = createLibraryHealthStore(rootDir);
 const syncHistoryStore = createSyncHistory(rootDir);
@@ -115,7 +117,7 @@ const tvPlaybackDiagnostics = {
     },
 };
 const networkInspector = createWindowsNetworkInspector();
-const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { playbackDiagnostics: tvPlaybackDiagnostics, profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: serializeProfileMutation(tvSaveProgress), saveFavorite: serializeProfileMutation(tvSaveFavorite), saveSignal: serializeProfileMutation(tvSaveSignal), savePreferences: serializeProfileMutation(tvSavePreferences), resetPersonalization: serializeProfileMutation(tvResetPersonalization), verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls, scan: () => libraryScan.request("tv"), scanStatus: () => libraryScan.status() },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
+const deviceController = createDeviceController({ pairing: pairingService, auth: deviceAuth, settingsStore: networkConfigStore, deviceStore, networkInfo: getPrivateNetworkAddresses, networkDiagnostics, networkInspector, getPort: () => activePort, tvServices: { thumbnail: tvThumbnail, playbackDiagnostics: tvPlaybackDiagnostics, profiles: tvProfiles, catalog: tvCatalog, home: tvHome, search: tvSearch, playback: tvPlayback, progress: tvProgress, saveProgress: serializeProfileMutation(tvSaveProgress), saveFavorite: serializeProfileMutation(tvSaveFavorite), saveSignal: serializeProfileMutation(tvSaveSignal), savePreferences: serializeProfileMutation(tvSavePreferences), resetPersonalization: serializeProfileMutation(tvResetPersonalization), verifyPin: tvVerifyPin, stream: tvStream, hls: tvHls, scan: () => libraryScan.request("tv"), scanStatus: () => libraryScan.status() },updateService:androidTvUpdateService, readBody: readJsonBody, send: sendJson });
 
 let isSyncing = false;
 let syncStatus = {
@@ -546,20 +548,23 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
         subtitles: (item.subtitles || []).map((track) => ({ ...track, src: String(track.src || "").startsWith("/") ? track.src : `/${track.src}` })),
         audioTracks: [], nextEpisode, preparationStatus: "analyzing", preparationProgress: 0, playbackMode: "pending", qualities: [], quality: "Automática", errorType: "", errorMessage: ""
     };
-    if (nextEpisode?.mediaKey && !(await mediaStore.get(nextEpisode.mediaKey))) mediaQueue.analyze(nextEpisode.mediaKey, { prepare: false, priority: 10 }).catch(() => {});
     if (!source?.originalPath) return { ...base, preparationStatus: "failed", errorType: "source", errorMessage: "O arquivo original não foi encontrado." };
     const mediaState = await mediaStore.get(mediaKey);
-    mediaQueue.prioritize(mediaKey, 100, { prepare: false, preemptOther: true });
+    if (allowPreparation) mediaQueue.prioritize(mediaKey, 100, { prepare: false, preemptOther: true });
     const original = resolvePathInsideLibrary(rootDir, source.originalPath).path;
     const originalStat = await fs.stat(original).catch(() => null);
     const stale = mediaState?.fingerprint && originalStat && (mediaState.fingerprint.size !== originalStat.size || mediaState.fingerprint.mtimeMs !== Math.round(originalStat.mtimeMs));
-    const outdatedProbe = mediaState?.probe && Number(mediaState.probe.schemaVersion || 0) < 3;
+    const outdatedProbe = mediaState?.probe && (Number(mediaState.probe.schemaVersion || 0) < 3 || !Array.isArray(mediaState.probe.chapterMarkers));
     if (!mediaState?.probe || stale || outdatedProbe) {
-        if (!mediaState || !["queued", "analyzing"].includes(mediaState.status)) mediaQueue.analyze(mediaKey, { prepare: false, priority: 100 }).catch(() => {});
-        mediaQueue.prioritize(mediaKey, 100, { prepare: false, preemptOther: true });
+        if (allowPreparation) {
+            if (!mediaState || !["queued", "analyzing"].includes(mediaState.status)) mediaQueue.analyze(mediaKey, { prepare: false, priority: 100 }).catch(() => {});
+            mediaQueue.prioritize(mediaKey, 100, { prepare: false, preemptOther: true });
+        }
         return { ...base, preparationStatus: "analyzing", preparationProgress: Number(mediaState?.progress || 0) };
     }
     const probe = mediaState.probe;
+    base.markers = probe.chapterMarkers || [];
+    base.thumbnailPath = `/api/v1/tv/thumbnail/${encodeURIComponent(mediaKey)}?profileId=${encodeURIComponent(profileId)}`;
     const playbackRevision = `${Number(originalStat?.size || mediaState.fingerprint?.size || 0)}-${Math.round(Number(originalStat?.mtimeMs || mediaState.fingerprint?.mtimeMs || 0))}`;
     const codecs = { container: probe.container || base.container, videoCodec: probe.video?.codec || "", audioCodec: probe.audioTracks?.[0]?.codec || "", bitrate: Math.round(Number(probe.bitrate || 0)), width: Math.round(Number(probe.video?.width || 0)), height: Math.round(Number(probe.video?.height || 0)), playbackRevision, duration: Math.round(Number(probe.duration || 0) * 1000), audioTracks: (probe.audioTracks || []).map((track) => ({ id: String(track.index), label: track.title || track.language || `Faixa ${track.index}`, language: track.language || "und", codec: track.codec || "" })) };
     if (codecs.duration > 0) base.resumePosition = Math.min(base.resumePosition, Math.max(0, codecs.duration - 2_000));
@@ -593,6 +598,24 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
     return { ...base, ...codecs, preparationStatus: "preparing", preparationProgress: Number(mediaState.progress || 0), playbackMode: mediaState.strategy || "prepare", errorType: mediaState.status === "failed" ? "processing" : "", errorMessage: mediaState.status === "failed" ? mediaState.error || "O servidor não conseguiu preparar esta mídia." : "" };
 }
 
+async function tvThumbnail(request, response, profileId, mediaKey, positionMs, allowed) {
+    const state = await readUserState(), profile = state.profiles.find(item => item.id === profileId), media = await getTvMediaItem(mediaKey);
+    if (!profile || !media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil.");
+    const source = await resolveMedia(mediaKey), prepared = await mediaStore.get(mediaKey);
+    if (!source?.originalPath || !prepared?.probe) { response.writeHead(204); response.end(); return; }
+    const file = resolvePathInsideLibrary(rootDir, source.originalPath).path;
+    const stat = await fs.stat(file).catch(() => null);
+    if (!stat?.isFile()) throw new NotFoundError("Arquivo não encontrado.");
+    const controller = new AbortController();
+    const cancel = () => controller.abort(); response.once("close", cancel);
+    try {
+        const tools = await getMediaToolsStatus(rootDir);
+        const bytes = await tvThumbnails.get({ file, revision: `${stat.size}-${stat.mtimeMs}`, positionMs, durationMs: Number(prepared.probe.duration) * 1000, ffmpeg: tools.ffmpegPath, allowed: allowed && tools.ffmpegAvailable, signal: controller.signal });
+        if (response.destroyed) return;
+        response.writeHead(bytes ? 200 : 204, { "Cache-Control": "private, no-store", ...(bytes ? { "Content-Type": "image/jpeg", "Content-Length": bytes.length } : {}) });
+        response.end(bytes || undefined);
+    } finally { response.off("close", cancel); }
+}
 async function tvProgress(profileId, mediaKey) { const state = await readUserState(); if (!state.profiles.some((item) => item.id === profileId)) throw new NotFoundError("Perfil não encontrado."); return validateProfileState(state.states[profileId] || {}).progress[mediaKey] || null; }
 async function tvSaveProgress(profileId, mediaKey, input) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId); if (!profile) throw new NotFoundError("Perfil não encontrado."); const media = await getTvMediaItem(mediaKey); if (!media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), previous = current.progress[mediaKey], timing = progressWriteTime(previous, input), now = timing.updatedAt, incoming = validateProgress({ ...input, updatedAt: now }, mediaKey), next = mergeWatchProgress(previous, incoming), progress = { ...current.progress, [mediaKey]: next }, completed = next.completed ? [...new Set([...current.completed, mediaKey])] : current.completed.filter((key) => key !== mediaKey), priorBucket = Math.floor(Number(previous?.percentage || 0) / 10), nextBucket = Math.floor(Number(next.percentage || 0) / 10), activityEvents = (next.completed !== Boolean(previous?.completed) || nextBucket > priorBucket) ? [...current.activityEvents, { mediaKey, type: next.completed ? "completed" : "watched", at: now, seconds: Math.max(0, Math.round(next.currentTime - Number(previous?.currentTime || 0))) }].slice(-1000) : current.activityEvents; if (timing.stale) return previous; state.states[profileId] = { ...current, progress, completed, activityEvents, updatedAt: now }; await queueUserStateWrite(state); return next; }
 async function tvSaveFavorite(profileId, mediaKey, enabled) { const state = await readUserState(), profile = state.profiles.find((item) => item.id === profileId), media = await getTvMediaItem(mediaKey); if (!profile || !media || !canTvAccess(media, profile)) throw new ForbiddenError("Conteúdo indisponível para este perfil."); const current = validateProfileState(state.states[profileId] || {}), legacyId = mediaKey.split(":").slice(1).join(":"), favorites = enabled ? [...new Set([...current.favorites.filter((item) => item !== legacyId), mediaKey])] : current.favorites.filter((item) => item !== mediaKey && item !== legacyId); state.states[profileId] = { ...current, favorites, updatedAt: new Date().toISOString() }; await queueUserStateWrite(state); return { favorite: enabled }; }
