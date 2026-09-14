@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "file": "13-retorno.png",
+  "capturedAt": "2026-09-14T09:38:44.749Z",
+  "packageName": "com.brasa.tv",
+  "versionName": "1.0.35",
+  "versionCode": 36,
+  "androidApi": 30,
+  "width": 1920,
+  "height": 1080,
+  "density": "Physical density: 320",
+  "source": "physical-device-apk",
+  "mode": "current-app-state",
+  "initialRoute": null,
+  "navigationKeys": [],
+  "uiScale": "app-setting-not-overridden",
+  "imageModified": false,
+  "note": "PNG direto do APK. Nenhuma reconstrução HTML nem edição da imagem.",
+  "sha256": "56c33b3843cd9a2d708371b304a30b201c6faa9462db213aabeb9f40f7a6e998"
+}

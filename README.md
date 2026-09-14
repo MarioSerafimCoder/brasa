@@ -2,6 +2,10 @@
 
 Servidor local de biblioteca de mídia com sincronização automática, perfis independentes e reprodução adaptativa por FFmpeg.
 
+## Preview na TV
+
+[Galeria de capturas reais do APK na TCL](preview/README.md) e [análise de oportunidades de UI e UX](preview/analise-ui-ux.md). As propostas estão documentadas, ainda não implementadas.
+
 ## Comandos
 
 - `Abrir BRasa.vbs`: entrada normal no Windows; inicia ou reutiliza o servidor com terminal oculto, acompanha a sincronização e abre a aplicação quando a biblioteca estiver pronta.

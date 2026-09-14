@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "file": "07-player-miniatura.png",
+  "capturedAt": "2026-09-14T09:33:48.369Z",
+  "packageName": "com.brasa.tv",
+  "versionName": "1.0.35",
+  "versionCode": 36,
+  "androidApi": 30,
+  "width": 1920,
+  "height": 1080,
+  "density": "Physical density: 320",
+  "source": "physical-device-apk",
+  "mode": "current-app-state",
+  "initialRoute": null,
+  "navigationKeys": [
+    "DPAD_CENTER",
+    "DPAD_UP",
+    "DPAD_RIGHT"
+  ],
+  "uiScale": "app-setting-not-overridden",
+  "imageModified": false,
+  "note": "PNG direto do APK. Nenhuma reconstrução HTML nem edição da imagem.",
+  "sha256": "ac6e5b246c3e975c136d76501104f170be985c5fd98c2a13d22b6c23a9437a1f"
+}

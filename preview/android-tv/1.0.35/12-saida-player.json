@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "file": "12-saida-player.png",
+  "capturedAt": "2026-09-14T09:38:31.767Z",
+  "packageName": "com.brasa.tv",
+  "versionName": "1.0.35",
+  "versionCode": 36,
+  "androidApi": 30,
+  "width": 1920,
+  "height": 1080,
+  "density": "Physical density: 320",
+  "source": "physical-device-apk",
+  "mode": "current-app-state",
+  "initialRoute": null,
+  "navigationKeys": [
+    "BACK",
+    "BACK",
+    "BACK"
+  ],
+  "uiScale": "app-setting-not-overridden",
+  "imageModified": false,
+  "note": "PNG direto do APK. Nenhuma reconstrução HTML nem edição da imagem.",
+  "sha256": "f1d531ec44b66e65289a9f6cf69a4b0d361b074b23241eeade30141cb2eae19c"
+}

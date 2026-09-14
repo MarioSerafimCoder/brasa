@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "file": "02-inicio.png",
+  "capturedAt": "2026-09-14T09:30:47.754Z",
+  "packageName": "com.brasa.tv",
+  "versionName": "1.0.35",
+  "versionCode": 36,
+  "androidApi": 30,
+  "width": 1920,
+  "height": 1080,
+  "density": "Physical density: 320",
+  "source": "physical-device-apk",
+  "mode": "current-app-state",
+  "initialRoute": null,
+  "navigationKeys": [
+    "DPAD_CENTER"
+  ],
+  "uiScale": "app-setting-not-overridden",
+  "imageModified": false,
+  "note": "PNG direto do APK. Nenhuma reconstrução HTML nem edição da imagem.",
+  "sha256": "3e00c237a5b4e5ec186ef60abc3c2c19bcf162e3c26da0a0e0b304b6898f62f1"
+}
