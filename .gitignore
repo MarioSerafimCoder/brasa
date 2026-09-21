@@ -98,3 +98,6 @@ apps/android-tv/.toolchain/
 *.keystore
 *.apk
 *.aab
+
+# User-edited intro and credits timestamps
+data/playback-markers.json*

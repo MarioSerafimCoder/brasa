@@ -87,35 +87,11 @@ export function selectTvPlaybackPlan(probe, rawCapabilities = {}) {
     return { mode: "transcode", videoAction: "h264", audioAction: "aac", reasons, capabilities };
 }
 
+/** Compatibility is independent of the saved position. Decoder failures still request transcode explicitly. */
 export function stabilizeTvPlaybackPlan(plan = {}, context = {}) {
-    const resumePosition = Math.max(0, Number(context.resumePosition || 0));
-    const video = context.probe?.video;
-    const indexedSdrAvc = normalizeVideo(video?.codec) === "h264" && Number(video?.bitDepth || 8) <= 8 && !video?.hdr && !video?.hdrType && !video?.dolbyVision;
-    if (plan.mode === "direct" && resumePosition >= 5_000 && !indexedSdrAvc) {
-        return {
-            ...plan,
-            mode: "transcode",
-            videoAction: "h264",
-            audioAction: "aac",
-            stripDolbyVision: false,
-            reasons: [
-                "retomada segura exige um novo quadro-chave no ponto salvo",
-                ...(Array.isArray(plan.reasons) ? plan.reasons : []),
-            ],
-        };
-    }
-    if (plan.mode !== "remux") return plan;
-    return {
-        ...plan,
-        mode: "transcode",
-        videoAction: "h264",
-        audioAction: "aac",
-        stripDolbyVision: false,
-        reasons: [
-            "segmentação HLS segura exige quadros-chave regulares",
-            ...(Array.isArray(plan.reasons) ? plan.reasons : []),
-        ],
-    };
+    // Remux seeking is aligned to a probed key frame by the session manager.
+    // Never discard HDR/resolution solely because playback is being resumed.
+    return plan;
 }
 
 export function createQualityLadder(probe) {

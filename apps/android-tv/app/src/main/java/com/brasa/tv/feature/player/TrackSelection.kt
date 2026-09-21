@@ -21,12 +21,26 @@ fun playbackTracks(tracks: Tracks, type: Int): List<PlaybackTrack> = tracks.grou
 }
 
 private fun trackLabel(format: Format, type: Int): String {
-    val language = format.language?.takeUnless { it == "und" }?.let { Locale.forLanguageTag(it).getDisplayLanguage(Locale.forLanguageTag("pt-BR")) }.orEmpty()
+    val language = format.language?.takeUnless { it == "und" }?.let { tag ->
+        val locale = Locale.forLanguageTag(tag)
+        val displayLocale = Locale.forLanguageTag("pt-BR")
+        val name = locale.getDisplayLanguage(displayLocale).replaceFirstChar { it.uppercase() }
+        val country = locale.getDisplayCountry(displayLocale)
+        if (country.isBlank()) name else "$name ($country)"
+    }.orEmpty()
     val parts = mutableListOf(language.ifBlank { "Idioma não informado" })
-    format.label?.takeIf { it.isNotBlank() && !it.equals(language, true) }?.let(parts::add)
+    format.label?.trim()?.takeIf {
+        it.isNotBlank() && !it.equals(language, true) &&
+            !it.matches(Regex("(?i)(audio|subtitle|legenda|track|faixa)(?:[ _-]*(track|faixa))?[ _-]*\\d*"))
+    }?.let(parts::add)
     if (type == C.TRACK_TYPE_AUDIO) {
-        if (format.channelCount > 0) parts += "${format.channelCount} canais"
-        format.sampleMimeType?.substringAfterLast('/')?.uppercase(Locale.ROOT)?.let(parts::add)
+        when (format.channelCount) {
+            1 -> parts += "Mono"
+            2 -> parts += "Estéreo"
+            6 -> parts += "5.1"
+            8 -> parts += "7.1"
+            in 3..Int.MAX_VALUE -> parts += "${format.channelCount} canais"
+        }
     }
     if (format.selectionFlags and C.SELECTION_FLAG_FORCED != 0) parts += "Forçada"
     if (format.roleFlags and C.ROLE_FLAG_COMMENTARY != 0) parts += "Comentário"

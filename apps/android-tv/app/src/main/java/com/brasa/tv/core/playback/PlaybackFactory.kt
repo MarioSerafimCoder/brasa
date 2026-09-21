@@ -29,7 +29,7 @@ class PlaybackFactory(
         const val TAG = "BRasaPlayback"
     }
 
-    fun create(baseUrl: String, info: PlaybackInfo, cache: SimpleCache?, autoPlay: Boolean): ExoPlayer {
+    fun source(baseUrl: String, info: PlaybackInfo, cache: SimpleCache?, delayMs: Long = info.subtitleDelayMs): androidx.media3.exoplayer.source.MediaSource {
         val upstream = http.authenticatedMediaDataSource(baseUrl)
         val dataSource = if (info.playbackMode == "hls") upstream else CacheDataSource.Factory()
             .setCache(requireNotNull(cache) { "Cache progressivo indisponível." })
@@ -39,8 +39,9 @@ class PlaybackFactory(
                 override fun onCachedBytesRead(cacheSizeBytes: Long, cachedBytesRead: Long) { Log.d(TAG, "Cache hit ${info.mediaKey}: $cachedBytesRead bytes; total=$cacheSizeBytes") }
                 override fun onCacheIgnored(reason: Int) { Log.w(TAG, "Cache ignorado ${info.mediaKey}: motivo=$reason") }
             })
-        val subtitles = info.subtitles.map {
+        val subtitles = info.subtitles.mapIndexed { index, it ->
             MediaItem.SubtitleConfiguration.Builder(android.net.Uri.parse(LocalServerAddress.resolve(baseUrl, it.src)))
+                .setId(OffsetSubtitleParserFactory.EXTERNAL_ID + index)
                 .setMimeType(it.mimeType.ifBlank { MimeTypes.TEXT_VTT })
                 .setLanguage(it.srclang)
                 .setLabel(it.label)
@@ -53,7 +54,13 @@ class PlaybackFactory(
             .setMimeType(info.mimeType)
             .setSubtitleConfigurations(subtitles)
         if (info.playbackMode != "hls") mediaItemBuilder.setCustomCacheKey(cacheKey(baseUrl, info))
-        val mediaItem = mediaItemBuilder.build()
+        return DefaultMediaSourceFactory(dataSource)
+            .setSubtitleParserFactory(OffsetSubtitleParserFactory(delayMs, info.playbackOffset))
+            .setLoadErrorHandlingPolicy(TvLoadErrorHandlingPolicy(info.playbackMode == "hls"))
+            .createMediaSource(mediaItemBuilder.build())
+    }
+
+    fun create(baseUrl: String, info: PlaybackInfo, cache: SimpleCache?, autoPlay: Boolean): ExoPlayer {
         val memory = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val buffer = PlaybackBufferPolicy.select(info.playbackMode, info.bitrate, info.height, memory.memoryClass, memory.isLowRamDevice)
         val loadControl = DefaultLoadControl.Builder()
@@ -73,12 +80,10 @@ class PlaybackFactory(
             .setHandleAudioBecomingNoisy(true)
             .setTrackSelector(DefaultTrackSelector(context, adaptiveTrackSelectionFactory()))
             .setLoadControl(loadControl)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSource).setLoadErrorHandlingPolicy(TvLoadErrorHandlingPolicy(info.playbackMode == "hls")))
             .build()
             .apply {
                 if (info.prioritizeStability) trackSelectionParameters = trackSelectionParameters.buildUpon().setMaxVideoSize(1280, 720).setMaxVideoBitrate(4_000_000).build()
-                setMediaItem(mediaItem)
-                seekTo(info.resumePosition)
+                setMediaSource(source(baseUrl, info, cache), info.resumePosition)
                 playWhenReady = autoPlay
                 prepare()
             }

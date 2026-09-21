@@ -26,6 +26,8 @@ class PlaybackExtrasPolicyTest {
     }
     @Test fun markersRespectAbsoluteTimelineAndKeepPostCreditsScene() {
         val marker = PlaybackMarker("credits", 1_100_000, 1_180_000, "embedded-chapter")
+        val manual=marker.copy(source="manual")
+        assertEquals(manual, PlaybackExtrasPolicy.activeMarker(listOf(manual), 1_150_000, 1_200_000))
         assertEquals(marker, PlaybackExtrasPolicy.activeMarker(listOf(marker), 1_150_000, 1_200_000))
         assertNull(PlaybackExtrasPolicy.activeMarker(listOf(marker), 1_190_000, 1_200_000))
         assertNull(PlaybackExtrasPolicy.activeMarker(listOf(marker.copy(source = "guess")), 1_150_000, 1_200_000))

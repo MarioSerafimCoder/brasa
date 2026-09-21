@@ -11,8 +11,12 @@ import com.brasa.tv.core.model.Season
 import com.brasa.tv.core.model.ServerInfo
 import com.brasa.tv.core.model.WatchProgress
 import com.brasa.tv.core.model.seriesContinuation
+import com.brasa.tv.core.model.normalizedGenres
 import com.brasa.tv.core.network.BrasaHttpClient
 import com.brasa.tv.core.network.LocalServerAddress
+import com.brasa.tv.core.network.ConnectionException
+import com.brasa.tv.core.network.ConnectionProblem
+import com.brasa.tv.core.network.connectionProblem
 import com.brasa.tv.core.security.SecureTokenStore
 import com.brasa.tv.data.api.BrasaApi
 import com.brasa.tv.data.storage.AppSettings
@@ -31,6 +35,7 @@ class BrasaRepository(
     private val http: BrasaHttpClient,
     private val cache: TvCacheStore,
     private val progressSync: ProgressSync,
+    private val networkAvailable: () -> Boolean = { true },
 ) {
     private val playbackCache = ConcurrentHashMap<String, Pair<Long, PlaybackInfo>>()
     @Volatile private var profileCache: Pair<Long, List<com.brasa.tv.core.model.Profile>>? = null
@@ -38,30 +43,47 @@ class BrasaRepository(
     suspend fun settings(): AppSettings = settings.values.first()
     suspend fun serverBaseUrl(): String = requireServer()
 
+    fun problem(error: Throwable) = connectionProblem(error, networkAvailable())
+
+    private fun requireNetwork() {
+        if (!networkAvailable()) throw ConnectionException(ConnectionProblem.NO_NETWORK)
+    }
+
     suspend fun connect(rawAddress: String): ServerInfo {
+        requireNetwork()
         val base = LocalServerAddress.normalize(rawAddress)
+        val previous = settings().serverBaseUrl
         val info = api.bootstrap(base)
-        require(info.apiVersion == 1) { "Servidor incompatível." }
+        if (info.apiVersion != 1) throw ConnectionException(ConnectionProblem.INCOMPATIBLE)
+        if (tokens.hasToken() && previous != base) {
+            tokens.clear()
+            profileCache = null
+            playbackCache.clear()
+        }
         settings.saveServer(base, info.name)
         http.bindServer(base)
         bindProgress(base)
+        if (tokens.hasToken()) profileCache = System.currentTimeMillis() to api.profiles(base)
         return info
     }
 
     suspend fun restore(): ServerInfo? {
         val current = settings()
         if (current.serverBaseUrl.isBlank() || !tokens.hasToken()) return null
+        requireNetwork()
         http.bindServer(current.serverBaseUrl)
         bindProgress(current.serverBaseUrl)
-        return runCatching {
+        return try {
             coroutineScope {
                 val info = async { api.bootstrap(current.serverBaseUrl) }
                 val profiles = async { api.profiles(current.serverBaseUrl) }
                 val loadedProfiles = profiles.await()
                 profileCache = System.currentTimeMillis() to loadedProfiles
-                info.await()
+                info.await().also { if (it.apiVersion != 1) throw ConnectionException(ConnectionProblem.INCOMPATIBLE) }
             }
-        }.getOrNull()
+        } catch (error: Exception) {
+            throw ConnectionException(problem(error), error)
+        }
     }
 
     suspend fun pair(deviceName: String, onStatus: suspend (PairingStatus) -> Unit): DeviceSession {
@@ -135,15 +157,17 @@ class BrasaRepository(
     }
 
     suspend fun playback(profileId: String, key: String, forceRefresh: Boolean = false, fallbackMode: String = "", prepare: Boolean = true, positionMs: Long? = null): PlaybackInfo {
-        val stability = settings().prioritizeStability
+        val playbackSettings = settings()
+        val stability = playbackSettings.prioritizeStability
+        val subtitleDelay = settings.subtitleDelay(playbackSettings.serverBaseUrl, profileId, key)
         val effectiveFallback = if (stability) "transcode" else fallbackMode
         val cacheKey = "$profileId:$key:$effectiveFallback:$stability:$prepare:${positionMs ?: "saved"}"
         val cached = playbackCache[cacheKey]
-        if (!forceRefresh && cached != null && System.currentTimeMillis() - cached.first < PLAYBACK_CACHE_MS) return cached.second
+        if (!forceRefresh && cached != null && System.currentTimeMillis() - cached.first < PLAYBACK_CACHE_MS) return cached.second.copy(subtitleDelayMs = subtitleDelay)
         if (positionMs == null && progressSync.pending(profileId, key) != null) progressSync.flush(profileId, key)
         val localProgress = if (positionMs == null) progressSync.pending(profileId, key) else null
         val resume = positionMs ?: localProgress?.takeUnless { it.completed }?.let { (it.currentTime * 1000).toLong() }
-        val value = api.playback(requireServer(), profileId, key, effectiveFallback, prepare, resume, stability).copy(prioritizeStability = stability)
+        val value = api.playback(requireServer(), profileId, key, effectiveFallback, prepare, resume, stability).copy(prioritizeStability = stability, subtitleDelayMs = subtitleDelay)
         if (value.preparationStatus == "ready") playbackCache[cacheKey] = System.currentTimeMillis() to value else playbackCache.remove(cacheKey)
         return value
     }
@@ -186,6 +210,7 @@ class BrasaRepository(
 
     private suspend fun requireServer() = settings().serverBaseUrl.ifBlank { error("Nenhum servidor configurado.") }
     private fun CatalogItem.withArtwork(base: String): CatalogItem = copy(
+        genres = genres.normalizedGenres(),
         poster = poster.toLocalUrl(base),
         backdrop = backdrop.toLocalUrl(base),
         seasons = seasons.map { season -> season.copy(episodes = season.episodes.map { it.withArtwork(base) }) },

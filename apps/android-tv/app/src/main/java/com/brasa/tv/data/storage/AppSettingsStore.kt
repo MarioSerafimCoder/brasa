@@ -6,6 +6,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.flow.first
+import androidx.datastore.preferences.core.longPreferencesKey
+import java.security.MessageDigest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -20,6 +23,17 @@ class AppSettingsStore(private val context:Context){
         AppSettings(it[Keys.server].orEmpty(),it[Keys.name].orEmpty(),profile,it[Keys.device]?:"BRasa Android TV",it[Keys.uiScale]?.coerceIn(.8f,1.1f)?:.9f,it[Keys.density]?.coerceIn(.8f,1.15f)?:1f,
             it[preference(profile,"audio")].orEmpty(),it[preference(profile,"subtitle")].orEmpty(),it[preference(profile,"subtitle_mode")]?:"auto",
             it[preference(profile,"subtitle_size")]?.toFloatOrNull()?.coerceIn(.8f,1.4f)?:1f,it[preference(profile,"subtitle_style")]?:"outline",it[booleanPreferencesKey("playback_${profile}_autoplay_next")]?:false,it[preference(profile,"recent_searches")]?.split("\u001f")?.filter(String::isNotBlank).orEmpty(), it[booleanPreferencesKey("playback_${profile}_stability")]?:false)
+    }
+    private fun subtitleDelayKey(server: String, profile: String, media: String): androidx.datastore.preferences.core.Preferences.Key<Long> {
+        val identity = listOf(server, profile, media).joinToString("\u001f")
+        val digest = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray()).joinToString("") { "%02x".format(it) }
+        return longPreferencesKey("subtitle_delay_$digest")
+    }
+    suspend fun subtitleDelay(server: String, profile: String, media: String): Long =
+        (context.dataStore.data.first()[subtitleDelayKey(server, profile, media)] ?: 0).coerceIn(-60_000, 60_000)
+    suspend fun saveSubtitleDelay(server: String, profile: String, media: String, delayMs: Long) = context.dataStore.edit {
+        val key = subtitleDelayKey(server, profile, media)
+        if (delayMs == 0L) it.remove(key) else it[key] = delayMs.coerceIn(-60_000, 60_000)
     }
     suspend fun saveAudioLanguage(profileId:String,language:String)=context.dataStore.edit{it[preference(profileId,"audio")]=language}
     suspend fun saveStability(profileId:String,enabled:Boolean)=context.dataStore.edit{it[booleanPreferencesKey("playback_${profileId}_stability")]=enabled}

@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.os.Build
+import androidx.core.view.DisplayCompat
 import android.view.Display
 import android.view.WindowManager
 import com.brasa.tv.core.model.ClientCapabilities
@@ -23,6 +24,10 @@ class PlaybackCapabilityDetector(private val context: Context) {
         val metrics = context.resources.displayMetrics
         val screenWidth = maxOf(metrics.widthPixels, metrics.heightPixels)
         val screenHeight = minOf(metrics.widthPixels, metrics.heightPixels)
+        @Suppress("DEPRECATION")
+        val display = (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+        val mode = runCatching { DisplayCompat.getMode(context, display) }.getOrNull()
+        val output = videoOutputSize(screenWidth, screenHeight, mode?.physicalWidth ?: 0, mode?.physicalHeight ?: 0)
         runCatching { MediaCodecList(MediaCodecList.ALL_CODECS).codecInfos.toList() }.getOrDefault(emptyList())
             .filterNot(MediaCodecInfo::isEncoder)
             .forEach { codec ->
@@ -68,8 +73,8 @@ class PlaybackCapabilityDetector(private val context: Context) {
                 audioCodecs = audio.sorted(),
                 hdrTypes = hdrTypes.sorted(),
                 videoCapabilities = mergedVideoCapabilities,
-                maxWidth = screenWidth,
-                maxHeight = screenHeight,
+                maxWidth = output.first,
+                maxHeight = output.second,
             ),
         )
     }

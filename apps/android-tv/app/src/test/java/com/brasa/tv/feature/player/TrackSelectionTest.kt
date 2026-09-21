@@ -54,4 +54,12 @@ class TrackSelectionTest {
         assertTrue(reset.overrides.isEmpty())
         assertEquals("en", reset.preferredTextLanguages.first())
     }
+    @Test fun trackLabelsPreferReadableLanguageAndChannelNames() {
+        val audio = TrackGroup(Format.Builder().setSampleMimeType(MimeTypes.AUDIO_AAC).setLanguage("pt-BR").setLabel("Audio Track 1").setChannelCount(6).build())
+        val subtitle = TrackGroup(Format.Builder().setSampleMimeType(MimeTypes.TEXT_VTT).setLanguage("en").setLabel("Subtitle 2").build())
+        val audioTracks = Tracks(listOf(Tracks.Group(audio, false, intArrayOf(C.FORMAT_HANDLED), booleanArrayOf(false))))
+        val subtitleTracks = Tracks(listOf(Tracks.Group(subtitle, false, intArrayOf(C.FORMAT_HANDLED), booleanArrayOf(false))))
+        assertEquals("Português (Brasil) · 5.1", playbackTracks(audioTracks, C.TRACK_TYPE_AUDIO).single().label)
+        assertEquals("Inglês", playbackTracks(subtitleTracks, C.TRACK_TYPE_TEXT).single().label)
+    }
 }

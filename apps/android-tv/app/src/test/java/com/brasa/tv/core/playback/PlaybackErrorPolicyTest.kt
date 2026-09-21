@@ -47,6 +47,11 @@ class PlaybackErrorPolicyTest {
         assertEquals(PlaybackErrorAction.STOP, PlaybackErrorPolicy.decide(PlaybackException("test", null, PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED), true).action)
         assertEquals(PlaybackErrorAction.RETRY, PlaybackErrorPolicy.decide(PlaybackException("test", SocketException("reset"), PlaybackException.ERROR_CODE_IO_UNSPECIFIED), false).action)
     }
+    @Test fun unsupportedCopiedVideoConvertsButConvertedVideoStops() {
+        val error=PlaybackException("decode",null,PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED)
+        assertEquals(PlaybackErrorAction.TRANSCODE,PlaybackErrorPolicy.decide(error,true,videoCopied=true).action)
+        assertEquals(PlaybackErrorAction.STOP,PlaybackErrorPolicy.decide(error,true,videoCopied=false).action)
+    }
     @Test fun loaderStopsPermanentErrorsAndBoundsMissingSegmentRetries() {
         fun info(status: Int, count: Int) = LoadErrorHandlingPolicy.LoadErrorInfo(LoadEventInfo(1, spec, 0), MediaLoadData(C.DATA_TYPE_MEDIA), http(status), count)
         val original = TvLoadErrorHandlingPolicy(false)

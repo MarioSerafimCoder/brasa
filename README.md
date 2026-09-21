@@ -4,7 +4,7 @@ Servidor local de biblioteca de mídia com sincronização automática, perfis i
 
 ## Preview na TV
 
-[Galeria de capturas reais do APK na TCL](preview/README.md) e [análise de oportunidades de UI e UX](preview/analise-ui-ux.md). As propostas estão documentadas, ainda não implementadas.
+[Galeria de capturas reais do APK na TCL](preview/README.md), [avaliação de UI e UX](preview/analise-ui-ux.md) e [melhorias aplicadas à interface de TV](docs/interface-tv-1.0.36.md).
 
 ## Comandos
 

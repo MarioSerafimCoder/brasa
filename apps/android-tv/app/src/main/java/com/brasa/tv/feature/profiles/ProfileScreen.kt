@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -54,6 +55,7 @@ import com.brasa.tv.designsystem.BrasaSurfaceElevated
 import com.brasa.tv.designsystem.BrasaText
 import com.brasa.tv.designsystem.BrasaTextMuted
 import com.brasa.tv.designsystem.BrasaType
+import com.brasa.tv.designsystem.BrasaIcon
 
 @Composable
 fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -> Unit, onExit: () -> Unit) {
@@ -76,7 +78,7 @@ fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -
             }
             if (state.loading) { Spacer(Modifier.height(BrasaSpacing.x3)); Text("Carregando perfis…", color = BrasaTextMuted, fontSize = BrasaType.metadata) }
             Spacer(Modifier.height(BrasaSpacing.x4))
-            BrasaButton("Encerrar aplicativo", { confirmExit = true }, style = BrasaButtonStyle.Ghost, leading = "⏻")
+            BrasaButton("Encerrar aplicativo", { confirmExit = true }, style = BrasaButtonStyle.Ghost, leadingIcon = BrasaIcon.Power)
         }
     }
     if (confirmExit) ExitConfirmationDialog(onDismiss = { confirmExit = false }, onConfirm = onExit)
@@ -111,12 +113,12 @@ private fun ProfileAvatar(profile: Profile, onClick: () -> Unit, modifier: Modif
     val scale by animateFloatAsState(if (focused) 1.06f else 1f, tween(165), label = "profileScale")
     val accent = if (profile.kind == "kids") Color(0xFF36B8FF) else BrasaOrange
     Column(modifier.graphicsLayer { scaleX = scale; scaleY = scale }.onFocusChanged { focused = it.isFocused }.clickable(role = Role.Button, onClick = onClick), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            Modifier.size(112.dp).shadow(if (focused) 11.dp else 2.dp, CircleShape, spotColor = accent).background(Brush.linearGradient(listOf(accent, if (profile.kind == "kids") Color(0xFF654DFF) else BrasaRed)), CircleShape).border(if (focused) 3.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(profile.initials.ifBlank { profile.name.take(1).uppercase() }, color = Color.White, fontSize = BrasaType.page, fontWeight = FontWeight.Black)
-            if (profile.hasPin) Text("PIN", modifier = Modifier.align(Alignment.BottomEnd).background(Color.Black.copy(alpha = .82f), CircleShape).padding(7.dp), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Box(Modifier.size(124.dp), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier.size(112.dp).shadow(if (focused) 11.dp else 2.dp, CircleShape, spotColor = accent).background(Brush.linearGradient(listOf(accent, if (profile.kind == "kids") Color(0xFF654DFF) else BrasaRed)), CircleShape).border(if (focused) 3.dp else 1.dp, if (focused) BrasaFocus else BrasaBorder, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Text(profile.initials.ifBlank { profile.name.take(1).uppercase() }, color = Color.White, fontSize = BrasaType.page, fontWeight = FontWeight.Black) }
+            if (profile.hasPin) Text("PIN", modifier = Modifier.align(Alignment.BottomEnd).offset((-2).dp, (-2).dp).background(Color.Black, RoundedCornerShape(8.dp)).border(1.dp, Color.White.copy(alpha = .65f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 4.dp), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
         }
         Spacer(Modifier.height(BrasaSpacing.x2))
         Text(profile.name, color = if (focused) BrasaText else BrasaTextMuted, fontSize = BrasaType.body, fontWeight = FontWeight.Bold)

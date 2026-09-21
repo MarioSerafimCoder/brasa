@@ -31,6 +31,7 @@ import coil3.compose.AsyncImage
 import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
+import com.brasa.tv.designsystem.BrasaIcon
 import com.brasa.tv.designsystem.BrasaLogo
 import com.brasa.tv.designsystem.BrasaOrange
 import com.brasa.tv.designsystem.BrasaText
@@ -75,11 +76,11 @@ fun PreviewPlayerScreen(item: CatalogItem?, onBack: () -> Unit) {
             }
             Spacer(Modifier.height(17.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                BrasaButton("10s", {}, leading = "↶")
+                BrasaButton("10s", {}, leadingIcon = BrasaIcon.Replay)
                 Spacer(Modifier.width(11.dp))
-                BrasaButton("Reproduzir", {}, Modifier.focusRequester(focus), style = BrasaButtonStyle.Primary, leading = "▶")
+                BrasaButton("Reproduzir", {}, Modifier.focusRequester(focus), style = BrasaButtonStyle.Primary, leadingIcon = BrasaIcon.Play)
                 Spacer(Modifier.width(11.dp))
-                BrasaButton("10s", {}, leading = "↷")
+                BrasaButton("10s", {}, leadingIcon = BrasaIcon.Forward)
                 Spacer(Modifier.width(22.dp))
                 BrasaButton("Áudio", {})
                 Spacer(Modifier.width(9.dp))

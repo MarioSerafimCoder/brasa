@@ -3,6 +3,7 @@ const suites = ["test-env-setup.mjs", "test-provider-recovery.mjs", "test-networ
 suites.splice(suites.indexOf("test-profiles.mjs") + 1, 0, "test-tv-personalization.mjs");
 suites.splice(suites.indexOf("test-adaptive-streaming.mjs"), 0, "test-media-tools.mjs", "test-media-state.mjs", "test-media-priority.mjs", "test-hls-playlist-recovery.mjs", "test-recently-added.mjs");
 suites.splice(suites.indexOf("test-media-compatibility.mjs") + 1, 0, "test-media-integrity.mjs");
+suites.push("test-playback-marker-editing.mjs", "test-remux-seek.mjs");
 let passed = 0;
 suites.push("test-hls-session-lifecycle.mjs");
 suites.push("test-library-scan.mjs");

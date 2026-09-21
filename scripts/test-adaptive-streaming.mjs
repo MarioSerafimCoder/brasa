@@ -59,10 +59,10 @@ const remuxPlan = selectTvPlaybackPlan({ ...hdr10Mkv, audioTracks: [{ codec: "dt
 assert.equal(remuxPlan.mode, "remux", "áudio incompatível deve usar remux");
 assert.equal(remuxPlan.audioAction, "aac", "remux deve converter somente o áudio");
 const stableRemuxPlan = stabilizeTvPlaybackPlan(remuxPlan);
-assert.equal(stableRemuxPlan.mode, "transcode", "HLS para TV deve gerar quadros-chave regulares mesmo quando a fonte aceitaria remux");
-assert.equal(stableRemuxPlan.videoAction, "h264", "segmentação estável deve normalizar o vídeo para H.264");
+assert.equal(stableRemuxPlan.mode, "remux", "HLS deve copiar vídeo compatível e alinhar a retomada a um quadro-chave");
+assert.equal(stableRemuxPlan.videoAction, "copy", "áudio incompatível não deve converter vídeo compatível");
 assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv)).mode, "direct", "direct play compatível não deve ser alterado");
-assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv), { resumePosition: 2_145_000 }).mode, "transcode", "retomada deve receber um quadro-chave seguro mesmo quando direct play seria compatível");
+assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv), { resumePosition: 2_145_000 }).mode, "direct", "retomada de Dolby Vision compatível deve preservar o original");
 assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan({ ...superman, container: "mp4" }, googleTv), { resumePosition: 0 }).mode, "direct", "reprodução desde o início deve preservar direct play compatível");
 const witchHat = probe({ container: "matroska", bitrate: 8_389_759, duration: 1420.053 });
 assert.equal(stabilizeTvPlaybackPlan(selectTvPlaybackPlan(witchHat, googleTv), { resumePosition: 600_000, probe: witchHat }).mode, "direct", "retomar H.264 SDR compatível não deve iniciar conversão desnecessária");

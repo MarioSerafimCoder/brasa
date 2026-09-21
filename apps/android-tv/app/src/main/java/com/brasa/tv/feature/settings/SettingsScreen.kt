@@ -3,51 +3,33 @@ package com.brasa.tv.feature.settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Text
 import com.brasa.tv.BuildConfig
 import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.data.storage.AppSettingsStore
-import com.brasa.tv.designsystem.AmbientBackground
-import com.brasa.tv.designsystem.BrasaBorder
-import com.brasa.tv.designsystem.BrasaButton
-import com.brasa.tv.designsystem.BrasaButtonStyle
-import com.brasa.tv.designsystem.BrasaRed
-import com.brasa.tv.designsystem.BrasaSpacing
-import com.brasa.tv.designsystem.BrasaSurface
-import com.brasa.tv.designsystem.BrasaSuccess
-import com.brasa.tv.designsystem.BrasaText
-import com.brasa.tv.designsystem.BrasaTextMuted
-import com.brasa.tv.designsystem.BrasaTopBar
-import com.brasa.tv.designsystem.BrasaType
+import com.brasa.tv.designsystem.*
 import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.launch
 
+private enum class SettingsCategory(val label: String) {
+    GENERAL("Geral"), PLAYBACK("Reprodução"), INTERFACE("Interface"), PERSONALIZATION("Personalização"), ACCOUNT("Conta e aplicativo")
+}
+
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 fun SettingsScreen(
     state: BrasaUiState,
     settingsStore: AppSettingsStore,
@@ -65,86 +47,109 @@ fun SettingsScreen(
     onBack: () -> Unit,
     progressStatus: String = "",
 ) {
+    var category by rememberSaveable { mutableStateOf(SettingsCategory.GENERAL) }
     var confirmForget by remember { mutableStateOf(false) }
-    val deviceSettings by settingsStore.values.collectAsState(initial=AppSettings())
-    val scope=rememberCoroutineScope()
+    val settings by settingsStore.values.collectAsState(initial = AppSettings())
+    val scope = rememberCoroutineScope()
     BackHandler { if (confirmForget) confirmForget = false else onBack() }
     LaunchedEffect(Unit) { onLoadCache() }
     AmbientBackground {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = BrasaSpacing.safe)) {
+        Column(Modifier.fillMaxSize().padding(horizontal = BrasaSpacing.safe)) {
             BrasaTopBar(Modifier.padding(top = BrasaSpacing.x2), active = "Configurações", onHome = onBack, onProfiles = onProfiles, onSettings = {}, profileInitials = state.profile?.initials.orEmpty())
-            Spacer(Modifier.height(BrasaSpacing.x4))
-            Text("Configurações", color = Color.White, fontSize = BrasaType.page, fontWeight = FontWeight.ExtraBold)
-            Spacer(Modifier.height(BrasaSpacing.x3))
-            SettingsSection("Conexão") {
-                StatusLine("Computador conectado", state.server?.name ?: "Não conectado")
-                StatusLine("Status", if (state.paired) "● Conectado" else "● Offline", if (state.paired) BrasaSuccess else BrasaRed)
-            }
-            BrasaButton("Diagnóstico de rede", onNetworkDiagnostics, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Primary)
-            Spacer(Modifier.height(BrasaSpacing.x2))
-            SettingsSection("Biblioteca") {
-                Text("Procura novos filmes e episódios nas pastas do computador e atualiza o catálogo desta TV.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
-                Spacer(Modifier.height(BrasaSpacing.x1))
-                BrasaButton(if (state.libraryScanning) "Buscando novos títulos…" else "Buscar novos títulos", onScanLibrary,
-                    Modifier.fillMaxWidth(), enabled = state.paired && !state.previewMode && !state.libraryScanning, style = BrasaButtonStyle.Primary)
-                if (state.libraryScanMessage.isNotBlank()) {
-                    Spacer(Modifier.height(BrasaSpacing.x1))
-                    Text(state.libraryScanMessage, color = BrasaText, fontSize = BrasaType.metadata)
+            Spacer(Modifier.height(18.dp))
+            Text("Configurações", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
+            Spacer(Modifier.height(14.dp))
+            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                Column(Modifier.width(280.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SettingsCategory.entries.forEach { value ->
+                        BrasaButton(value.label, { category = value }, Modifier.fillMaxWidth(), style = if (category == value) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
+                    }
+                }
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(end = 6.dp, bottom = BrasaSpacing.x8), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    when (category) {
+                        SettingsCategory.GENERAL -> {
+                            SettingsSection("Conexão") {
+                                StatusLine("Computador", state.server?.name ?: "Não conectado")
+                                StatusLine("Pareamento", if (state.paired) "Ativado" else "Desativado", if (state.paired) BrasaSuccess else BrasaRed)
+                                state.connectionProblem?.let { StatusLine("Conexão atual", it.title, BrasaRed) }
+                                BrasaButton("Abrir diagnóstico de rede", onNetworkDiagnostics, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Primary)
+                            }
+                            SettingsSection("Biblioteca") {
+                                Text("Procura novos filmes e episódios nas pastas do computador.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                                BrasaButton(if (state.libraryScanning) "Buscando novos títulos…" else "Buscar novos títulos", onScanLibrary, Modifier.fillMaxWidth(), enabled = state.paired && !state.previewMode && !state.libraryScanning, style = BrasaButtonStyle.Primary)
+                                if (state.libraryScanMessage.isNotBlank()) Text(state.libraryScanMessage, color = BrasaText, fontSize = BrasaType.metadata)
+                            }
+                        }
+                        SettingsCategory.PLAYBACK -> {
+                            SettingsSection("Preferências") {
+                                ToggleSetting("Priorizar estabilidade", settings.prioritizeStability) { scope.launch { state.profile?.id?.let { settingsStore.saveStability(it, !settings.prioritizeStability) } } }
+                                Text("Quando ativado, usa qualidade automática até 720p no próximo vídeo.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                                Spacer(Modifier.height(8.dp))
+                                ToggleSetting("Próximo episódio automático", settings.autoplayNext) {
+                                    val next = !settings.autoplayNext
+                                    scope.launch { state.profile?.id?.let { settingsStore.saveAutoplayNext(it, next) } }
+                                    onAutoplayNext(next)
+                                }
+                            }
+                            SettingsSection("Histórico e armazenamento") {
+                                if (progressStatus.isNotBlank()) Text(progressStatus, color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                                BrasaButton("Histórico de reprodução", onPlaybackHistory, Modifier.fillMaxWidth())
+                                StatusLine("Cache utilizado", formatBytes(state.cacheBytes))
+                                BrasaButton(if (state.loading) "Limpando cache…" else "Limpar cache", onClearCache, Modifier.fillMaxWidth(), enabled = !state.loading)
+                            }
+                        }
+                        SettingsCategory.INTERFACE -> {
+                            SettingsSection("Escala da interface") {
+                                Text("Escolha o tamanho mais confortável para a distância da TV.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    listOf("80%" to .8f, "90%" to .9f, "100%" to 1f, "110%" to 1.1f).forEach { (label, value) -> ScaleOption(label, value, settings.uiScale) { scope.launch { settingsStore.saveUiScale(it) } } }
+                                }
+                            }
+                            SettingsSection("Densidade dos cards") {
+                                Text("Muda a quantidade de títulos visíveis sem reduzir a legibilidade.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    ScaleOption("Compacto", .85f, settings.density) { scope.launch { settingsStore.saveDensity(it) } }
+                                    ScaleOption("Confortável", 1f, settings.density) { scope.launch { settingsStore.saveDensity(it) } }
+                                }
+                            }
+                        }
+                        SettingsCategory.PERSONALIZATION -> SettingsSection("Dados do perfil") {
+                            Text("As ações abaixo preservam Minha lista e o progresso assistido.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                            BrasaButton("Limpar histórico de buscas", { scope.launch { state.profile?.id?.let { settingsStore.clearRecentSearches(it) } } }, Modifier.fillMaxWidth())
+                            BrasaButton("Reiniciar avaliações e sugestões", onResetPersonalization, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Ghost)
+                        }
+                        SettingsCategory.ACCOUNT -> {
+                            SettingsSection("Aplicativo") {
+                                StatusLine("Versão", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                                StatusLine("Última verificação", if (lastUpdateCheckAt > 0) DateFormat.getDateTimeInstance().format(Date(lastUpdateCheckAt)) else "Nunca")
+                                BrasaButton("Verificar atualização", onUpdates, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Primary)
+                            }
+                            SettingsSection("Conta") {
+                                BrasaButton("Trocar perfil", onProfiles, Modifier.fillMaxWidth())
+                                if (confirmForget) {
+                                    Text("Esquecer este computador remove a autorização desta TV.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) { BrasaButton("Confirmar", onForget, style = BrasaButtonStyle.Primary); BrasaButton("Cancelar", { confirmForget = false }) }
+                                } else BrasaButton("Esquecer computador", { confirmForget = true }, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Ghost)
+                            }
+                        }
+                    }
                 }
             }
-            Spacer(Modifier.height(BrasaSpacing.x2))
-            SettingsSection("Reprodução") {
-                BrasaButton(if (deviceSettings.prioritizeStability) "✓ Priorizar estabilidade" else "Priorizar estabilidade", { scope.launch { state.profile?.id?.let { settingsStore.saveStability(it, !deviceSettings.prioritizeStability) } } }, Modifier.fillMaxWidth(), style = if (deviceSettings.prioritizeStability) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
-                Text("Usa qualidade automática até 720p para consumir menos rede. Pode reduzir a nitidez e exigir conversão no computador. Vale para o próximo vídeo; não evita quedas totais de conexão.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
-                if (progressStatus.isNotBlank()) Text(progressStatus, color = BrasaTextMuted, fontSize = BrasaType.metadata)
-                BrasaButton("Histórico de reprodução e pausas", onPlaybackHistory, Modifier.fillMaxWidth())
-                Spacer(Modifier.height(BrasaSpacing.x1))
-                StatusLine("Cache utilizado", formatBytes(state.cacheBytes))
-                BrasaButton(if (state.loading) "Limpando cache…" else "Limpar cache", onClearCache, Modifier.fillMaxWidth(), enabled = !state.loading)
-                Spacer(Modifier.height(BrasaSpacing.x1))
-                BrasaButton(if (deviceSettings.autoplayNext) "✓ Próximo episódio automático" else "Próximo episódio automático", { val next=!deviceSettings.autoplayNext;scope.launch{state.profile?.id?.let{settingsStore.saveAutoplayNext(it,next)}};onAutoplayNext(next) }, Modifier.fillMaxWidth(), style = if(deviceSettings.autoplayNext) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
-            }
-            Spacer(Modifier.height(BrasaSpacing.x2))
-            SettingsSection("Interface da TV") {
-                Text("Escala da interface",color=BrasaTextMuted,fontSize=BrasaType.metadata)
-                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){ScaleOption("80%",.8f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}};ScaleOption("90%",.9f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}};ScaleOption("100%",1f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}};ScaleOption("110%",1.1f,deviceSettings.uiScale){scope.launch{settingsStore.saveUiScale(it)}}}
-                Spacer(Modifier.height(BrasaSpacing.x2))
-                Text("Densidade dos cards",color=BrasaTextMuted,fontSize=BrasaType.metadata)
-                Text("Altera somente cards e a quantidade de conteúdo visível.",color=BrasaTextMuted,fontSize=BrasaType.metadata)
-                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){ScaleOption("Compacto",.85f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}};ScaleOption("Confortável",1f,deviceSettings.density){scope.launch{settingsStore.saveDensity(it)}}}
-            }
-            Spacer(Modifier.height(BrasaSpacing.x2))
-            SettingsSection("Personalização") {
-                Text("Reiniciar preferências apaga avaliações e sugestões ocultadas, mas preserva Minha lista e o progresso.", color=BrasaTextMuted,fontSize=BrasaType.metadata)
-                Spacer(Modifier.height(BrasaSpacing.x1))
-                BrasaButton("Limpar buscas recentes", { scope.launch { state.profile?.id?.let { settingsStore.clearRecentSearches(it) } } }, Modifier.fillMaxWidth())
-                BrasaButton("Reiniciar personalização", onResetPersonalization, Modifier.fillMaxWidth(), style=BrasaButtonStyle.Ghost)
-            }
-            Spacer(Modifier.height(BrasaSpacing.x2))
-            SettingsSection("Aplicativo") {
-                StatusLine("Versão", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
-                StatusLine("Última verificação", if (lastUpdateCheckAt > 0) DateFormat.getDateTimeInstance().format(Date(lastUpdateCheckAt)) else "Nunca")
-                BrasaButton("Verificar atualização", onUpdates, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Primary)
-            }
-            Spacer(Modifier.height(BrasaSpacing.x2))
-            SettingsSection("Conta") {
-                BrasaButton("Trocar perfil", onProfiles, Modifier.fillMaxWidth())
-                if (confirmForget) {
-                    Text("Esquecer este computador remove a autorização desta TV.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
-                    Row(horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x2)) { BrasaButton("Confirmar", onForget, style = BrasaButtonStyle.Primary); BrasaButton("Cancelar", { confirmForget = false }) }
-                } else BrasaButton("Esquecer computador", { confirmForget = true }, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Ghost)
-            }
-            Spacer(Modifier.height(BrasaSpacing.x8))
         }
     }
 }
 
-@Composable private fun ScaleOption(label:String,value:Float,current:Float,onSelect:(Float)->Unit){BrasaButton(label,{onSelect(value)},style=if(kotlin.math.abs(value-current)<.01f)BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)}
+@Composable private fun ToggleSetting(label: String, enabled: Boolean, onToggle: () -> Unit) =
+    BrasaButton("$label — ${if (enabled) "Ativado" else "Desativado"}", onToggle, Modifier.fillMaxWidth(), style = if (enabled) BrasaButtonStyle.Primary else BrasaButtonStyle.Secondary, leadingIcon = if (enabled) BrasaIcon.Check else null)
 
-@Composable private fun SettingsSection(title: String, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().background(BrasaSurface.copy(alpha = .9f), RoundedCornerShape(16.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(16.dp)).padding(horizontal = BrasaSpacing.x3, vertical = BrasaSpacing.x2)) {
+@Composable private fun ScaleOption(label: String, value: Float, current: Float, onSelect: (Float) -> Unit) =
+    BrasaButton("$label${if (kotlin.math.abs(value - current) < .01f) " — Ativado" else ""}", { onSelect(value) }, style = if (kotlin.math.abs(value - current) < .01f) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
+
+@Composable private fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
+    Column(Modifier.fillMaxWidth().background(BrasaSurface.copy(alpha = .92f), RoundedCornerShape(16.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(16.dp)).padding(horizontal = BrasaSpacing.x3, vertical = BrasaSpacing.x2)) {
         Text(title, color = BrasaText, fontSize = BrasaType.body, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp)); content()
+        Spacer(Modifier.height(8.dp))
+        content()
     }
 }
 

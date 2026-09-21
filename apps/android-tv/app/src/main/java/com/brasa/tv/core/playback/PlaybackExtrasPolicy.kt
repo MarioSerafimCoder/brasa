@@ -14,7 +14,7 @@ object PlaybackExtrasPolicy {
         foreground && playing && !loading && !buffering && !seeking && bufferedMs >= maxOf(30_000, remainingMs) &&
             remainingMs in 15_000..120_000 && stableMs >= 30_000
     fun activeMarker(markers: List<PlaybackMarker>, positionMs: Long, durationMs: Long): PlaybackMarker? =
-        markers.firstOrNull { it.source == "embedded-chapter" && it.kind in setOf("intro", "credits") &&
+        markers.firstOrNull { it.source in setOf("embedded-chapter", "manual") && it.kind in setOf("intro", "credits") &&
             it.startMs >= 0 && it.endMs > it.startMs && it.endMs <= durationMs &&
             positionMs >= it.startMs && positionMs < it.endMs - 1000 }
 }

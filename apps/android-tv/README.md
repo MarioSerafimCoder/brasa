@@ -13,7 +13,9 @@ Aplicativo nativo em Kotlin e Jetpack Compose for TV. Ele encontra o BRasa na re
 
 A preferência local `uiScale` redimensiona toda a interface e oferece 80%, 90%, 100% e 110%; 90% é o padrão recomendado para TV. A preferência `density` é independente e altera apenas cards, espaçamento das grades e quantidade de conteúdo visível. O vídeo em tela cheia e as legendas do Media3 não são reduzidos pela escala da interface.
 
-Busca e PIN não recebem foco de digitação ao abrir uma tela. O PIN usa um painel numérico próprio. Setas, Enter e Voltar navegam pelos controles; o player fecha antes do aplicativo e mantém o ponto de reprodução.
+Busca e PIN não recebem foco de digitação ao abrir uma tela. O PIN usa um painel numérico próprio. Setas, Enter e Voltar navegam pelos controles; o player fecha antes do aplicativo e mantém o ponto de reprodução. Detalhes preservam a temporada e o episódio selecionado depois da reprodução, concentram ações menos usadas em **Mais opções** e mostram progresso, estado assistido e tempo restante nos episódios.
+
+A busca usa cabeçalho compacto, campo adaptável, histórico horizontal e resultados com títulos visíveis. Gêneros equivalentes, como `Acao` e `Ação`, compartilham a identidade exibida **Ação**, enquanto categorias compostas continuam separadas. Configurações são divididas em Geral, Reprodução, Interface, Personalização e Conta, com estados **Ativado/Desativado** explícitos.
 
 A página inicial é personalizada por perfil no computador servidor, com continuidade separada do histórico, recomendações locais, novos episódios e `Minha lista` para filmes e séries. O destaque permanece estável durante a navegação. A busca ignora acentos, tolera um pequeno erro, oferece histórico local e usa reconhecimento de voz somente quando a TV o disponibiliza. Consulte [`docs/android-tv-personalizacao.md`](../../docs/android-tv-personalizacao.md) para regras, controles e limites de validação.
 
@@ -25,11 +27,14 @@ Em servidores NVIDIA, o BRasa valida o NVENC com uma codificação prática e us
 
 ## Compilar e testar
 
-No diretório `apps/android-tv`:
+No diretório `apps/android-tv`, o SDK incluído no projeto pode ser usado no Windows sem criar `local.properties`:
 
-```text
-gradlew.bat test lint assembleDebug
+```powershell
+$env:ANDROID_HOME=(Resolve-Path '.toolchain/android-sdk').Path
+./gradlew.bat test lint assembleDebug
 ```
+
+O script de release também copia automaticamente o runtime do Robolectric para uma pasta pública sem espaços, evitando a falha de biblioteca nativa causada por caminhos de usuário codificados. Os testes de interface cobrem as escalas 80%, 90%, 100% e 110%, além do percurso por controle remoto nas ações de detalhes.
 
 O APK de desenvolvimento é criado em `app/build/outputs/apk/debug/app-debug.apk`. Artefatos de build, `local.properties`, APKs e configurações locais permanecem fora do Git.
 
@@ -75,4 +80,4 @@ Em **Configurações → Diagnóstico de rede**, o APK identifica Ethernet, Wi-F
 
 ## Teste em dispositivo
 
-Instale o APK com Android Studio ou ADB, valide navegação completa pelo controle remoto, retorno de foco, suspensão/retomada, troca de legenda/áudio e reprodução de arquivos MP4/MKV presentes na biblioteca. O servidor continua sendo necessário durante a reprodução.
+Instale o APK com Android Studio ou ADB, valide navegação completa pelo controle remoto, retorno de foco, suspensão/retomada, troca de legenda/áudio e reprodução de arquivos MP4/MKV presentes na biblioteca. No player de episódios, confira série, temporada, número e título; o botão **Informações** abre resolução, codecs, modo, qualidade, bitrate e buffer sem interromper o vídeo. O servidor continua sendo necessário durante a reprodução.

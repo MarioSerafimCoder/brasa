@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,9 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -61,6 +65,45 @@ import android.view.KeyEvent
 
 enum class BrasaButtonStyle { Primary, Secondary, Ghost }
 enum class MediaCardFormat { Landscape, Poster, CompactPoster }
+enum class BrasaIcon { Search, Settings, Play, Pause, Replay, Forward, Power, Info, Mic, Back, Add, Check, More }
+
+@Composable
+fun BrasaVectorIcon(icon: BrasaIcon, color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(19.dp)) {
+        val stroke = size.minDimension * .105f
+        val center = androidx.compose.ui.geometry.Offset(size.width / 2, size.height / 2)
+        when (icon) {
+            BrasaIcon.Search -> {
+                drawCircle(color, size.minDimension * .29f, center.copy(x = size.width * .43f, y = size.height * .43f), style = Stroke(stroke, cap = StrokeCap.Round))
+                drawLine(color, androidx.compose.ui.geometry.Offset(size.width * .64f, size.height * .64f), androidx.compose.ui.geometry.Offset(size.width * .88f, size.height * .88f), stroke, StrokeCap.Round)
+            }
+            BrasaIcon.Settings -> {
+                drawCircle(color, size.minDimension * .2f, center, style = Stroke(stroke))
+                repeat(8) { index ->
+                    val angle = Math.toRadians(index * 45.0)
+                    val a = androidx.compose.ui.geometry.Offset(center.x + kotlin.math.cos(angle).toFloat() * size.width * .31f, center.y + kotlin.math.sin(angle).toFloat() * size.height * .31f)
+                    val b = androidx.compose.ui.geometry.Offset(center.x + kotlin.math.cos(angle).toFloat() * size.width * .44f, center.y + kotlin.math.sin(angle).toFloat() * size.height * .44f)
+                    drawLine(color, a, b, stroke, StrokeCap.Round)
+                }
+            }
+            BrasaIcon.Play -> drawPath(Path().apply { moveTo(size.width * .27f, size.height * .16f); lineTo(size.width * .84f, size.height * .5f); lineTo(size.width * .27f, size.height * .84f); close() }, color)
+            BrasaIcon.Pause -> { drawRoundRect(color, androidx.compose.ui.geometry.Offset(size.width * .22f, size.height * .14f), androidx.compose.ui.geometry.Size(size.width * .2f, size.height * .72f)); drawRoundRect(color, androidx.compose.ui.geometry.Offset(size.width * .58f, size.height * .14f), androidx.compose.ui.geometry.Size(size.width * .2f, size.height * .72f)) }
+            BrasaIcon.Replay, BrasaIcon.Forward -> {
+                drawArc(color, if (icon == BrasaIcon.Replay) 55f else 125f, 245f, false, style = Stroke(stroke, cap = StrokeCap.Round))
+                val x = if (icon == BrasaIcon.Replay) size.width * .13f else size.width * .87f
+                val path = Path().apply { moveTo(x, size.height * .2f); lineTo(if (icon == BrasaIcon.Replay) size.width * .38f else size.width * .62f, size.height * .22f); lineTo(x, size.height * .43f); close() }
+                drawPath(path, color)
+            }
+            BrasaIcon.Power -> { drawArc(color, -48f, 276f, false, style = Stroke(stroke, cap = StrokeCap.Round)); drawLine(color, center.copy(y = size.height * .08f), center.copy(y = size.height * .48f), stroke, StrokeCap.Round) }
+            BrasaIcon.Info -> { drawCircle(color, size.minDimension * .42f, center, style = Stroke(stroke)); drawCircle(color, stroke * .55f, center.copy(y = size.height * .29f)); drawLine(color, center.copy(y = size.height * .45f), center.copy(y = size.height * .72f), stroke, StrokeCap.Round) }
+            BrasaIcon.Mic -> { drawRoundRect(color, androidx.compose.ui.geometry.Offset(size.width * .34f, size.height * .08f), androidx.compose.ui.geometry.Size(size.width * .32f, size.height * .54f)); drawArc(color, 0f, 180f, false, androidx.compose.ui.geometry.Offset(size.width * .2f, size.height * .23f), androidx.compose.ui.geometry.Size(size.width * .6f, size.height * .5f), style = Stroke(stroke)); drawLine(color, center.copy(y = size.height * .72f), center.copy(y = size.height * .9f), stroke, StrokeCap.Round) }
+            BrasaIcon.Back -> { drawLine(color, androidx.compose.ui.geometry.Offset(size.width * .78f, size.height * .18f), androidx.compose.ui.geometry.Offset(size.width * .27f, size.height * .5f), stroke, StrokeCap.Round); drawLine(color, androidx.compose.ui.geometry.Offset(size.width * .27f, size.height * .5f), androidx.compose.ui.geometry.Offset(size.width * .78f, size.height * .82f), stroke, StrokeCap.Round) }
+            BrasaIcon.Add -> { drawLine(color, center.copy(x = size.width * .18f), center.copy(x = size.width * .82f), stroke, StrokeCap.Round); drawLine(color, center.copy(y = size.height * .18f), center.copy(y = size.height * .82f), stroke, StrokeCap.Round) }
+            BrasaIcon.Check -> drawPath(Path().apply { moveTo(size.width * .12f, size.height * .52f); lineTo(size.width * .4f, size.height * .78f); lineTo(size.width * .88f, size.height * .22f) }, color, style = Stroke(stroke, cap = StrokeCap.Round))
+            BrasaIcon.More -> repeat(3) { drawCircle(color, stroke * .7f, androidx.compose.ui.geometry.Offset(size.width * (.25f + it * .25f), center.y)) }
+        }
+    }
+}
 
 @Composable
 fun BrasaLogo(modifier: Modifier = Modifier) {
@@ -89,6 +132,7 @@ fun BrasaButton(
     enabled: Boolean = true,
     style: BrasaButtonStyle = BrasaButtonStyle.Secondary,
     leading: String? = null,
+    leadingIcon: BrasaIcon? = null,
 ) {
     var focused by remember { mutableStateOf(false) }
     val scale by animateFloatAsState(if (focused) 1.04f else 1f, tween(165), label = "buttonScale")
@@ -127,7 +171,10 @@ fun BrasaButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (leading != null) {
+        if (leadingIcon != null) {
+            BrasaVectorIcon(leadingIcon, foreground)
+            Spacer(Modifier.width(8.dp))
+        } else if (leading != null) {
             Text(leading, color = foreground, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.width(8.dp))
         }
@@ -165,19 +212,20 @@ fun BrasaTopBar(
         if (onCollections != null) NavItem("Coleções", active == "Coleções", onCollections)
         if (onMyList != null) NavItem("Minha lista", active == "Minha lista", onMyList)
         Spacer(Modifier.weight(1f))
-        if (onSearch != null) NavItem("⌕  Buscar", active == "Buscar", onSearch)
-        if (onSettings != null) NavItem("⚙", active == "Configurações", onSettings)
+        if (onSearch != null) NavItem("Buscar", active == "Buscar", onSearch, BrasaIcon.Search)
+        if (onSettings != null) NavItem("Configurações", active == "Configurações", onSettings, BrasaIcon.Settings)
         if (onProfiles != null) NavItem(profileInitials.ifBlank { "Perfil" }, active == "Perfis", onProfiles)
     }
 }
 
 @Composable
-private fun NavItem(text: String, active: Boolean, onClick: () -> Unit) {
+private fun NavItem(text: String, active: Boolean, onClick: () -> Unit, icon: BrasaIcon? = null) {
     BrasaButton(
         text = text,
         onClick = onClick,
         modifier = Modifier.padding(horizontal = 4.dp),
         style = if (active) BrasaButtonStyle.Secondary else BrasaButtonStyle.Ghost,
+        leadingIcon = icon,
     )
 }
 
@@ -238,8 +286,8 @@ fun MediaCard(
             )
             if (format == MediaCardFormat.Landscape) {
                 Column(Modifier.align(Alignment.BottomStart).padding(14.dp)) {
-                    Text(item.title, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(metadata(item), color = BrasaTextMuted, fontSize = 13.sp, maxLines = 1)
+                    Text(item.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(metadata(item), color = BrasaTextMuted, fontSize = 14.sp, maxLines = 1)
                 }
             }
             val badge = when {
@@ -250,7 +298,14 @@ fun MediaCard(
                 else -> ""
             }
             if (badge.isNotBlank()) Text(badge, modifier = Modifier.align(Alignment.TopStart).padding(9.dp).background(BrasaBackground.copy(alpha = .88f), RoundedCornerShape(50)).padding(horizontal = 9.dp, vertical = 5.dp), color = if (item.newEpisode) BrasaOrange else BrasaText, fontSize = 11.sp, fontWeight = FontWeight.Black)
-            if (item.favorite || item.inMyList) Text("✓ LISTA", modifier = Modifier.align(Alignment.TopEnd).padding(9.dp).background(BrasaOrange.copy(alpha = .92f), RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 5.dp), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            if (item.favorite || item.inMyList) Row(
+                modifier = Modifier.align(Alignment.TopEnd).padding(9.dp).background(BrasaOrange.copy(alpha = .92f), RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                BrasaVectorIcon(BrasaIcon.Check, Color.Black, Modifier.size(12.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("LISTA", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            }
             item.progress?.takeIf { it.percentage > 0 }?.let { progress ->
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp).background(Color.White.copy(alpha = .18f))) {
                     Box(
@@ -264,7 +319,7 @@ fun MediaCard(
         }
         if (poster) {
             Column(Modifier.fillMaxWidth().heightIn(min = if (compact) 50.dp else 64.dp).padding(horizontal = if (compact) 7.dp else 11.dp, vertical = if (compact) 6.dp else 8.dp)) {
-                Text(item.title, color = BrasaText, fontSize = if (compact) 13.sp else 16.sp, lineHeight = if (compact) 15.sp else 19.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(item.title, color = BrasaText, fontSize = if (compact) 14.sp else 17.sp, lineHeight = if (compact) 17.sp else 20.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(if (compact) 2.dp else 3.dp))
                 Text(metadata(item), color = if (focused) BrasaText else BrasaTextMuted, fontSize = if (compact) 11.sp else 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }

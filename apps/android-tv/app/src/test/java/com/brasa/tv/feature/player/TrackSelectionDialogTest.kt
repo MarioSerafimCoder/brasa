@@ -19,6 +19,23 @@ import org.robolectric.annotation.Config
 class TrackSelectionDialogTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun adjustsSubtitleDelayInBothDirectionsAndResetsIt() {
+        var saved=0L
+        compose.setContent {
+            BrasaTheme {
+                TrackSelectionDialog(C.TRACK_TYPE_TEXT,emptyList(),false,AppSettings(),
+                    onSelect={},onAutomaticAudio={},onSize={},onStyle={},onDismiss={},subtitleDelayMs=500,onDelay={saved=it})
+            }
+        }
+        compose.onNodeWithText("+ 0,25 s").performScrollTo().performClick()
+        compose.onNodeWithText("Aplicar ajuste").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(750L,saved) }
+        compose.onNodeWithText("Zerar").performScrollTo().performClick()
+        compose.onNodeWithText("− 0,25 s").performScrollTo().performClick()
+        compose.onNodeWithText("Aplicar ajuste").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals(-250L,saved) }
+    }
+
     @Test fun menuExposesIndividualTracksOffAndAppearanceControls() {
         val group = TrackGroup(Format.Builder().setSampleMimeType(MimeTypes.TEXT_VTT).setLanguage("pt").build())
         val track = PlaybackTrack(group, 0, "Português — Completa", "pt", false, true)

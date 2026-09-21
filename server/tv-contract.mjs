@@ -21,6 +21,21 @@ function stringList(value) {
     return Array.isArray(value) ? value.map(stringValue).map((item) => item.trim()).filter(Boolean) : [];
 }
 
+export function genreIdentity(value) {
+    const normalized = stringValue(value).trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ");
+    return ({ "acao": "acao", "action": "acao", "ficcao cientifica": "ficcao-cientifica", "science fiction": "ficcao-cientifica", "sci-fi": "ficcao-cientifica", "comedia": "comedia", "comedy": "comedia", "animacao": "animacao", "animation": "animacao", "aventura": "aventura", "adventure": "aventura", "action & adventure": "acao-e-aventura", "action and adventure": "acao-e-aventura", "acao e aventura": "acao-e-aventura", "acao & aventura": "acao-e-aventura" })[normalized] || normalized;
+}
+
+export function genreLabel(value) {
+    const labels = { "acao": "Ação", "ficcao-cientifica": "Ficção científica", "comedia": "Comédia", "animacao": "Animação", "aventura": "Aventura", "acao-e-aventura": "Ação e aventura" };
+    return labels[genreIdentity(value)] || stringValue(value).trim();
+}
+
+function normalizedGenres(value) {
+    const seen = new Set();
+    return stringList(value).filter((item) => { const identity = genreIdentity(item); if (seen.has(identity)) return false; seen.add(identity); return true; }).map(genreLabel);
+}
+
 export function normalizeTvProgress(value) {
     if (!value || typeof value !== "object" || Array.isArray(value)) return null;
     return {
@@ -77,7 +92,7 @@ export function normalizeTvCatalogItem(value) {
         durationMinutes: integerOrNull(item.durationMinutes),
         rating: numberOrNull(item.rating),
         contentRating: stringValue(item.contentRating),
-        genres: stringList(item.genres),
+        genres: normalizedGenres(item.genres),
         cast: stringList(item.cast),
         directors: stringList(item.directors || item.direction),
         themes: stringList(item.themes || item.keywords),

@@ -105,6 +105,20 @@ class PlaybackCoordinator(
         }
     }
 
+    suspend fun setSubtitleDelay(player: ExoPlayer, info: PlaybackInfo, delayMs: Long) {
+        val holder = current?.takeIf { it.player === player } ?: return
+        val simpleCache = if (info.playbackMode == "hls") null else cache.getOrCreate()
+        withContext(Dispatchers.Main.immediate) {
+            if (current !== holder) return@withContext
+            val position = player.currentPosition
+            val playing = player.playWhenReady
+            val source = PlaybackFactory(appContext, http).source(holder.baseUrl, info, simpleCache, delayMs)
+            player.setMediaSource(source, position)
+            player.prepare()
+            player.playWhenReady = playing && foreground
+        }
+    }
+
     fun cancelPreload() {
         generation++
         scope.launch {

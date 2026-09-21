@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,10 +39,11 @@ import com.brasa.tv.designsystem.BrasaTextField
 import com.brasa.tv.designsystem.BrasaTextMuted
 
 @Composable
-fun ServerScreen(state: BrasaUiState, container: AppContainer, onConnect: (String) -> Unit) {
+fun ServerScreen(state: BrasaUiState, container: AppContainer, onPair: () -> Unit = {}, onConnect: (String) -> Unit) {
     val discovery = remember(container.discovery) { container.discovery.discover() }
     val servers by discovery.collectAsState(initial = emptyList())
     var address by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) { address = container.repository.settings().serverBaseUrl }
     AmbientBackground {
         Column(
             Modifier.fillMaxSize().padding(horizontal = 64.dp),
@@ -83,6 +85,9 @@ fun ServerScreen(state: BrasaUiState, container: AppContainer, onConnect: (Strin
                         enabled = !state.loading && address.isNotBlank(),
                         style = BrasaButtonStyle.Primary,
                     )
+                }
+                if (state.connectionProblem == com.brasa.tv.core.network.ConnectionProblem.REVOKED) {
+                    BrasaButton("Parear novamente", onPair, style = BrasaButtonStyle.Primary)
                 }
                 if (state.message.isNotBlank()) {
                     Spacer(Modifier.height(12.dp))

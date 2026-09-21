@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { normalizeTvCatalogItem, normalizeTvProfile, normalizeTvProgress, normalizeTvProgressMap } from "../server/tv-contract.mjs";
+import { genreIdentity, genreLabel, normalizeTvCatalogItem, normalizeTvProfile, normalizeTvProgress, normalizeTvProgressMap } from "../server/tv-contract.mjs";
 import { getMovies } from "../data/movies.js";
 import { getSeries } from "../data/series.js";
 
@@ -41,6 +41,9 @@ assert.equal(profile.maxContentRating, 10);
 assert.equal(profile.hasPin, true);
 assert.equal(normalizeTvProgress(null), null);
 assert.equal(normalizeTvProgressMap({ "movie:10": { percentage: "250" } })["movie:10"].percentage, 100);
+assert.equal(genreIdentity("Acao"), genreIdentity("Ação"));
+assert.equal(genreLabel("Acao"), "Ação");
+assert.notEqual(genreIdentity("Ação"), genreIdentity("Ação e aventura"));
 
 const library = [
     ...getMovies().map((item) => normalizeTvCatalogItem({ ...item, mediaKey: `movie:${item.id}`, type: "movie" })),

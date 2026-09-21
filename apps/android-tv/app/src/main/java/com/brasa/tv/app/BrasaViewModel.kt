@@ -33,6 +33,7 @@ data class BrasaUiState(
     val catalog: CatalogResponse? = null,
     val searchResults: List<CatalogItem> = emptyList(),
     val selected: CatalogItem? = null,
+    val playbackItem: CatalogItem? = null,
     val playback: PlaybackInfo? = null,
     val selectedRow: HomeRow? = null,
     val cacheBytes: Long = 0,
@@ -43,6 +44,7 @@ data class BrasaUiState(
     val reconnecting: Boolean = false,
     val searching: Boolean = false,
     val searchError: String = "",
+    val connectionProblem: com.brasa.tv.core.network.ConnectionProblem? = null,
 )
 
 class BrasaViewModel(
@@ -57,6 +59,7 @@ class BrasaViewModel(
     private var metadataPrefetchJob: Job? = null
     private var mediaPreloadJob: Job? = null
     private var playbackPreparationJob: Job? = null
+    private var playbackRequestJob: Job? = null
     private var playbackGeneration = 0L
     private var preloadMediaKey: String = ""
 
@@ -66,14 +69,14 @@ class BrasaViewModel(
 
     fun restore(onReady: (Boolean) -> Unit) = launch {
         val info = repository.restore()
-        mutable.value = mutable.value.copy(server = info, paired = info != null)
+        mutable.value = mutable.value.copy(server = info, paired = info != null, connectionProblem = null)
         onReady(info != null)
     }
 
     fun connect(address: String, onReady: (Boolean) -> Unit) = launch {
         val info = repository.connect(address)
         val paired = repository.isPaired()
-        mutable.value = mutable.value.copy(server = info, paired = paired)
+        mutable.value = mutable.value.copy(server = info, paired = paired, connectionProblem = null)
         onReady(paired)
     }
 
@@ -82,7 +85,7 @@ class BrasaViewModel(
         pairingJob = viewModelScope.launch {
             setLoading(true)
             runCatching { repository.pair(deviceName) { status -> mutable.value = mutable.value.copy(pairing = status, loading = false) } }
-                .onSuccess { mutable.value = mutable.value.copy(paired = true, loading = false); onApproved() }
+                .onSuccess { mutable.value = mutable.value.copy(paired = true, loading = false, connectionProblem = null); onApproved() }
                 .onFailure(::error)
         }
     }
@@ -102,6 +105,8 @@ class BrasaViewModel(
             catalog = null,
             searchResults = emptyList(),
             selected = null,
+            playbackItem = null,
+            playback = null,
             selectedRow = null,
             message = "",
         )
@@ -113,7 +118,7 @@ class BrasaViewModel(
     fun refreshHome() = launch {
         val profile = mutable.value.profile ?: return@launch
         val home = repository.home(profile.id)
-        if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = home)
+        if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = home, connectionProblem = null)
     }
     fun loadHome() {
         val profile = mutable.value.profile ?: return
@@ -122,14 +127,14 @@ class BrasaViewModel(
                 if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = cached, reconnecting = true)
             }
             runCatching { repository.home(profile.id) }
-                .onSuccess { home -> if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = home, reconnecting = false, message = "") }
-                .onFailure { failure -> if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(reconnecting = false, message = failure.message ?: "Não foi possível atualizar a página inicial.") }
+                .onSuccess { home -> if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(home = home, reconnecting = false, connectionProblem = null, message = "") }
+                .onFailure { failure -> if (mutable.value.profile?.id == profile.id) { mutable.value = mutable.value.copy(reconnecting = false); error(failure) } }
         }
     }
     fun refreshCatalog() = launch {
         val profile = mutable.value.profile ?: return@launch
         val catalog = repository.catalog(profile.id)
-        if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(catalog = catalog)
+        if (mutable.value.profile?.id == profile.id) mutable.value = mutable.value.copy(catalog = catalog, connectionProblem = null)
     }
 
     fun scanLibrary() {
@@ -206,12 +211,22 @@ class BrasaViewModel(
         refreshCatalog()
     }
 
-    fun signal(action: String, enabled: Boolean = true) = launch {
+    fun signal(action: String, enabled: Boolean = true) = signalItem(mutable.value.selected, action, enabled)
+
+    fun signalPlayback(action: String, enabled: Boolean = true) = signalItem(mutable.value.playbackItem, action, enabled)
+
+    private fun signalItem(target: CatalogItem?, action: String, enabled: Boolean) = launch {
         val profile = mutable.value.profile ?: return@launch
-        val item = mutable.value.selected ?: return@launch
+        val item = target ?: return@launch
         if (!mutable.value.previewMode) repository.signal(profile.id, item.mediaKey, action, enabled)
+        if (mutable.value.profile?.id != profile.id) return@launch
         val reaction = when { !enabled && action in setOf("like", "not-for-me") -> ""; action in setOf("like", "not-for-me") -> action; else -> item.reaction }
-        mutable.value = mutable.value.copy(selected = item.copy(reaction = reaction, hiddenSuggestion = if (action == "hide") enabled else item.hiddenSuggestion), message = when (action) { "hide" -> if(enabled) "Sugestão ocultada. Você pode desfazer nos detalhes." else "Sugestão restaurada."; "dismiss-continue" -> "Removido de Continuar assistindo."; "mark-watched" -> "Marcado como assistido."; else -> "Preferência salva." })
+        val updated = item.copy(reaction = reaction, hiddenSuggestion = if (action == "hide") enabled else item.hiddenSuggestion)
+        mutable.value = mutable.value.copy(
+            selected = if (mutable.value.selected?.mediaKey == item.mediaKey) updated else mutable.value.selected,
+            playbackItem = if (mutable.value.playbackItem?.mediaKey == item.mediaKey) updated else mutable.value.playbackItem,
+            message = when (action) { "hide" -> if(enabled) "Sugestão ocultada. Você pode desfazer nos detalhes." else "Sugestão restaurada."; "dismiss-continue" -> "Removido de Continuar assistindo."; "mark-watched" -> "Marcado como assistido."; else -> "Preferência salva." },
+        )
         refreshHome()
         refreshCatalog()
     }
@@ -228,37 +243,41 @@ class BrasaViewModel(
         runCatching { repository.savePreferences(profile.id, enabled) }
     }
 
-    fun loadPlayback(item: CatalogItem, fromBeginning: Boolean = false, onReady: () -> Unit) = launch {
-        metadataPrefetchJob?.cancel()
-        mediaPreloadJob?.cancel()
-        cancelPlaybackPreparation()
-        val requestGeneration = playbackGeneration
-        mutable.value = mutable.value.copy(playback = null, message = "")
-        if (mutable.value.previewMode) {
-            mutable.value = mutable.value.copy(selected = item, playback = PreviewCatalog.playback(item))
-            onReady()
-            return@launch
-        }
-        val profile = mutable.value.profile ?: return@launch
-        if (fromBeginning) repository.saveProgress(profile.id, item.mediaKey, WatchProgress(mediaType = if (item.type == "episode") "episode" else "movie", mediaId = item.id, seriesId = item.seriesId, duration = item.progress?.duration ?: 0.0))
-        val playback = repository.playback(profile.id, item.mediaKey, forceRefresh = true, positionMs = if (fromBeginning) 0 else null)
-        if (requestGeneration != playbackGeneration || mutable.value.profile?.id != profile.id) return@launch
-        mutable.value = mutable.value.copy(selected = item, playback = playback)
-        onReady()
-        if (playback.preparationStatus !in setOf("ready", "failed")) playbackPreparationJob = viewModelScope.launch poll@ {
-            repeat(MAX_PREPARATION_POLLS) {
-                delay(1_000)
-                val next = runCatching { repository.playback(profile.id, item.mediaKey, forceRefresh = true, positionMs = playback.playbackOffset + playback.resumePosition) }.getOrElse {
-                    if (it is CancellationException) throw it
-                    if (requestGeneration != playbackGeneration) return@poll
-                    mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível receber os dados do servidor."))
-                    return@poll
-                }
-                if (requestGeneration != playbackGeneration || mutable.value.selected?.mediaKey != item.mediaKey) return@poll
-                mutable.value = mutable.value.copy(playback = next)
-                if (next.preparationStatus in setOf("ready", "failed")) return@poll
+    fun loadPlayback(item: CatalogItem, fromBeginning: Boolean = false, onReady: () -> Unit) {
+        playbackRequestJob?.cancel()
+        playbackRequestJob = launch {
+            metadataPrefetchJob?.cancel()
+            mediaPreloadJob?.cancel()
+            cancelPlaybackPreparation(cancelRequest = false)
+            val requestGeneration = playbackGeneration
+            mutable.value = mutable.value.beginPlayback(item, fromBeginning)
+            if (mutable.value.previewMode) {
+                mutable.value = mutable.value.copy(playback = PreviewCatalog.playback(item))
+                onReady()
+                return@launch
             }
-            if (mutable.value.selected?.mediaKey == item.mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "timeout", errorMessage = "O servidor demorou demais para preparar esta mídia. Tente novamente."))
+            val profile = mutable.value.profile ?: return@launch
+            if (fromBeginning) repository.saveProgress(profile.id, item.mediaKey, WatchProgress(mediaType = if (item.type == "episode") "episode" else "movie", mediaId = item.id, seriesId = item.seriesId, duration = item.progress?.duration ?: 0.0))
+            val playback = repository.playback(profile.id, item.mediaKey, forceRefresh = true, positionMs = if (fromBeginning) 0 else null)
+            if (requestGeneration != playbackGeneration || mutable.value.profile?.id != profile.id) return@launch
+            mutable.value = mutable.value.copy(playback = playback)
+            onReady()
+            if (playback.preparationStatus !in setOf("ready", "failed")) playbackPreparationJob = viewModelScope.launch poll@ {
+                repeat(MAX_PREPARATION_POLLS) {
+                    delay(1_000)
+                    val next = runCatching { repository.playback(profile.id, item.mediaKey, forceRefresh = true, positionMs = playback.playbackOffset + playback.resumePosition) }.getOrElse {
+                        if (it is CancellationException) throw it
+                        if (requestGeneration != playbackGeneration) return@poll
+                        mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = repository.problem(it).explanation))
+                        error(it)
+                        return@poll
+                    }
+                    if (requestGeneration != playbackGeneration || mutable.value.playbackItem?.mediaKey != item.mediaKey) return@poll
+                    mutable.value = mutable.value.copy(playback = next)
+                    if (next.preparationStatus in setOf("ready", "failed")) return@poll
+                }
+                if (mutable.value.playbackItem?.mediaKey == item.mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "timeout", errorMessage = "O servidor demorou demais para preparar esta mídia. Tente novamente."))
+            }
         }
     }
 
@@ -271,7 +290,8 @@ class BrasaViewModel(
             repeat(MAX_PREPARATION_POLLS) {
                 val next = runCatching { repository.playback(profile.id, mediaKey, forceRefresh = true, fallbackMode = "transcode") }.getOrElse {
                     if (it is CancellationException) throw it
-                    if (mutable.value.playback?.mediaKey == mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível preparar a versão compatível."))
+                    if (mutable.value.playback?.mediaKey == mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = repository.problem(it).explanation))
+                    error(it)
                     return@poll
                 }
                 if (mutable.value.playback?.mediaKey != mediaKey) return@poll
@@ -283,10 +303,11 @@ class BrasaViewModel(
         }
     }
 
-    fun seekPlayback(mediaKey: String, positionMs: Long) {
+    fun seekPlayback(mediaKey: String, positionMs: Long, forceConversion: Boolean) {
         if (mutable.value.previewMode || mutable.value.playback?.mediaKey != mediaKey) return
         val profile = mutable.value.profile ?: return
         val target = positionMs.coerceAtLeast(0)
+        val convert = forceConversion || (mutable.value.playback?.let { it.playbackMode == "hls" && !it.videoCopied } == true)
         cancelPlaybackPreparation()
         val requestGeneration = playbackGeneration
         mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(playbackUrl = "", preparationStatus = "preparing", preparationProgress = 0.0, playbackMode = "hls", errorType = "", errorMessage = ""))
@@ -297,13 +318,14 @@ class BrasaViewModel(
                         profile.id,
                         mediaKey,
                         forceRefresh = true,
-                        fallbackMode = "transcode",
+                        fallbackMode = if (convert) "transcode" else "",
                         positionMs = target,
                     )
                 }.getOrElse {
                     if (it is CancellationException) throw it
                     if (requestGeneration != playbackGeneration) return@poll
-                    if (mutable.value.playback?.mediaKey == mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = "Não foi possível carregar o ponto escolhido."))
+                    if (mutable.value.playback?.mediaKey == mediaKey) mutable.value = mutable.value.copy(playback = mutable.value.playback?.copy(preparationStatus = "failed", errorType = "network", errorMessage = repository.problem(it).explanation))
+                    error(it)
                     return@poll
                 }
                 if (requestGeneration != playbackGeneration || mutable.value.playback?.mediaKey != mediaKey) return@poll
@@ -350,13 +372,15 @@ class BrasaViewModel(
         playbackCoordinator.cancelPreload()
     }
 
-    fun cancelPlaybackPreparation() {
+    fun cancelPlaybackPreparation(cancelRequest: Boolean = true) {
+        if (cancelRequest) { playbackRequestJob?.cancel(); playbackRequestJob = null; setLoading(false) }
         playbackGeneration++
         playbackPreparationJob?.cancel()
         playbackPreparationJob = null
     }
 
     fun saveProgress(mediaKey: String, progress: WatchProgress) {
+        mutable.value = mutable.value.withPlaybackProgress(mediaKey, progress)
         if (mutable.value.previewMode) return
         val profile = mutable.value.profile ?: return
         repository.enqueueProgress(profile.id, mediaKey, progress)
@@ -371,13 +395,29 @@ class BrasaViewModel(
     fun forget(onDone: () -> Unit) = launch { libraryScanJob?.cancel(); cancelPreload(); playbackCoordinator.clear(); repository.forget(); mutable.value = BrasaUiState(); onDone() }
 
     override fun onCleared() {
-        pairingJob?.cancel(); searchJob?.cancel(); metadataPrefetchJob?.cancel(); playbackPreparationJob?.cancel(); cancelPreload()
+        pairingJob?.cancel(); searchJob?.cancel(); metadataPrefetchJob?.cancel(); playbackRequestJob?.cancel(); playbackPreparationJob?.cancel(); cancelPreload()
         super.onCleared()
     }
 
     private fun launch(block: suspend () -> Unit) = viewModelScope.launch { setLoading(true); runCatching { block() }.onFailure(::error); setLoading(false) }
     private fun setLoading(value: Boolean) { mutable.value = mutable.value.copy(loading = value, message = if (value) "" else mutable.value.message) }
-    private fun error(value: Throwable) { mutable.value = mutable.value.copy(loading = false, message = value.message ?: "Não foi possível conectar ao BRasa.") }
+    fun dismissConnectionProblem() { mutable.value = mutable.value.copy(connectionProblem = null) }
+    fun reportConnectionProblem(problem: com.brasa.tv.core.network.ConnectionProblem) {
+        mutable.value = mutable.value.copy(connectionProblem = problem,
+            paired = if (problem == com.brasa.tv.core.network.ConnectionProblem.REVOKED) false else mutable.value.paired,
+            message = problem.explanation)
+    }
+    private fun error(value: Throwable) {
+        if (value is CancellationException) throw value
+        if (value !is java.io.IOException || (value is com.brasa.tv.core.network.BrasaApiException && value.status in setOf(400, 409, 422))) {
+            mutable.value = mutable.value.copy(loading = false, message = value.message ?: "Não foi possível concluir a operação.")
+            return
+        }
+        val problem = repository.problem(value)
+        mutable.value = mutable.value.copy(loading = false, connectionProblem = problem,
+            paired = if (problem == com.brasa.tv.core.network.ConnectionProblem.REVOKED) false else mutable.value.paired,
+            message = problem.explanation)
+    }
 
     private companion object { const val MAX_PREPARATION_POLLS = 600 }
 

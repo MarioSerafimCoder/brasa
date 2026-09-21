@@ -4,12 +4,15 @@ import crypto from "node:crypto";
 import { spawn } from "node:child_process";
 import { createQualityLadder, createAdaptiveLadder, encoderFor, estimateHlsCacheBytes, HLS_LIMITS } from "./transcoding-profiles.mjs";
 
-export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess = spawn }) {
+import { findRemuxKeyframe } from "./remux-seek.mjs";
+
+export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess = spawn, findKeyframe = findRemuxKeyframe }) {
     const root = path.join(rootDir, "data", "prepared-media", "hls");
     const active = new Map();
     const currentByMedia = new Map();
     const pendingByMedia = new Map();
     const lastAccess = new Map();
+    const seekPoints = new Map();
 
     function ensure(mediaKey, input, probe, settings = {}, plan = {}) {
         // Serialize setup: simultaneous polls must not launch encoders that
@@ -23,20 +26,32 @@ export function createHlsSessionManager({ rootDir, store, getTools, spawnProcess
     }
 
     async function ensureSession(mediaKey, input, probe, settings = {}, plan = {}) {
-        const mode = plan.mode === "remux" ? "remux" : "transcode";
+        let mode = plan.mode === "remux" ? "remux" : "transcode";
         const segmentSeconds = clamp(settings.hlsSegmentSeconds, 1, 6, HLS_LIMITS.segmentSeconds);
         const tools = await getTools();
         const adaptiveLadder = createAdaptiveLadder(probe, settings, tools.hardwareAcceleration || {}, plan.capabilities);
-        const profileKey = `v5-abr:${mode}:${plan.audioAction || "aac"}:${plan.stripDolbyVision ? "hdr10" : "native"}:${segmentSeconds}:${adaptiveLadder.map(q => `${q.width}x${q.height}`).join(",")}`;
-        const startPositionMs = normalizeStartPosition(plan.startPositionMs, probe?.duration, segmentSeconds);
+        let startPositionMs = normalizeStartPosition(plan.startPositionMs, probe?.duration, segmentSeconds);
+        if (mode === "remux" && startPositionMs > 0) {
+            const key = JSON.stringify([input, probe?.fingerprint, startPositionMs]);
+            if (!seekPoints.has(key)) {
+                if (seekPoints.size >= 128) seekPoints.delete(seekPoints.keys().next().value);
+                seekPoints.set(key, await findKeyframe(tools.ffprobePath, input, startPositionMs));
+            }
+            const point = seekPoints.get(key);
+            if (point == null) mode = "transcode";
+            else startPositionMs = point;
+        }
+        const profileKey = `v6-keyframe:${mode}:${plan.audioAction || "aac"}:${plan.stripDolbyVision ? "hdr10" : "native"}:${segmentSeconds}:${adaptiveLadder.map(q => `${q.width}x${q.height}`).join(",")}`;
         const id = hlsSessionId(mediaKey, probe?.fingerprint, profileKey, startPositionMs);
-        currentByMedia.set(mediaKey, id);
-        cancelOtherSessions(id, mediaKey);
         const directory = path.join(root, id);
         let existing = active.get(id);
         if (existing?.cancelled) { await existing.completion; existing = active.get(id); }
+        if (existing?.state === "failed" && mode === "remux") return ensureSession(mediaKey, input, probe, settings, { ...plan, mode: "transcode" });
+        const saved = existing ? {} : await readState(directory);
+        if (saved.state === "failed" && mode === "remux") return ensureSession(mediaKey, input, probe, settings, { ...plan, mode: "transcode" });
+        currentByMedia.set(mediaKey, id);
+        cancelOtherSessions(id, mediaKey);
         if (existing) return await hasStartBuffer(existing.directory, existing.ladder, existing.startSegments) ? markPlayable(existing) : publicState(existing);
-        const saved = await readState(directory);
         if (saved.state === "ready") {
             const ladder = saved.ladder || createQualityLadder(probe);
             const expectedDurationSeconds = Number(saved.expectedDurationSeconds || Math.max(0, Number(probe?.duration || 0) - Number(saved.startPositionMs || startPositionMs) / 1000));
@@ -374,7 +389,7 @@ function persist(session) {
     });
     return session.persistQueue;
 }
-function publicState(session) { return { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress || 0), qualities: (session.ladder || []).map((item) => item.id), startPositionMs: Number(session.startPositionMs || 0), encoder: session.encoder || "", encodingSpeed: Number(session.encodingSpeed || 0), outputSeconds: Number(session.outputSeconds || 0), error: session.error || "", errorType: session.errorType || "", technical: session.state === "failed" ? { ffmpegStderr: session.stderr?.slice(-800) || "" } : undefined }; }
+function publicState(session) { return { id: session.id, mediaKey: session.mediaKey, state: session.state, progress: Number(session.progress || 0), videoCopied: session.mode === "remux", qualities: (session.ladder || []).map((item) => item.id), startPositionMs: Number(session.startPositionMs || 0), encoder: session.encoder || "", encodingSpeed: Number(session.encodingSpeed || 0), outputSeconds: Number(session.outputSeconds || 0), error: session.error || "", errorType: session.errorType || "", technical: session.state === "failed" ? { ffmpegStderr: session.stderr?.slice(-800) || "" } : undefined }; }
 function markPlayable(session) { if (!session.firstPlayableAt) { session.firstPlayableAt = new Date().toISOString();persist(session).catch(() => {}); }return publicState({ ...session, state: "ready" }); }
 function clamp(value, minimum, maximum, fallback) { const number=Number(value);return Number.isFinite(number)?Math.round(Math.min(maximum,Math.max(minimum,number))):fallback; }
 function inputSeek(value) { const seconds=Number(value);return Number.isFinite(seconds)&&seconds>0?["-ss",String(Number(seconds.toFixed(3)))]:[]; }

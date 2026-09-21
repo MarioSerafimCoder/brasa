@@ -34,9 +34,12 @@ fun TrackSelectionDialog(
     onSize: (Float) -> Unit,
     onStyle: (String) -> Unit,
     onDismiss: () -> Unit,
+    subtitleDelayMs: Long = 0,
+    onDelay: (Long) -> Unit = {},
 ) {
     val firstFocus = remember { FocusRequester() }
     val subtitles = type == C.TRACK_TYPE_TEXT
+    var draftDelay by remember(subtitleDelayMs) { mutableLongStateOf(subtitleDelayMs) }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(Modifier.width(620.dp).heightIn(max = 510.dp).background(BrasaSurface, RoundedCornerShape(18.dp)).padding(24.dp)) {
             Text(if (subtitles) "Legendas" else "Áudio", color = Color.White, fontSize = 26.sp)
@@ -55,6 +58,18 @@ fun TrackSelectionDialog(
                         { onSelect(track) }, Modifier.fillMaxWidth(), enabled = track.supported,
                         style = if (track.selected && (!subtitles || !subtitlesDisabled)) BrasaButtonStyle.Primary else BrasaButtonStyle.Secondary,
                     )
+                }
+                if (subtitles) item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Sincronização: %+.2f s".format(draftDelay / 1000.0), color = Color.White)
+                        Text("− adianta • + atrasa. Salvo para este vídeo e perfil.", color = Color.LightGray, fontSize = 14.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BrasaButton("− 0,25 s", { draftDelay = (draftDelay - 250).coerceAtLeast(-60_000) })
+                            BrasaButton("+ 0,25 s", { draftDelay = (draftDelay + 250).coerceAtMost(60_000) })
+                            BrasaButton("Zerar", { draftDelay = 0 })
+                        }
+                        BrasaButton("Aplicar ajuste", { onDelay(draftDelay) }, enabled = draftDelay != subtitleDelayMs)
+                    }
                 }
                 if (tracks.isEmpty()) item { Text("Nenhuma faixa disponível neste vídeo.", color = Color.LightGray) }
             }

@@ -26,6 +26,7 @@ import { validateLocalWriteRequest } from "../server/local-security.mjs";
 import { normalizeProfileState } from "../server/profile-state.mjs";
 import { createAdminAuthService } from "../server/admin-auth.mjs";
 import { createAdminLogService } from "../server/admin-log.mjs";
+import { createPlaybackMarkerStore } from "../server/playback-markers.mjs";
 import { createAdminServices } from "../server/admin-services.mjs";
 import { createAdminController } from "../server/admin-controller.mjs";
 import { createMetadataRetryStore } from "../server/metadata-retry-store.mjs";
@@ -132,7 +133,8 @@ const libraryScan = createLibraryScan({ coordinator: syncCoordinator, getProgres
 const adminAuth = createAdminAuthService({ rootDir });
 const adminLogs = createAdminLogService(rootDir);
 const getAdminTools=(options={})=>getMediaToolsStatus(rootDir,options);
-const adminServices = createAdminServices({ rootDir, mediaStore, mediaQueue, libraryHealth, libraryHealthStore, syncHistoryStore, syncCoordinator, getTools: getAdminTools, profileAdapter: { list: adminListProfiles, create: serializeProfileMutation(adminCreateProfile), update: serializeProfileMutation(adminUpdateProfile), remove: serializeProfileMutation(adminRemoveProfile), clear: serializeProfileMutation(adminClearProfile), relocate: adminRelocate }, collectionAdapter: { list: readUserCollections, create: adminCreateCollection, update: adminUpdateCollection, remove: adminRemoveCollection }, watcherStatus: () => ({ enabled: process.env.BRASA_WATCH_LIBRARY !== "0", active: Boolean(libraryWatcher), observedFiles: libraryWatcher?.getStates?.().length || 0 }) });
+const markerStore = createPlaybackMarkerStore(rootDir);
+const adminServices = createAdminServices({ rootDir, markerStore, mediaStore, mediaQueue, libraryHealth, libraryHealthStore, syncHistoryStore, syncCoordinator, getTools: getAdminTools, profileAdapter: { list: adminListProfiles, create: serializeProfileMutation(adminCreateProfile), update: serializeProfileMutation(adminUpdateProfile), remove: serializeProfileMutation(adminRemoveProfile), clear: serializeProfileMutation(adminClearProfile), relocate: adminRelocate }, collectionAdapter: { list: readUserCollections, create: adminCreateCollection, update: adminUpdateCollection, remove: adminRemoveCollection }, watcherStatus: () => ({ enabled: process.env.BRASA_WATCH_LIBRARY !== "0", active: Boolean(libraryWatcher), observedFiles: libraryWatcher?.getStates?.().length || 0 }) });
 const handleAdminApi = createAdminController({ auth: adminAuth, logs: adminLogs, services: adminServices, readBody: readJsonBody, send: sendJson, syncCoordinator, libraryHealth, mediaQueue, mediaStore, deviceAdmin: deviceController.admin, getPort: () => activePort, getHost: () => host });
 
 const contentTypes = {
@@ -563,7 +565,7 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
         return { ...base, preparationStatus: "analyzing", preparationProgress: Number(mediaState?.progress || 0) };
     }
     const probe = mediaState.probe;
-    base.markers = probe.chapterMarkers || [];
+    base.markers = (await markerStore.get(mediaKey, probe)).markers;
     base.thumbnailPath = `/api/v1/tv/thumbnail/${encodeURIComponent(mediaKey)}?profileId=${encodeURIComponent(profileId)}`;
     const playbackRevision = `${Number(originalStat?.size || mediaState.fingerprint?.size || 0)}-${Math.round(Number(originalStat?.mtimeMs || mediaState.fingerprint?.mtimeMs || 0))}`;
     const codecs = { container: probe.container || base.container, videoCodec: probe.video?.codec || "", audioCodec: probe.audioTracks?.[0]?.codec || "", bitrate: Math.round(Number(probe.bitrate || 0)), width: Math.round(Number(probe.video?.width || 0)), height: Math.round(Number(probe.video?.height || 0)), playbackRevision, duration: Math.round(Number(probe.duration || 0) * 1000), audioTracks: (probe.audioTracks || []).map((track) => ({ id: String(track.index), label: track.title || track.language || `Faixa ${track.index}`, language: track.language || "und", codec: track.codec || "" })) };
@@ -581,15 +583,15 @@ async function tvPlayback(device, profileId, mediaKey, clientCapabilities = {}, 
     if (["remux", "transcode"].includes(clientPlan.mode)) {
         const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings(), { ...clientPlan, startPositionMs: base.resumePosition });
         const timeline = hlsTimeline(base.resumePosition, session.startPositionMs);
-        if (session.state === "ready") return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities, adaptiveReasons: clientPlan.reasons };
-        return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: clientPlan.reasons };
+        if (session.state === "ready") return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, videoCopied: session.videoCopied === true, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities, adaptiveReasons: clientPlan.reasons };
+        return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, videoCopied: session.videoCopied === true, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: clientPlan.reasons };
     }
     const adaptive = shouldUseAdaptiveHls(probe, { browserCompatible: true });
     if (adaptive.useHls) {
         const session = await hlsSessions.ensure(mediaKey, original, probe, await mediaStore.settings(), { startPositionMs: base.resumePosition });
         const timeline = hlsTimeline(base.resumePosition, session.startPositionMs);
-        if (session.state === "ready") return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities };
-        return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: adaptive.reasons };
+        if (session.state === "ready") return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, videoCopied: session.videoCopied === true, playbackUrl: `/api/v1/tv/hls/${session.id}/master.m3u8`, mimeType: "application/x-mpegURL", preparationStatus: "ready", preparationProgress: 100, playbackMode: "hls", qualities: session.qualities };
+        return { ...base, ...codecs, ...timeline, hlsSessionId: session.id, videoCopied: session.videoCopied === true, preparationStatus: session.state === "failed" ? "failed" : "preparing", preparationProgress: session.progress, playbackMode: "hls", qualities: session.qualities, errorType: session.errorType || "", errorMessage: session.error || "", adaptiveReasons: adaptive.reasons };
     }
     if (mediaState.status === "failed") return { ...base, ...codecs, preparationStatus: "failed", errorType: "processing", errorMessage: mediaState.error || "A mídia não pôde ser preparada." };
     if (mediaState.strategy === "direct-play") return { ...base, ...codecs, playbackUrl: item.streamUrl, mimeType: contentTypes[extension] || "video/*", preparationStatus: "ready", preparationProgress: 100, playbackMode: "direct" };

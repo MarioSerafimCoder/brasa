@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.tv.material3.Text
 import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.core.model.CatalogItem
+import com.brasa.tv.core.model.genreIdentity
+import com.brasa.tv.core.model.genreLabel
 import com.brasa.tv.designsystem.BrasaBackground
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
@@ -68,13 +70,13 @@ fun LibraryScreen(
     }
     val title = when (type) { "series" -> "Séries"; "favorites" -> "Minha lista"; else -> "Filmes" }
     val source = when (type) { "series" -> catalog.series; "favorites" -> (catalog.movies + catalog.series).filter { it.favorite || it.inMyList }; else -> catalog.movies }
-    val genres = remember(source) { source.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinct().sorted() }
+    val genres = remember(source) { source.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinctBy(::genreIdentity).sortedBy(::genreLabel) }
     var selectedGenre by rememberSaveable(type, state.profile?.id) { mutableStateOf("Todos") }
     var order by rememberSaveable(type, state.profile?.id) { mutableStateOf(CatalogOrder.ORIGINAL) }
     var unwatchedOnly by rememberSaveable(type, state.profile?.id) { mutableStateOf(false) }
     val focusMemory = rememberCatalogFocus("$type:${state.profile?.id}")
     val items = remember(source, selectedGenre, order, unwatchedOnly) {
-        orderCatalog(if (selectedGenre == "Todos") source else source.filter { selectedGenre in it.genres }, order, unwatchedOnly)
+        orderCatalog(if (selectedGenre == "Todos") source else source.filter { item -> item.genres.any { genreIdentity(it) == genreIdentity(selectedGenre) } }, order, unwatchedOnly)
     }
     val kids = state.profile?.kind == "kids"
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
@@ -117,9 +119,9 @@ fun LibraryScreen(
             ) {
                 items(listOf("Todos") + genres, key = { it }) { genre ->
                     BrasaButton(
-                        genre,
+                        genreLabel(genre),
                         { selectedGenre = genre },
-                        style = if (selectedGenre == genre) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost,
+                        style = if (genreIdentity(selectedGenre) == genreIdentity(genre)) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost,
                     )
                 }
             }

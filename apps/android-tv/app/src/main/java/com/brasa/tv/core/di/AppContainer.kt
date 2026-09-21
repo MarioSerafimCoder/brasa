@@ -22,7 +22,7 @@ class AppContainer(val context:Context){
     val http=BrasaHttpClient(tokenStore,json);val capabilityDetector=PlaybackCapabilityDetector(context);val api=BrasaApi(http,json,capabilityDetector::snapshot);val tvCache=TvCacheStore(context,json)
     val progressOutbox=com.brasa.tv.data.storage.ProgressOutbox(java.io.File(context.noBackupFilesDir,"progress/outbox.json"),json)
     val progressSync=com.brasa.tv.data.repository.ProgressSync(progressOutbox, { entry -> api.progress(entry.destination.server,entry.profileId,entry.mediaKey,entry.value); Unit })
-    val repository=BrasaRepository(api,settings,tokenStore,http,tvCache,progressSync)
+    val repository=BrasaRepository(api,settings,tokenStore,http,tvCache,progressSync,networkAccess::isLocalNetworkAvailable)
     val playbackCache=PlaybackCache(context);val playback=PlaybackCoordinator(context,http,playbackCache)
     val updatePreferences=UpdatePreferences(context,json);val updateRepository=UpdateRepository(HttpUpdateApi(http,json),updatePreferences,{settings.values.first().serverBaseUrl});val apkValidator=ApkValidator(AndroidApkInspector(context));val packageInstaller=PackageInstallController(context)
 }

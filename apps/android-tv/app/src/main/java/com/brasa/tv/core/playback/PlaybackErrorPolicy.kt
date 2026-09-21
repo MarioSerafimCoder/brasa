@@ -16,7 +16,7 @@ enum class PlaybackErrorAction { RETRY, RENEW_STREAM, TRANSCODE, STOP }
 data class PlaybackErrorDecision(val action: PlaybackErrorAction, val message: String, val delayMs: Long = 1500)
 
 object PlaybackErrorPolicy {
-    fun decide(error: PlaybackException, hls: Boolean): PlaybackErrorDecision {
+    fun decide(error: PlaybackException, hls: Boolean, videoCopied: Boolean = false): PlaybackErrorDecision {
         val http = cause<HttpDataSource.InvalidResponseCodeException>(error)
         if (http != null) return http(http.responseCode, hls, retryAfter(http))
         if (cause<FileNotFoundException>(error) != null || error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND)
@@ -30,7 +30,7 @@ object PlaybackErrorPolicy {
             PlaybackException.ERROR_CODE_DECODING_FAILED, PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
             PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED, PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED,
             PlaybackException.ERROR_CODE_DECODING_FORMAT_EXCEEDS_CAPABILITIES, PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED ->
-                PlaybackErrorDecision(if (hls) PlaybackErrorAction.STOP else PlaybackErrorAction.TRANSCODE, "A TV não conseguiu decodificar o vídeo. Confira o formato e a capacidade do aparelho.")
+                PlaybackErrorDecision(if (hls && !videoCopied) PlaybackErrorAction.STOP else PlaybackErrorAction.TRANSCODE, "A TV não conseguiu decodificar o vídeo. Confira o formato e a capacidade do aparelho.")
             PlaybackException.ERROR_CODE_IO_UNSPECIFIED -> if (cause<SocketException>(error) != null || cause<SocketTimeoutException>(error) != null || cause<UnknownHostException>(error) != null) temporary()
                 else PlaybackErrorDecision(PlaybackErrorAction.STOP, "Falha ao ler o vídeo. Confira o arquivo e a conexão com o computador antes de tentar novamente.")
             else -> PlaybackErrorDecision(PlaybackErrorAction.STOP, "Não foi possível reproduzir esta mídia. Confira o arquivo no computador.")

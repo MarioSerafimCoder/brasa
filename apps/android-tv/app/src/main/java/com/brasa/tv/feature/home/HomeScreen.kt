@@ -44,6 +44,7 @@ import com.brasa.tv.core.model.HomeRow
 import com.brasa.tv.designsystem.BrasaBackground
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
+import com.brasa.tv.designsystem.BrasaIcon
 import com.brasa.tv.designsystem.BrasaOrange
 import com.brasa.tv.designsystem.BrasaText
 import com.brasa.tv.designsystem.BrasaTextMuted
@@ -188,9 +189,9 @@ fun HomeScreen(
                                 { focusMemory.select("hero-play"); onPlay(hero.playableItem()) },
                                 focusMemory.modifier("hero-play").focusRequester(heroFocus),
                                 style = BrasaButtonStyle.Primary,
-                                leading = "▶",
+                                leadingIcon = BrasaIcon.Play,
                             )
-                            BrasaButton("Detalhes", { focusMemory.select("hero-details"); onItem(hero) }, modifier = focusMemory.modifier("hero-details"), leading = "ⓘ")
+                            BrasaButton("Detalhes", { focusMemory.select("hero-details"); onItem(hero) }, modifier = focusMemory.modifier("hero-details"), leadingIcon = BrasaIcon.Info)
                         }
                     }
                 }

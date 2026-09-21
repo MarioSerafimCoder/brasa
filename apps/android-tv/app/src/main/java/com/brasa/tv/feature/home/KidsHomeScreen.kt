@@ -44,6 +44,7 @@ import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.core.model.HomeRow
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
+import com.brasa.tv.designsystem.BrasaIcon
 import com.brasa.tv.designsystem.BrasaLogo
 import com.brasa.tv.designsystem.BrasaSpacing
 import com.brasa.tv.designsystem.MediaCard
@@ -120,7 +121,7 @@ fun KidsHomeScreen(
                     BrasaButton("Filmes", onMovies, style = BrasaButtonStyle.Ghost)
                     BrasaButton("Séries", onSeries, style = BrasaButtonStyle.Ghost)
                     BrasaButton("Coleções", onCollections, style = BrasaButtonStyle.Ghost)
-                    BrasaButton("Buscar", onSearch, style = BrasaButtonStyle.Ghost, leading = "⌕")
+                    BrasaButton("Buscar", onSearch, style = BrasaButtonStyle.Ghost, leadingIcon = BrasaIcon.Search)
                     BrasaButton(state.profile?.initials.orEmpty().ifBlank { "L" }, onProfiles, style = BrasaButtonStyle.Secondary)
                 }
                 Spacer(Modifier.height(16.dp))
@@ -146,7 +147,7 @@ fun KidsHomeScreen(
                             Text(hero.overview, color = Color.White.copy(alpha = .86f), fontSize = 17.sp, lineHeight = 23.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(18.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                BrasaButton("Assistir", { focusMemory.select("hero-play"); onPlay(hero) }, focusMemory.modifier("hero-play").focusRequester(firstFocus), style = BrasaButtonStyle.Primary, leading = "▶")
+                                BrasaButton("Assistir", { focusMemory.select("hero-play"); onPlay(hero) }, focusMemory.modifier("hero-play").focusRequester(firstFocus), style = BrasaButtonStyle.Primary, leadingIcon = BrasaIcon.Play)
                                 BrasaButton("Ver detalhes", { focusMemory.select("hero-details"); onItem(hero) }, modifier = focusMemory.modifier("hero-details"))
                             }
                         }

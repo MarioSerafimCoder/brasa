@@ -14,6 +14,8 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -84,6 +86,7 @@ import com.brasa.tv.core.playback.PlaybackEvent
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.designsystem.BrasaButton
 import com.brasa.tv.designsystem.BrasaButtonStyle
+import com.brasa.tv.designsystem.BrasaIcon
 import com.brasa.tv.designsystem.BrasaOrange
 import com.brasa.tv.designsystem.BrasaRed
 import com.brasa.tv.designsystem.BrasaSurface
@@ -101,14 +104,15 @@ fun PlayerScreen(
     container: AppContainer,
     onProgress: (String, WatchProgress) -> Unit,
     onPlaybackFallback: (String) -> Unit,
-    onRemoteSeek: (String, Long) -> Unit,
+    onRemoteSeek: (String, Long, Boolean) -> Unit,
+    onConnectionProblem: (com.brasa.tv.core.network.ConnectionProblem) -> Unit,
     onRetry: () -> Unit,
     onNext: (CatalogItem) -> Unit,
     onSignal: (String, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     if (state.previewMode) {
-        PreviewPlayerScreen(state.selected, onBack)
+        PreviewPlayerScreen(state.playbackItem ?: state.selected, onBack)
         return
     }
     val info = state.playback
@@ -139,9 +143,12 @@ fun PlayerScreen(
     } else {
         val identity = "${info.mediaKey}|${info.playbackMode}|${info.playbackRevision}|${info.playbackUrl}"
         key(identity) {
-            val selected = state.selected
+            val selected = state.playbackItem
             val related = state.catalog?.let { catalog -> (catalog.movies + catalog.series).filter { it.mediaKey != selected?.mediaKey && it.genres.any(selected?.genres.orEmpty()::contains) }.take(2) }.orEmpty()
-            PlayerContent(info, identity, selected, related, settings.serverBaseUrl, settings, container, recovery, diagnostics, onProgress, onPlaybackFallback, onRemoteSeek, onNext, onSignal, onBack)
+            val seriesTitle = state.catalog?.series?.firstOrNull { series ->
+                series.seasons.any { season -> season.episodes.any { episode -> episode.mediaKey == info.mediaKey } }
+            }?.title.orEmpty()
+            PlayerContent(info, identity, selected, seriesTitle, related, settings.serverBaseUrl, settings, container, recovery, diagnostics, onProgress, onPlaybackFallback, onRemoteSeek, onConnectionProblem, onNext, onSignal, onBack)
         }
     }
 }
@@ -168,11 +175,13 @@ private fun PreparationScreen(info: PlaybackInfo, onRetry: () -> Unit, onBack: (
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlayerContent(
     info: PlaybackInfo,
     playbackIdentity: String,
     selected: CatalogItem?,
+    seriesTitle: String,
     related: List<CatalogItem>,
     serverBaseUrl: String,
     settings: AppSettings,
@@ -181,7 +190,8 @@ private fun PlayerContent(
     diagnostics: PlaybackDiagnosticsRecorder?,
     onProgress: (String, WatchProgress) -> Unit,
     onPlaybackFallback: (String) -> Unit,
-    onRemoteSeek: (String, Long) -> Unit,
+    onRemoteSeek: (String, Long, Boolean) -> Unit,
+    onConnectionProblem: (com.brasa.tv.core.network.ConnectionProblem) -> Unit,
     onNext: (CatalogItem) -> Unit,
     onSignal: (String, Boolean) -> Unit,
     onBack: () -> Unit,
@@ -260,6 +270,7 @@ private fun PlayerContent(
     var remoteSeekTarget by remember(player) { mutableLongStateOf(-1L) }
     var recoveryRequested by remember(player) { mutableStateOf(false) }
     var trackDialogType by remember(player) { mutableStateOf<Int?>(null) }
+    var technicalInfoVisible by remember(player) { mutableStateOf(false) }
     var restoreTrackFocus by remember(player) { mutableStateOf(false) }
     var currentTracks by remember(player) { mutableStateOf(player.currentTracks) }
     val playbackScope = rememberCoroutineScope()
@@ -365,7 +376,8 @@ private fun PlayerContent(
         controlsVisible = true
         interaction++
     }
-    fun requestRemoteSeek(targetPosition: Long, recovery: Boolean = false, adaptive: Boolean = false) {
+    var subtitleDelayMs by remember(info.mediaKey) { mutableLongStateOf(info.subtitleDelayMs) }
+    fun requestRemoteSeek(targetPosition: Long, recovery: Boolean = false, adaptive: Boolean = false, forceConversion: Boolean = recovery || adaptive) {
         if (recoveryRequested) return
         if (recovery || adaptive) diagnostics?.conversion(if (adaptive) "network" else "recovery")
         else diagnostics?.record(PlaybackEvent(kind = "seek", positionMs = targetPosition.coerceAtLeast(0), reason = "seek"))
@@ -378,7 +390,7 @@ private fun PlayerContent(
         saveAt(target)
         player.pause()
         centerNotice = if (recovery) "Reconectando em ${formatTime(target)}…" else "Carregando ${formatTime(target)}…"
-        onRemoteSeek(info.mediaKey, target)
+        onRemoteSeek(info.mediaKey, target, forceConversion)
     }
     fun seekToPosition(targetPosition: Long) {
         val total = duration.takeIf { it > 0 } ?: info.duration ?: Long.MAX_VALUE
@@ -402,7 +414,9 @@ private fun PlayerContent(
         seekToPosition(PlaybackTimeline.absolutePosition(info, player.currentPosition) + delta)
     }
 
-    BackHandler { exit() }
+    BackHandler {
+        if (technicalInfoVisible) technicalInfoVisible = false else exit()
+    }
     DisposableEffect(player, lifecycleOwner) {
         val lifecycle = PlaybackLifecycle(player, { save() }, {
             pendingRetry?.cancel(); pendingRetry = null; recovery.resetSampling()
@@ -465,7 +479,11 @@ private fun PlayerContent(
                 Log.i(TAG, "Primeiro frame ${info.mediaKey} em ${SystemClock.elapsedRealtime() - startedAt}ms")
             }
             override fun onPlayerError(error: PlaybackException) {
-                val decision = PlaybackErrorPolicy.decide(error, info.playbackMode == "hls")
+                val decision = PlaybackErrorPolicy.decide(error, info.playbackMode == "hls", info.videoCopied)
+                val httpError = PlaybackErrorPolicy.cause<androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException>(error)
+                if (httpError?.responseCode == 401) onConnectionProblem(com.brasa.tv.core.network.ConnectionProblem.REVOKED)
+                if (httpError?.responseCode == 403) onConnectionProblem(com.brasa.tv.core.network.ConnectionProblem.FORBIDDEN)
+                if (error.errorCode in setOf(PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED, PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT) && !container.networkAccess.isLocalNetworkAvailable()) onConnectionProblem(com.brasa.tv.core.network.ConnectionProblem.NO_NETWORK)
                 when {
                     !appForeground -> { loadError = decision.message; player.pause() }
                     decision.action == PlaybackErrorAction.TRANSCODE && !fallbackRequested -> {
@@ -474,14 +492,18 @@ private fun PlayerContent(
                     }
                     decision.action == PlaybackErrorAction.RENEW_STREAM && recovery.beginSourceRenewal() -> {
                         loadError = ""
-                        requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true)
+                        requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true, forceConversion = false)
                     }
                     decision.action == PlaybackErrorAction.RETRY && pendingRetry?.isActive == true -> Unit
                     decision.action == PlaybackErrorAction.RETRY && recovery.beginRetry() -> {
                         retryCount = recovery.attempts; loadError = ""
                         pendingRetry = playbackScope.launch { delay((decision.delayMs * retryCount).coerceAtMost(30_000)); retryPlayback() }
                     }
-                    else -> { loadError = decision.message; controlsVisible = true; player.pause() }
+                    else -> {
+                        loadError = decision.message; controlsVisible = true; player.pause()
+                        if (error.errorCode in setOf(PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED, PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT))
+                            onConnectionProblem(if (container.networkAccess.isLocalNetworkAvailable()) com.brasa.tv.core.network.ConnectionProblem.SERVER_UNAVAILABLE else com.brasa.tv.core.network.ConnectionProblem.NO_NETWORK)
+                    }
                 }
                 Log.w(TAG, "Falha de reprodução: ${error.errorCodeName}; ação=${decision.action}")
             }
@@ -507,7 +529,7 @@ private fun PlayerContent(
             if (!startup.sample(SystemClock.elapsedRealtime(), 0, waitingForFrame,
                     buffering = player.playbackState == Player.STATE_BUFFERING,
                     bufferedPositionMs = player.bufferedPosition)) continue
-            if (info.playbackMode == "direct" && !fallbackRequested) {
+            if ((info.playbackMode == "direct" || info.videoCopied) && !fallbackRequested) {
                 fallbackRequested = true
                 loadError = ""
                 requestRemoteSeek(PlaybackTimeline.absolutePosition(info, player.currentPosition), recovery = true)
@@ -647,11 +669,36 @@ private fun PlayerContent(
                     ),
                 ),
             )
-            Row(
+            Column(
                 Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(horizontal = 34.dp, vertical = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(selected?.title.orEmpty().ifBlank { "Reproduzindo agora" }, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                val episodeContext = listOfNotNull(
+                    selected?.seasonNumber?.let { "Temporada $it" },
+                    selected?.episodeNumber?.let { "Episódio $it" },
+                ).joinToString(" · ")
+                Text(seriesTitle.ifBlank { selected?.title.orEmpty().ifBlank { "Reproduzindo agora" } }, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                if (seriesTitle.isNotBlank()) {
+                    Text(listOf(episodeContext, selected?.title.orEmpty()).filter { it.isNotBlank() }.joinToString(" — "), color = BrasaTextMuted, fontSize = 16.sp)
+                }
+            }
+            if (technicalInfoVisible) {
+                Column(
+                    Modifier.align(Alignment.CenterEnd).padding(end = 34.dp).width(390.dp)
+                        .background(BrasaSurface.copy(alpha = .96f), RoundedCornerShape(16.dp)).padding(24.dp),
+                ) {
+                    Text("Informações da reprodução", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(14.dp))
+                    TechnicalLine("Modo", playbackModeLabel(info))
+                    TechnicalLine("Vídeo", listOf(info.videoCodec.uppercase()).filter { it.isNotBlank() }.joinToString().ifBlank { "Não informado" })
+                    TechnicalLine("Áudio", info.audioCodec.uppercase().ifBlank { "Não informado" })
+                    TechnicalLine("Resolução", if (info.width > 0 && info.height > 0) "${info.width} × ${info.height}" else "Não informada")
+                    TechnicalLine("Qualidade", "$selectedQuality${if (actualHeight > 0) " · ${actualHeight}p" else ""}")
+                    TechnicalLine("Taxa", if (info.bitrate > 0) "${info.bitrate / 1_000_000.0} Mbps" else "Não informada")
+                    TechnicalLine("Buffer", "${((buffered - position).coerceAtLeast(0) / 1000)} s")
+                    if (subtitleDelayMs != 0L) TechnicalLine("Legenda", formatSubtitleDelay(subtitleDelayMs))
+                    Spacer(Modifier.height(14.dp))
+                    BrasaButton("Fechar painel", { technicalInfoVisible = false }, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Ghost)
+                }
             }
             Column(
                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 52.dp, vertical = 30.dp),
@@ -726,28 +773,28 @@ private fun PlayerContent(
                 }
                 Text(
                     if (timelineFocused) "← → escolha o ponto  •  OK para carregar"
-                    else "Qualidade: $selectedQuality${if (actualHeight > 0) " · ${actualHeight}p" else ""}  •  Buffer: ${((buffered - position).coerceAtLeast(0) / 1000)}s",
+                    else "OK abre o ponto escolhido  •  Informações técnicas no botão Informações",
                     color = if (timelineFocused) BrasaOrange else BrasaTextMuted,
                     fontSize = 13.sp,
                 )
                 if (progressStatus.pending > 0 || progressStatus.message.startsWith("Não foi")) Text(progressStatus.message, color = BrasaTextMuted, fontSize = 13.sp)
                 Spacer(Modifier.height(17.dp))
-                Row(
+                FlowRow(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(9.dp),
                 ) {
-                    BrasaButton("10s", { seekBy(-10_000) }, leading = "↶")
+                    BrasaButton("10s", { seekBy(-10_000) }, leadingIcon = BrasaIcon.Replay)
                     Spacer(Modifier.width(11.dp))
                     BrasaButton(
                         if (playRequested) "Pausar" else "Reproduzir",
                         { if (player.playWhenReady) { player.pause(); centerNotice = "Pausado" } else { player.play(); centerNotice = "Reproduzindo" } },
                         Modifier.focusRequester(playFocus),
                         style = BrasaButtonStyle.Primary,
-                        leading = if (playRequested) "Ⅱ" else "▶",
+                        leadingIcon = if (playRequested) BrasaIcon.Pause else BrasaIcon.Play,
                     )
                     Spacer(Modifier.width(11.dp))
-                    BrasaButton("10s", { seekBy(10_000) }, leading = "↷")
+                    BrasaButton("10s", { seekBy(10_000) }, leadingIcon = BrasaIcon.Forward)
                     Spacer(Modifier.width(22.dp))
                     BrasaButton("Áudio", { trackDialogType = C.TRACK_TYPE_AUDIO; revealControls() })
                     Spacer(Modifier.width(9.dp))
@@ -756,6 +803,8 @@ private fun PlayerContent(
                         Spacer(Modifier.width(9.dp))
                         BrasaButton(selectedQuality, { selectedQuality = cycleQuality(player, info, selectedQuality); trackNotice = "Qualidade: $selectedQuality"; revealControls() })
                     }
+                    Spacer(Modifier.width(9.dp))
+                    BrasaButton("Informações", { technicalInfoVisible = !technicalInfoVisible; revealControls() }, leadingIcon = BrasaIcon.Info)
                 }
             }
         }
@@ -788,6 +837,23 @@ private fun PlayerContent(
                     revealControls()
                     restoreTrackFocus = true
                 },
+                subtitleDelayMs = subtitleDelayMs,
+                onDelay = { value ->
+                    playbackScope.launch {
+                        try {
+                            container.settings.saveSubtitleDelay(serverBaseUrl, settings.selectedProfileId, info.mediaKey, value)
+                            container.playback.setSubtitleDelay(player, info, value)
+                            subtitleDelayMs = value
+                            trackDialogType = null
+                            centerNotice = "Sincronização de legenda salva."
+                            revealControls()
+                            restoreTrackFocus = true
+                        } catch (error: Exception) {
+                            if (error is kotlinx.coroutines.CancellationException) throw error
+                            centerNotice = "Não foi possível aplicar o ajuste. Tente novamente."
+                        }
+                    }
+                },
                 onSize = { size -> playbackScope.launch { container.settings.saveSubtitleSize(settings.selectedProfileId, size) } },
                 onStyle = { style -> playbackScope.launch { container.settings.saveSubtitleStyle(settings.selectedProfileId, style) } },
                 onDismiss = { trackDialogType = null; revealControls(); restoreTrackFocus = true },
@@ -806,7 +872,7 @@ private fun PlayerContent(
                     if (settings.autoplayNext && !autoNextCancelled) Text("Reprodução automática em $autoNextSeconds s", color = BrasaOrange, fontSize = 16.sp)
                     Spacer(Modifier.height(21.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        BrasaButton("Reproduzir agora", { onNext(info.nextEpisode) }, style = BrasaButtonStyle.Primary, leading = "▶")
+                        BrasaButton("Reproduzir agora", { onNext(info.nextEpisode) }, style = BrasaButtonStyle.Primary, leadingIcon = BrasaIcon.Play)
                         if (settings.autoplayNext && !autoNextCancelled) BrasaButton("Cancelar contagem", { autoNextCancelled = true }, Modifier.focusRequester(endFocus))
                         BrasaButton("Voltar à série", ::exit)
                     }
@@ -827,6 +893,28 @@ private fun PlayerContent(
         }
     }
 }
+
+@Composable
+private fun TechnicalLine(label: String, value: String) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = BrasaTextMuted, fontSize = 14.sp)
+        Spacer(Modifier.width(16.dp))
+        Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+private fun playbackModeLabel(info: PlaybackInfo): String = when {
+    info.playbackMode == "direct" -> "Original"
+    info.videoCopied -> "Vídeo original adaptado"
+    info.playbackMode == "hls" -> "Conversão adaptativa"
+    else -> info.playbackMode.replaceFirstChar { it.uppercase() }
+}
+
+private fun formatSubtitleDelay(delayMs: Long): String = String.format(
+    Locale.forLanguageTag("pt-BR"),
+    "%+.2f s",
+    delayMs / 1000.0,
+)
 
 private const val TAG = "BRasaPlayback"
 

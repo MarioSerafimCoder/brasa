@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -54,6 +55,9 @@ import com.brasa.tv.designsystem.BrasaType
 import com.brasa.tv.designsystem.MediaCard
 import com.brasa.tv.designsystem.MediaCardFormat
 import com.brasa.tv.designsystem.LocalCardDensity
+import com.brasa.tv.designsystem.BrasaIcon
+import com.brasa.tv.core.model.genreIdentity
+import com.brasa.tv.core.model.genreLabel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -86,12 +90,12 @@ fun SearchScreen(
     val focusMemory = rememberCatalogFocus("search:${state.profile?.id}")
     LaunchedEffect(state.profile?.id) { if (query.isNotBlank()) onSearch(query) }
     val catalogItems = remember(state.catalog) { state.catalog?.let { it.movies + it.series }.orEmpty() }
-    val genres = remember(catalogItems) { catalogItems.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinct().sorted() }
+    val genres = remember(catalogItems) { catalogItems.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinctBy(::genreIdentity).sortedBy(::genreLabel) }
     val results = remember(query, selectedGenre, state.searchResults, catalogItems) {
         val base = if (query.isBlank()) {
             if (selectedGenre == "Todos") catalogItems.take(12) else catalogItems
         } else state.searchResults
-        if (selectedGenre == "Todos") base else base.filter { selectedGenre in it.genres }
+        if (selectedGenre == "Todos") base else base.filter { item -> item.genres.any { genreIdentity(it) == genreIdentity(selectedGenre) } }
     }
     val cardDensity = LocalCardDensity.current
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
@@ -110,37 +114,39 @@ fun SearchScreen(
             onSearch = {},
             profileInitials = state.profile?.initials.orEmpty(),
         )
-        Spacer(Modifier.height(26.dp))
-        Text("Buscar na biblioteca", color = Color.White, fontSize = BrasaType.page, fontWeight = FontWeight.ExtraBold)
-        Spacer(Modifier.height(6.dp))
-        Text("Digite um título ou escolha um gênero usando o controle remoto.", color = BrasaTextMuted, fontSize = BrasaType.body)
-        Spacer(Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            BrasaTextField(
-                value = query,
-                onValueChange = { query = it; onSearch(it) },
-                modifier = Modifier.width(720.dp),
-                placeholder = "⌕  Buscar filmes, séries e episódios",
-            )
-            if (query.isNotBlank()) BrasaButton("Limpar", { query = ""; onSearch("") })
-            BrasaButton("Busca por voz", { if (voiceAvailable) voiceLauncher.launch(voiceIntent) }, enabled = voiceAvailable, leading = "🎙")
+        Spacer(Modifier.height(14.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+            Text("Buscar", color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Filmes, séries e episódios", color = BrasaTextMuted, fontSize = BrasaType.metadata, modifier = Modifier.padding(top = 10.dp))
+        }
+        Spacer(Modifier.height(10.dp))
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val compactSearch = this.maxWidth < 900.dp
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                BrasaTextField(
+                    value = query,
+                    onValueChange = { query = it; onSearch(it) },
+                    modifier = Modifier.weight(1f),
+                    placeholder = "Buscar na biblioteca",
+                )
+                if (query.isNotBlank()) BrasaButton("Limpar", { query = ""; onSearch("") })
+                BrasaButton(if (compactSearch) "Voz" else "Busca por voz", { if (voiceAvailable) voiceLauncher.launch(voiceIntent) }, enabled = voiceAvailable, leadingIcon = BrasaIcon.Mic)
+            }
         }
         if (!voiceAvailable) Text("A busca por voz não está disponível nesta TV; use o teclado ou os filtros.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
         if (query.isBlank() && deviceSettings.recentSearches.isNotEmpty()) {
-            Spacer(Modifier.height(12.dp)); Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                deviceSettings.recentSearches.take(5).forEach { recent -> BrasaButton(recent, { query = recent; onSearch(recent) }, style = BrasaButtonStyle.Ghost) }
-                BrasaButton("Limpar buscas", { scope.launch { state.profile?.id?.let { settingsStore.clearRecentSearches(it) } } }, style = BrasaButtonStyle.Ghost)
+            Spacer(Modifier.height(8.dp)); LazyRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(deviceSettings.recentSearches.take(8), key = { it }) { recent -> BrasaButton(recent, { query = recent; onSearch(recent) }, style = BrasaButtonStyle.Ghost) }
+                item { BrasaButton("Limpar histórico", { scope.launch { state.profile?.id?.let { settingsStore.clearRecentSearches(it) } } }, style = BrasaButtonStyle.Ghost) }
             }
         }
-        Spacer(Modifier.height(18.dp))
-        Text("Buscar por gênero", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(7.dp))
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Spacer(Modifier.height(9.dp))
+        LazyRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(listOf("Todos") + genres, key = { it }) { genre ->
-                BrasaButton(genre, { selectedGenre = genre }, style = if (selectedGenre == genre) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
+                BrasaButton(genreLabel(genre), { selectedGenre = genre }, style = if (genreIdentity(selectedGenre) == genreIdentity(genre)) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
             }
         }
-        Spacer(Modifier.height(14.dp))
+        Spacer(Modifier.height(8.dp))
         if (state.searching) {
             Text("Buscando…", color = BrasaTextMuted, fontSize = BrasaType.body)
         } else if (state.searchError.isNotBlank()) {
@@ -156,12 +162,13 @@ fun SearchScreen(
         LazyVerticalGrid(
             state = gridState,
             modifier = Modifier.fillMaxWidth(),
-            columns = GridCells.Adaptive(188.dp * cardDensity),
+            columns = GridCells.Adaptive(250.dp * cardDensity),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = BrasaSpacing.x6),
         ) {
             items(results, key = { it.mediaKey }) { item ->
-                MediaCard(item, { focusMemory.select(item.mediaKey); onItem(item) }, modifier = focusMemory.modifier(item.mediaKey), format = if (item.type == "series") MediaCardFormat.Landscape else MediaCardFormat.Poster)
+                MediaCard(item, { focusMemory.select(item.mediaKey); onItem(item) }, modifier = focusMemory.modifier(item.mediaKey), format = MediaCardFormat.Landscape)
             }
         }
     }
