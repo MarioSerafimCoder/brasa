@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -56,6 +57,7 @@ import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.core.model.CatalogItem
 import com.brasa.tv.core.model.Season
 import com.brasa.tv.core.model.playableItem
+import com.brasa.tv.core.model.isWatched
 import com.brasa.tv.designsystem.BrasaBackground
 import com.brasa.tv.designsystem.BrasaBorder
 import com.brasa.tv.designsystem.BrasaButton
@@ -117,7 +119,10 @@ fun DetailsScreen(
 
     LaunchedEffect(item.mediaKey, selectedSeasonNumber) {
         onPrefetch(firstPlayable)
-        if (!initialFocusSet && focusMemory.selectedKey.isBlank()) { runCatching { playFocus.requestFocus() }; initialFocusSet = true }
+        if (!initialFocusSet && focusMemory.selectedKey.isBlank()) {
+            withFrameNanos { }
+            initialFocusSet = runCatching { playFocus.requestFocus() }.getOrDefault(false)
+        }
     }
     DisposableEffect(item.mediaKey) { onDispose { if (!keepPreload) onCancelPreload() } }
 
@@ -158,7 +163,7 @@ fun DetailsScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         BrasaButton(
                             continueLabel(item, firstPlayable),
-                            { focusMemory.select("play"); keepPreload = true; onPlay(firstPlayable) },
+                            { focusMemory.select("play"); keepPreload = true; if (firstPlayable.isWatched()) onPlayFromStart(firstPlayable) else onPlay(firstPlayable) },
                             focusMemory.modifier("play").focusRequester(playFocus),
                             enabled = firstPlayable.streamUrl.isNotBlank(),
                             style = BrasaButtonStyle.Primary,
@@ -225,7 +230,7 @@ fun DetailsScreen(
             }
         }
     }
-    if (showMoreOptions) MoreOptionsDialog(item, onSignal, onDismiss = { showMoreOptions = false })
+    if (showMoreOptions) MoreOptionsDialog(item, onSignal, onDismiss = { showMoreOptions = false; focusMemory.restore("more") })
 }
 
 @Composable
@@ -274,7 +279,7 @@ private fun EpisodeCard(episode: CatalogItem, highlighted: Boolean, modifier: Mo
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Black,
             )
-            val watched = episode.completed || episode.progress?.completed == true || (episode.progress?.percentage ?: 0.0) >= 95.0
+            val watched = episode.isWatched()
             if (watched) Text("ASSISTIDO", modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).background(BrasaBackground.copy(alpha = .9f), RoundedCornerShape(50)).padding(horizontal = 9.dp, vertical = 5.dp), color = BrasaText, fontSize = 11.sp, fontWeight = FontWeight.Black)
             else if (highlighted) Text("CONTINUAR", modifier = Modifier.align(Alignment.TopEnd).padding(10.dp).background(BrasaOrange, RoundedCornerShape(50)).padding(horizontal = 9.dp, vertical = 5.dp), color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
             episode.progress?.takeIf { it.percentage > 0 }?.let { progress ->
@@ -287,8 +292,8 @@ private fun EpisodeCard(episode: CatalogItem, highlighted: Boolean, modifier: Mo
             Text(episode.title, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(6.dp))
             Text(episode.overview.ifBlank { "Resumo sem spoilers em preparação." }, color = BrasaTextMuted, fontSize = 14.sp, lineHeight = 19.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
-            val remaining = episode.remainingMinutes ?: episode.progress?.takeIf { it.duration > it.currentTime }?.let { ((it.duration - it.currentTime) / 60).toInt() }
-            if (remaining != null && remaining > 0 && episode.progress?.completed != true) {
+            val remaining = episode.progress?.takeIf { it.duration > 0 }?.let { kotlin.math.ceil((it.duration - it.currentTime).coerceAtLeast(0.0) / 60).toInt() } ?: episode.remainingMinutes
+            if (remaining != null && remaining > 0 && !episode.isWatched()) {
                 Spacer(Modifier.height(5.dp))
                 Text("Faltam $remaining min", color = if (highlighted) BrasaOrange else BrasaTextMuted, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
@@ -297,6 +302,7 @@ private fun EpisodeCard(episode: CatalogItem, highlighted: Boolean, modifier: Mo
 }
 
 private fun continueLabel(parent: CatalogItem, item: CatalogItem): String {
+    if (item.isWatched()) return "Assistir novamente"
     if (parent.actionLabel.isNotBlank()) return parent.actionLabel + (parent.remainingMinutes?.let { " — faltam $it min" } ?: "")
     val seconds = item.progress?.currentTime?.toLong() ?: 0L
     if (seconds <= 0) return "Assistir"

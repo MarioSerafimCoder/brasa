@@ -11,6 +11,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -52,6 +55,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -271,6 +276,15 @@ private fun PlayerContent(
     var recoveryRequested by remember(player) { mutableStateOf(false) }
     var trackDialogType by remember(player) { mutableStateOf<Int?>(null) }
     var technicalInfoVisible by remember(player) { mutableStateOf(false) }
+    val infoFocus = remember { FocusRequester() }
+    var restoreInfoFocus by remember { mutableStateOf(false) }
+    LaunchedEffect(technicalInfoVisible, restoreInfoFocus) {
+        if (!technicalInfoVisible && restoreInfoFocus) {
+            withFrameNanos { }
+            infoFocus.requestFocus()
+            restoreInfoFocus = false
+        }
+    }
     var restoreTrackFocus by remember(player) { mutableStateOf(false) }
     var currentTracks by remember(player) { mutableStateOf(player.currentTracks) }
     val playbackScope = rememberCoroutineScope()
@@ -415,7 +429,7 @@ private fun PlayerContent(
     }
 
     BackHandler {
-        if (technicalInfoVisible) technicalInfoVisible = false else exit()
+        if (technicalInfoVisible) { technicalInfoVisible = false; restoreInfoFocus = true } else exit()
     }
     DisposableEffect(player, lifecycleOwner) {
         val lifecycle = PlaybackLifecycle(player, { save() }, {
@@ -575,8 +589,8 @@ private fun PlayerContent(
         }
     }
     LaunchedEffect(player) { while (true) { delay(12_000); if (player.isPlaying) save(); if (BuildConfig.DEBUG) Log.d(TAG, "Buffer ${info.mediaKey}: ${player.totalBufferedDuration}ms") } }
-    LaunchedEffect(controlsVisible, interaction, isPlaying, trackDialogType, timelineFocused) {
-        if (controlsVisible && isPlaying && !ended && trackDialogType == null && !timelineFocused) {
+    LaunchedEffect(controlsVisible, interaction, isPlaying, trackDialogType, timelineFocused, technicalInfoVisible, ended) {
+        if (controlsVisible && isPlaying && !ended && trackDialogType == null && !timelineFocused && !technicalInfoVisible) {
             delay(4_000)
             controlsVisible = false
             runCatching { rootFocus.requestFocus() }
@@ -682,22 +696,29 @@ private fun PlayerContent(
                 }
             }
             if (technicalInfoVisible) {
-                Column(
-                    Modifier.align(Alignment.CenterEnd).padding(end = 34.dp).width(390.dp)
-                        .background(BrasaSurface.copy(alpha = .96f), RoundedCornerShape(16.dp)).padding(24.dp),
-                ) {
-                    Text("Informações da reprodução", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(14.dp))
-                    TechnicalLine("Modo", playbackModeLabel(info))
-                    TechnicalLine("Vídeo", listOf(info.videoCodec.uppercase()).filter { it.isNotBlank() }.joinToString().ifBlank { "Não informado" })
-                    TechnicalLine("Áudio", info.audioCodec.uppercase().ifBlank { "Não informado" })
-                    TechnicalLine("Resolução", if (info.width > 0 && info.height > 0) "${info.width} × ${info.height}" else "Não informada")
-                    TechnicalLine("Qualidade", "$selectedQuality${if (actualHeight > 0) " · ${actualHeight}p" else ""}")
-                    TechnicalLine("Taxa", if (info.bitrate > 0) "${info.bitrate / 1_000_000.0} Mbps" else "Não informada")
-                    TechnicalLine("Buffer", "${((buffered - position).coerceAtLeast(0) / 1000)} s")
-                    if (subtitleDelayMs != 0L) TechnicalLine("Legenda", formatSubtitleDelay(subtitleDelayMs))
-                    Spacer(Modifier.height(14.dp))
-                    BrasaButton("Fechar painel", { technicalInfoVisible = false }, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Ghost)
+                val closeFocus = remember { FocusRequester() }
+                val closeInfo = { technicalInfoVisible = false; restoreInfoFocus = true }
+                Dialog(onDismissRequest = closeInfo, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+                    Column(
+                        Modifier.padding(24.dp).width(460.dp).heightIn(max = 470.dp)
+                            .background(BrasaSurface.copy(alpha = .96f), RoundedCornerShape(16.dp)).padding(24.dp),
+                    ) {
+                        Text("Informações da reprodução", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(14.dp))
+                        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
+                            TechnicalLine("Modo", playbackModeLabel(info))
+                            TechnicalLine("Vídeo", info.videoCodec.uppercase().ifBlank { "Não informado" })
+                            TechnicalLine("Áudio", info.audioCodec.uppercase().ifBlank { "Não informado" })
+                            TechnicalLine("Resolução", if (info.width > 0 && info.height > 0) "${info.width} × ${info.height}" else "Não informada")
+                            TechnicalLine("Qualidade", "$selectedQuality${if (actualHeight > 0) " · ${actualHeight}p" else ""}")
+                            TechnicalLine("Taxa", if (info.bitrate > 0) String.format(Locale.forLanguageTag("pt-BR"), "%.1f Mbps", info.bitrate / 1_000_000.0) else "Não informada")
+                            TechnicalLine("Buffer", "${((buffered - position).coerceAtLeast(0) / 1000)} s")
+                            if (subtitleDelayMs != 0L) TechnicalLine("Legenda", formatSubtitleDelay(subtitleDelayMs))
+                        }
+                        Spacer(Modifier.height(14.dp))
+                        BrasaButton("Fechar painel", closeInfo, Modifier.fillMaxWidth().focusRequester(closeFocus), style = BrasaButtonStyle.Ghost)
+                    }
+                    LaunchedEffect(Unit) { withFrameNanos { }; closeFocus.requestFocus() }
                 }
             }
             Column(
@@ -804,7 +825,7 @@ private fun PlayerContent(
                         BrasaButton(selectedQuality, { selectedQuality = cycleQuality(player, info, selectedQuality); trackNotice = "Qualidade: $selectedQuality"; revealControls() })
                     }
                     Spacer(Modifier.width(9.dp))
-                    BrasaButton("Informações", { technicalInfoVisible = !technicalInfoVisible; revealControls() }, leadingIcon = BrasaIcon.Info)
+                    BrasaButton("Informações", { technicalInfoVisible = true; revealControls() }, Modifier.focusRequester(infoFocus), leadingIcon = BrasaIcon.Info)
                 }
             }
         }

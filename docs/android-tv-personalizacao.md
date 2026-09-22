@@ -54,7 +54,7 @@ O teste final em aparelho físico ainda deve confirmar distância de leitura, na
 
 ## Dependências ainda reais
 
-- `Pular abertura` e antecipação nos créditos não foram ativados: o catálogo não possui marcações confiáveis por episódio. Tempos fixos não são usados para evitar cortes.
+- `Pular abertura` e `Pular créditos` usam capítulos explícitos reconhecidos ou marcações editadas por mídia no painel. Tempos fixos não são inventados; o fim dos créditos pode preservar cenas pós-créditos. Veja [como editar as marcações](melhorias-tv-2026-09-21.md#editar-abertura-e-créditos).
 - O formulário opcional de escolha inicial de gêneros não foi criado nesta etapa; perfis novos recebem diversidade automática e podem ensinar preferências com as ações dos detalhes.
 - O enriquecimento só consome dados já confirmados pelos mecanismos atuais. Completar elenco, direção e temas dos títulos ainda vazios depende de novas correspondências confiáveis ou correção manual.
 

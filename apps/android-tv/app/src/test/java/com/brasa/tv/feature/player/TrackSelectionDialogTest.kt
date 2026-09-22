@@ -50,7 +50,7 @@ class TrackSelectionDialogTest {
                     onStyle = { style = it }, onDismiss = { dismissed = true })
             }
         }
-        compose.onNodeWithText("✓ Sem legenda").assertIsFocused().performClick()
+        compose.onNodeWithText("Sem legenda").assertIsFocused().performClick()
         compose.runOnIdle { assertNull(selected) }
         compose.onNodeWithText("1. Português — Completa").performClick()
         compose.runOnIdle { assertEquals(track, selected) }

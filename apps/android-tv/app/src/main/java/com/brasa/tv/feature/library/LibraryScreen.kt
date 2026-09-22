@@ -129,7 +129,7 @@ fun LibraryScreen(
         Spacer(Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             BrasaButton("Ordem: ${order.label}", { order = CatalogOrder.entries[(order.ordinal + 1) % CatalogOrder.entries.size] })
-            BrasaButton(if (unwatchedOnly) "✓ Não assistidos" else "Não assistidos", { unwatchedOnly = !unwatchedOnly },
+            BrasaButton("Não assistidos", { unwatchedOnly = !unwatchedOnly }, leadingIcon = if (unwatchedOnly) com.brasa.tv.designsystem.BrasaIcon.Check else null,
                 style = if (unwatchedOnly) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost)
         }
         Spacer(Modifier.height(10.dp))

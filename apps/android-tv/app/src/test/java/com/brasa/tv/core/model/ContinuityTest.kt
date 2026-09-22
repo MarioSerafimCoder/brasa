@@ -20,5 +20,11 @@ class ContinuityTest {
     @Test fun completedSeriesIsExcludedByUnwatchedRule() {
         val show=CatalogItem(type="series",seasons=listOf(Season(1,listOf(episode("e1",1,1,100.0,true)))))
         assertTrue(show.isWatched())
+        assertEquals("episode:e1", show.playableItem().mediaKey)
+    }
+    @Test fun completedFlagAdvancesToNextEpisodeWithoutProgressRecord() {
+        val first = episode("e1", 1, 1).copy(completed = true, progress = null)
+        val show = CatalogItem(type = "series", seasons = listOf(Season(1, listOf(first, episode("e2", 1, 2)))))
+        assertEquals("episode:e2", show.seriesContinuation().episode?.mediaKey)
     }
 }

@@ -1,6 +1,6 @@
 # Melhorias de reprodução e navegação na TV
 
-Implementação local de 21/09/2026. Servidor e aplicativo Android TV precisam ser atualizados juntos para usar todas as melhorias. A versão assinada não foi publicada nem instalada em um aparelho durante este trabalho.
+Implementação de 21/09/2026. Servidor e aplicativo Android TV precisam ser atualizados juntos para usar todas as melhorias. A primeira etapa foi concluída localmente; a publicação e a revisão posteriores estão registradas em [Revisão das melhorias de TV](revisao-tv-2026-09-21.md). A instalação em aparelho físico ainda precisa ser conferida.
 
 ## Navegação
 

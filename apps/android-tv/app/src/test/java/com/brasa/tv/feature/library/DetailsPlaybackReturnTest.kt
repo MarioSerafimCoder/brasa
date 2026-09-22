@@ -19,8 +19,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], qualifiers = "w1280dp-h720dp-land-mdpi", application = Application::class)
 class DetailsPlaybackReturnTest {
     @get:Rule val compose = createComposeRule()
@@ -29,6 +31,7 @@ class DetailsPlaybackReturnTest {
     })
     @Test fun returnsToChosenSeasonAndOffscreenEpisodeAfterPlayback() {
         compose.setContent {
+            RemoteInputMode()
             var state by remember { mutableStateOf(BrasaUiState(selected=series(),profile=Profile(id="p"))) }
             var playing by remember { mutableStateOf(false) }
             val holder = rememberSaveableStateHolder()
@@ -69,6 +72,38 @@ class DetailsPlaybackReturnTest {
         assertFalse(state.playbackItem!!.completed)
     }
 
+    @Test fun returningFromPlaybackUpdatesStaleRemainingMinutes() {
+        val movie = CatalogItem(mediaKey = "movie:a", remainingMinutes = 30)
+        val updated = BrasaUiState(selected = movie).withPlaybackProgress(movie.mediaKey,
+            WatchProgress(currentTime = 1750.0, duration = 1800.0))
+        assertEquals(1, updated.selected!!.remainingMinutes)
+        assertNull(updated.withPlaybackProgress(movie.mediaKey, WatchProgress(completed = true)).selected!!.remainingMinutes)
+    }
+
+    @Test fun watchedEpisodeDoesNotAlsoDisplayRemainingTime() {
+        val watched = CatalogItem(mediaKey = "episode:watched", type = "episode", title = "Concluído",
+            completed = true, remainingMinutes = 2, progress = WatchProgress(currentTime = 950.0, duration = 1000.0, percentage = 95.0))
+        val show = CatalogItem(mediaKey = "series:watched", type = "series", seasons = listOf(Season(1, listOf(watched))))
+        compose.setContent { BrasaTheme {
+            DetailsScreen(BrasaUiState(selected = show), {}, {}, {}, {}, {}, { _, _ -> }, {})
+        } }
+        compose.onAllNodes(hasScrollToIndexAction()).onFirst().performScrollToIndex(1)
+        compose.onNodeWithText("ASSISTIDO").assertIsDisplayed()
+        compose.onNodeWithText("Faltam 2 min").assertDoesNotExist()
+    }
+
+    @Test fun replayOfCompletedSeriesRestartsFirstEpisode() {
+        val episode = CatalogItem(mediaKey = "episode:done", type = "episode", title = "Finalizado", streamUrl = "/video", completed = true)
+        val show = CatalogItem(mediaKey = "series:done", type = "series", seasons = listOf(Season(1, listOf(episode))))
+        var restarted: String? = null
+        var resumed = false
+        compose.setContent { RemoteInputMode(); BrasaTheme {
+            DetailsScreen(BrasaUiState(selected = show), { resumed = true }, { restarted = it.mediaKey }, {}, {}, {}, { _, _ -> }, {})
+        } }
+        compose.onNodeWithText("Assistir novamente").assertIsEnabled().performClick()
+        compose.runOnIdle { assertEquals("episode:done", restarted); assertFalse(resumed) }
+    }
+
     @Test fun longDetailsKeepAllPrimaryActionsVisibleAtEveryUiScale() {
         var scale by mutableStateOf(.8f)
         val longMovie = CatalogItem(
@@ -77,6 +112,7 @@ class DetailsPlaybackReturnTest {
             overview = "Uma sinopse extensa que ocupa várias linhas e simula o conteúdo real da biblioteca. ".repeat(8),
         )
         compose.setContent {
+            RemoteInputMode()
             BrasaTheme(uiScale = scale) {
                 DetailsScreen(BrasaUiState(selected = longMovie), onPlay = {}, onPlayFromStart = {}, onPrefetch = {},
                     onCancelPreload = {}, onFavorite = {}, onSignal = { _, _ -> }, onBack = {})
@@ -94,16 +130,18 @@ class DetailsPlaybackReturnTest {
     @Test fun remoteMovesAcrossDetailsActionsAndOpensMoreOptions() {
         val movie = CatalogItem(id = "focus", mediaKey = "movie:focus", title = "Filme", streamUrl = "/movie")
         compose.setContent {
+            RemoteInputMode()
             BrasaTheme {
                 DetailsScreen(BrasaUiState(selected = movie), onPlay = {}, onPlayFromStart = {}, onPrefetch = {},
                     onCancelPreload = {}, onFavorite = {}, onSignal = { _, _ -> }, onBack = {})
             }
         }
-        compose.onNodeWithText("Assistir").performSemanticsAction(SemanticsActions.RequestFocus).assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNodeWithText("Assistir").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Minha lista").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Assistir do início").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Mais opções").assertIsFocused().performClick()
         compose.onAllNodesWithText("Mais opções").onLast().assertIsDisplayed()
-        compose.onNodeWithText("Fechar").assertIsDisplayed()
+        compose.onNodeWithText("Fechar").assertIsDisplayed().performClick()
+        compose.onNodeWithText("Mais opções").assertIsFocused()
     }
 }

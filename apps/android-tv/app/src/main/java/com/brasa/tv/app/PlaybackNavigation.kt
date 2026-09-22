@@ -16,7 +16,10 @@ fun BrasaUiState.withPlaybackProgress(mediaKey: String, progress: WatchProgress,
     fun update(item: CatalogItem): CatalogItem {
         if (item.mediaKey == mediaKey) {
             val merged = if (preserveCompleted && item.progress?.completed == true && !stamped.completed) stamped.copy(completed = true) else stamped
-            return item.copy(progress = merged, completed = merged.completed)
+            return item.copy(progress = merged, completed = merged.completed,
+                remainingMinutes = if (merged.completed) null else merged.duration.takeIf { it > 0 }?.let {
+                    kotlin.math.ceil((it - merged.currentTime).coerceAtLeast(0.0) / 60).toInt()
+                })
         }
         if (item.seasons.none { season -> season.episodes.any { it.mediaKey == mediaKey } }) return item
         val changed = item.copy(seasons = item.seasons.map { season -> season.copy(episodes = season.episodes.map(::update)) })

@@ -23,18 +23,17 @@ A página inicial é personalizada por perfil no computador servidor, com contin
 
 O APK detecta decoders de vídeo por hardware, perfis, limites de bitrate/resolução e tipos HDR do Google TV e envia essas capacidades ao servidor. Um MKV grande realmente compatível usa direct play autenticado com Range; Dolby Vision direto fica restrito a MP4, enquanto perfil 8.1 com camada HDR10 compatível usa remux HLS preservando resolução e HDR. Incompatibilidade apenas de áudio usa remux HLS, e uma falha real do decoder aciona automaticamente HLS transcodificado. As telas mostram “Analisando mídia” e “Preparando reprodução” somente quando algum processamento é necessário.
 
-Em servidores NVIDIA, o BRasa valida o NVENC com uma codificação prática e usa NVDEC/CUDA + NVENC. Quando a TV não suporta o HDR original e o FFmpeg precisa fazer tone mapping, fontes Full HD ou superiores nunca começam abaixo de 1080p. Ao retomar, o HLS começa perto da posição salva e o player continua exibindo o tempo absoluto do filme. Segmentos curtos e buffer inicial controlado diminuem o tempo até o primeiro quadro sem alterar o arquivo original.
+Em servidores NVIDIA, o BRasa valida o NVENC com uma codificação prática e usa NVDEC/CUDA + NVENC. A conversão adaptativa oferece variantes até 720p em CPU e até 1080p com aceleração, respeitando a fonte e a TV. HDR incompatível passa por tone mapping para SDR. A reprodução original e o remux preservam a resolução e o HDR compatíveis; retomar um vídeo não força conversão. Ao retomar, o HLS começa perto da posição salva e o player continua exibindo o tempo absoluto do filme.
 
 ## Compilar e testar
 
-No diretório `apps/android-tv`, o SDK incluído no projeto pode ser usado no Windows sem criar `local.properties`:
+No diretório `apps/android-tv`, use o comando de validação para Windows. Ele localiza o SDK incluído no projeto e prepara os runtimes do Robolectric em um caminho sem espaços:
 
 ```powershell
-$env:ANDROID_HOME=(Resolve-Path '.toolchain/android-sdk').Path
-./gradlew.bat test lint assembleDebug
+./scripts/test-windows.ps1
 ```
 
-O script de release também copia automaticamente o runtime do Robolectric para uma pasta pública sem espaços, evitando a falha de biblioteca nativa causada por caminhos de usuário codificados. Os testes de interface cobrem as escalas 80%, 90%, 100% e 110%, além do percurso por controle remoto nas ações de detalhes.
+Em uma máquina nova sem runtime em cache, a primeira execução permite o download. Se o carregador nativo reclamar de `%20`, repita o comando para preparar o arquivo recém-baixado. O script de release também prepara o runtime sem espaços. Os testes usam renderização nativa para conferir textos e navegação em detalhes, busca e Configurações nas escalas 80%, 90%, 100% e 110%.
 
 O APK de desenvolvimento é criado em `app/build/outputs/apk/debug/app-debug.apk`. Artefatos de build, `local.properties`, APKs e configurações locais permanecem fora do Git.
 

@@ -12,7 +12,7 @@ fun CatalogItem.orderedEpisodes(): List<CatalogItem> = seasons.flatMap(Season::e
 fun CatalogItem.seriesContinuation(): SeriesContinuation {
     val episodes = orderedEpisodes()
     if (episodes.isEmpty()) return SeriesContinuation(null, false, false)
-    fun finished(item: CatalogItem) = item.progress?.completed == true || (item.progress?.percentage ?: 0.0) >= 95.0
+    fun finished(item: CatalogItem) = item.isWatched()
     val partial = episodes.filter { (it.progress?.percentage ?: 0.0) > 0.0 && !finished(it) }.maxByOrNull { it.progress?.updatedAt.orEmpty() }
     if (partial != null) return SeriesContinuation(partial, false, true)
     val completedIndexes = episodes.mapIndexedNotNull { index, item -> index.takeIf { finished(item) } }
@@ -22,7 +22,7 @@ fun CatalogItem.seriesContinuation(): SeriesContinuation {
 }
 
 fun CatalogItem.playableItem(): CatalogItem = if (type != "series") this else {
-    orderedEpisodes().find { it.mediaKey == resumeMediaKey } ?: seriesContinuation().episode ?: this
+    orderedEpisodes().find { it.mediaKey == resumeMediaKey } ?: seriesContinuation().episode ?: orderedEpisodes().firstOrNull() ?: this
 }
 
 fun CatalogItem.isWatched(): Boolean = if (type == "series") completed || seriesContinuation().completed else completed || progress?.completed == true || (progress?.percentage ?: 0.0) >= 95.0

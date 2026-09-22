@@ -19,6 +19,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.media3.common.C
 import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.designsystem.BrasaButton
+import com.brasa.tv.designsystem.BrasaIcon
 import com.brasa.tv.designsystem.BrasaButtonStyle
 import com.brasa.tv.designsystem.BrasaSurface
 import androidx.tv.material3.Text
@@ -47,16 +48,18 @@ fun TrackSelectionDialog(
             LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
                     BrasaButton(
-                        if (subtitles) (if (subtitlesDisabled) "✓ " else "") + "Sem legenda" else "Áudio automático",
+                        if (subtitles) "Sem legenda" else "Áudio automático",
                         { if (subtitles) onSelect(null) else onAutomaticAudio() },
                         Modifier.fillMaxWidth().focusRequester(firstFocus),
+                        leadingIcon = if (subtitles && subtitlesDisabled) BrasaIcon.Check else null,
                     )
                 }
                 itemsIndexed(tracks) { index, track ->
                     BrasaButton(
-                        "${if (track.selected && (!subtitles || !subtitlesDisabled)) "✓ " else ""}${index + 1}. ${track.label}",
+                        "${index + 1}. ${track.label}",
                         { onSelect(track) }, Modifier.fillMaxWidth(), enabled = track.supported,
                         style = if (track.selected && (!subtitles || !subtitlesDisabled)) BrasaButtonStyle.Primary else BrasaButtonStyle.Secondary,
+                        leadingIcon = if (track.selected && (!subtitles || !subtitlesDisabled)) BrasaIcon.Check else null,
                     )
                 }
                 if (subtitles) item {

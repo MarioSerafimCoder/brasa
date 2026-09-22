@@ -31,10 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -74,6 +78,7 @@ fun SearchScreen(
     onMyList: () -> Unit,
     onRefresh: () -> Unit,
     onBack: () -> Unit,
+    onHome: () -> Unit,
 ) {
     BackHandler(onBack = onBack)
     LaunchedEffect(state.profile?.id) { if (state.profile != null) onRefresh() }
@@ -88,6 +93,13 @@ fun SearchScreen(
         if (result.resultCode == Activity.RESULT_OK) result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let { spoken -> query = spoken; onSearch(spoken); scope.launch { state.profile?.id?.let { settingsStore.addRecentSearch(it, spoken) } } }
     }
     val focusMemory = rememberCatalogFocus("search:${state.profile?.id}")
+    val searchFocus = remember { FocusRequester() }
+    LaunchedEffect(state.profile?.id) {
+        if (focusMemory.selectedKey.isBlank()) {
+            withFrameNanos { }
+            searchFocus.requestFocus()
+        }
+    }
     LaunchedEffect(state.profile?.id) { if (query.isNotBlank()) onSearch(query) }
     val catalogItems = remember(state.catalog) { state.catalog?.let { it.movies + it.series }.orEmpty() }
     val genres = remember(catalogItems) { catalogItems.flatMap(CatalogItem::genres).filter(String::isNotBlank).distinctBy(::genreIdentity).sortedBy(::genreLabel) }
@@ -106,7 +118,7 @@ fun SearchScreen(
         BrasaTopBar(
             modifier = Modifier.padding(top = BrasaSpacing.x2),
             active = "Buscar",
-            onHome = onBack,
+            onHome = onHome,
             onMovies = onMovies,
             onSeries = onSeries,
             onCollections = onCollections,
@@ -126,7 +138,7 @@ fun SearchScreen(
                 BrasaTextField(
                     value = query,
                     onValueChange = { query = it; onSearch(it) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(searchFocus).testTag("search-field"),
                     placeholder = "Buscar na biblioteca",
                 )
                 if (query.isNotBlank()) BrasaButton("Limpar", { query = ""; onSearch("") })
