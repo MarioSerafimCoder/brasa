@@ -13,6 +13,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
 class TrackSelectionTest {
+    @Test fun translatedAndUnaccentedLanguageLabelsAreNotRepeated() {
+        listOf("en" to "English", "pt-BR" to "Portugues (Brasil)").forEach { (language, label) ->
+            val group = TrackGroup(Format.Builder().setSampleMimeType(MimeTypes.TEXT_VTT).setLanguage(language).setLabel(label).build())
+            val tracks = Tracks(listOf(Tracks.Group(group, false, intArrayOf(C.FORMAT_HANDLED), booleanArrayOf(false))))
+            assertEquals(if (language == "en") "Inglês" else "Português (Brasil)", playbackTracks(tracks, C.TRACK_TYPE_TEXT).single().label)
+        }
+    }
     @Test fun canTurnSubtitlesOffAndOnRepeatedly() {
         val group = TrackGroup(Format.Builder().setSampleMimeType(MimeTypes.TEXT_VTT).setLanguage("pt-BR").build())
         val track = PlaybackTrack(group, 0, "Português", "pt-BR", false, true)

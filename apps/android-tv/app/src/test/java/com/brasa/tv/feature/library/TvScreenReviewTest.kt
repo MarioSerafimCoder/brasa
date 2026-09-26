@@ -13,8 +13,13 @@ import com.brasa.tv.app.BrasaUiState
 import com.brasa.tv.core.model.*
 import com.brasa.tv.data.storage.AppSettingsStore
 import com.brasa.tv.designsystem.BrasaTheme
+import com.brasa.tv.designsystem.BrasaTopBar
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import com.brasa.tv.feature.search.SearchScreen
 import com.brasa.tv.feature.settings.SettingsScreen
+import com.brasa.tv.feature.details.DetailsScreen
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -26,10 +31,46 @@ import org.robolectric.annotation.GraphicsMode
 
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], qualifiers = "w1280dp-h720dp-land-mdpi", application = Application::class)
+@Config(sdk = [35], qualifiers = "w960dp-h540dp-land-xhdpi", application = Application::class)
 class TvScreenReviewTest {
     @get:Rule val compose = createComposeRule()
     private val settings get() = AppSettingsStore(RuntimeEnvironment.getApplication())
+
+    @Test fun detailsContrastLayerCoversTheWholeHeroAtEveryScale() {
+        var scale by mutableStateOf(.8f)
+        val movie = CatalogItem(mediaKey = "movie:contrast", title = "Título visível", streamUrl = "/test",
+            genres = listOf("Ação", "Aventura"), overview = "Uma sinopse longa para testar a altura dos detalhes. ".repeat(18))
+        compose.setContent { BrasaTheme(uiScale = scale) {
+            RemoteInputMode()
+            DetailsScreen(BrasaUiState(selected = movie), {}, {}, {}, {}, {}, { _, _ -> }, {})
+        } }
+        listOf(.8f, .9f, 1f, 1.1f).forEach {
+            compose.runOnIdle { scale = it }
+            compose.onNodeWithText("Assistir", substring = false).assertIsDisplayed()
+            val hero = compose.onNodeWithTag("details-hero").fetchSemanticsNode().size
+            val scrim = compose.onNodeWithTag("details-scrim").fetchSemanticsNode().size
+            assertTrue(hero.height > 0)
+            assertEquals(hero, scrim)
+        }
+    }
+
+    @Test fun allNavigationLabelsRemainReachableAtRealTvDensity() {
+        var scale by mutableStateOf(.8f)
+        compose.setContent { BrasaTheme(uiScale = scale) {
+            RemoteInputMode()
+            BrasaTopBar(Modifier.padding(horizontal = 54.dp), onHome = {}, onMovies = {}, onSeries = {},
+                onCollections = {}, onMyList = {}, onSearch = {}, onSettings = {}, onProfiles = {}, profileInitials = "MS")
+        } }
+        listOf(.8f, .9f, 1f, 1.1f).forEach {
+            compose.runOnIdle { scale = it }
+            compose.onNodeWithText("Início").performScrollTo().performSemanticsAction(SemanticsActions.RequestFocus)
+            listOf("Filmes", "Séries", "Coleções", "Minha lista", "Buscar", "Configurações", "MS").forEach { label ->
+                compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionRight) }
+                compose.onNodeWithText(label).assertIsFocused().assertIsDisplayed()
+                assertLabelFits(label)
+            }
+        }
+    }
 
     @Test fun searchStartsOnFieldAndHomeHasItsOwnDestination() {
         var home = false
@@ -41,6 +82,9 @@ class TvScreenReviewTest {
         compose.onNodeWithTag("search-field").assertIsFocused().assert(hasSetTextAction().not())
             .performKeyInput { pressKey(Key.Enter) }
         compose.onNodeWithTag("search-field").assert(hasSetTextAction())
+        compose.onNodeWithTag("search-field").performTextInput("Witch")
+        compose.onNodeWithTag("search-field").performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onNodeWithText("Todos").assertIsFocused()
         compose.onNodeWithText("Início").performClick()
         compose.runOnIdle { assertTrue(home); assertFalse(back) }
     }

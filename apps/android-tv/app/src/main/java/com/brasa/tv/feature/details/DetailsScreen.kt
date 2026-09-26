@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -132,15 +133,15 @@ fun DetailsScreen(
         contentPadding = PaddingValues(bottom = BrasaSpacing.x8),
     ) {
         item {
-            Box(Modifier.fillMaxWidth().heightIn(min = if (item.type == "series") 530.dp else 560.dp)) {
+            Box(Modifier.fillMaxWidth().heightIn(min = if (item.type == "series") 530.dp else 560.dp).testTag("details-hero")) {
                 AsyncImage(
                     model = item.backdrop.ifBlank { item.poster },
                     contentDescription = item.title,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop,
                 )
-                Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(BrasaBackground, BrasaBackground.copy(alpha = .93f), BrasaBackground.copy(alpha = .22f), Color.Transparent))))
-                Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(BrasaBackground.copy(alpha = .08f), Color.Transparent, BrasaBackground))))
+                Box(Modifier.matchParentSize().testTag("details-scrim").background(Brush.horizontalGradient(listOf(BrasaBackground, BrasaBackground.copy(alpha = .93f), BrasaBackground.copy(alpha = .22f), Color.Transparent))))
+                Box(Modifier.matchParentSize().background(Brush.verticalGradient(listOf(BrasaBackground.copy(alpha = .08f), Color.Transparent, BrasaBackground))))
                 Row(Modifier.align(Alignment.TopStart).padding(start = 42.dp, top = 24.dp), verticalAlignment = Alignment.CenterVertically) {
                     BrasaButton("Voltar", onBack, style = BrasaButtonStyle.Ghost, leadingIcon = BrasaIcon.Back)
                     Spacer(Modifier.width(16.dp))
@@ -156,9 +157,6 @@ fun DetailsScreen(
                         Spacer(Modifier.height(13.dp))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { item.genres.take(4).forEach { GenreChip(it) } }
                     }
-                    Spacer(Modifier.height(15.dp))
-                    Text(item.overview.ifBlank { "Sinopse ainda não disponível." }, color = BrasaText.copy(alpha = .88f), fontSize = BrasaType.body, lineHeight = 27.sp, maxLines = if (expandedOverview) 10 else 4, overflow = TextOverflow.Ellipsis)
-                    if (item.overview.length > 220) BrasaButton(if (expandedOverview) "Recolher sinopse" else "Ler sinopse completa", { expandedOverview = !expandedOverview }, style = BrasaButtonStyle.Ghost)
                     Spacer(Modifier.height(20.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         BrasaButton(
@@ -173,6 +171,9 @@ fun DetailsScreen(
                         BrasaButton("Assistir do início", { focusMemory.select("start"); keepPreload = true; onPlayFromStart(firstPlayable) }, focusMemory.modifier("start"))
                         BrasaButton("Mais opções", { focusMemory.select("more"); showMoreOptions = true }, focusMemory.modifier("more"), style = BrasaButtonStyle.Ghost, leadingIcon = BrasaIcon.More)
                     }
+                    Spacer(Modifier.height(15.dp))
+                    Text(item.overview.ifBlank { "Sinopse ainda não disponível." }, color = BrasaText.copy(alpha = .88f), fontSize = BrasaType.body, lineHeight = 27.sp, maxLines = if (expandedOverview) 10 else 4, overflow = TextOverflow.Ellipsis)
+                    if (item.overview.length > 220) BrasaButton(if (expandedOverview) "Recolher sinopse" else "Ler sinopse completa", { expandedOverview = !expandedOverview }, style = BrasaButtonStyle.Ghost)
                     if (item.cast.isNotEmpty() || item.directors.isNotEmpty()) {
                         Spacer(Modifier.height(10.dp))
                         Text(listOfNotNull(item.directors.takeIf { it.isNotEmpty() }?.let { "Direção: ${it.joinToString()}" }, item.cast.takeIf { it.isNotEmpty() }?.let { "Elenco: ${it.take(5).joinToString()}" }).joinToString("  ·  "), color = BrasaTextMuted, fontSize = BrasaType.metadata, maxLines = 2)

@@ -17,6 +17,7 @@ import com.brasa.tv.data.repository.BrasaRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -195,8 +196,12 @@ class BrasaViewModel(
             delay(150)
             val profile = mutable.value.profile ?: return@launch
             runCatching { repository.search(profile.id, query) }
-                .onSuccess { mutable.value = mutable.value.copy(searchResults = it, searching = false) }
-                .onFailure { mutable.value = mutable.value.copy(searching = false, searchError = it.message ?: "Não foi possível buscar agora.") }
+                .onSuccess { ensureActive(); mutable.value = mutable.value.copy(searchResults = it, searching = false, searchError = "") }
+                .onFailure {
+                    ensureActive()
+                    if (it is CancellationException) throw it
+                    mutable.value = mutable.value.copy(searching = false, searchError = "Não foi possível buscar agora. Tente novamente.")
+                }
         }
     }
 

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "file": "review-details-top.png",
+  "capturedAt": "2026-09-22T02:57:23.702Z",
+  "packageName": "com.brasa.tv",
+  "versionName": "1.0.37",
+  "versionCode": 38,
+  "androidApi": 30,
+  "width": 1920,
+  "height": 1080,
+  "density": "Physical density: 320",
+  "source": "physical-device-apk",
+  "mode": "current-app-state",
+  "initialRoute": null,
+  "navigationKeys": [
+    "DPAD_UP",
+    "DPAD_UP"
+  ],
+  "uiScale": "app-setting-not-overridden",
+  "imageModified": false,
+  "note": "PNG direto do APK. Nenhuma reconstrução HTML nem edição da imagem.",
+  "sha256": "45352c9b004cf39eff330d41d13fa32edf52f93dd198e72d8fe332f877580326"
+}

@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,6 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -204,17 +208,18 @@ fun BrasaTopBar(
             .padding(horizontal = 18.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        BrasaLogo()
-        Spacer(Modifier.width(26.dp))
-        if (onHome != null) NavItem("Início", active == "Início", onHome)
-        if (onMovies != null) NavItem("Filmes", active == "Filmes", onMovies)
-        if (onSeries != null) NavItem("Séries", active == "Séries", onSeries)
-        if (onCollections != null) NavItem("Coleções", active == "Coleções", onCollections)
-        if (onMyList != null) NavItem("Minha lista", active == "Minha lista", onMyList)
-        Spacer(Modifier.weight(1f))
-        if (onSearch != null) NavItem("Buscar", active == "Buscar", onSearch, BrasaIcon.Search)
-        if (onSettings != null) NavItem("Configurações", active == "Configurações", onSettings, BrasaIcon.Settings)
-        if (onProfiles != null) NavItem(profileInitials.ifBlank { "Perfil" }, active == "Perfis", onProfiles)
+        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically) {
+            BrasaLogo()
+            Spacer(Modifier.width(26.dp))
+            if (onHome != null) NavItem("Início", active == "Início", onHome)
+            if (onMovies != null) NavItem("Filmes", active == "Filmes", onMovies)
+            if (onSeries != null) NavItem("Séries", active == "Séries", onSeries)
+            if (onCollections != null) NavItem("Coleções", active == "Coleções", onCollections)
+            if (onMyList != null) NavItem("Minha lista", active == "Minha lista", onMyList)
+            if (onSearch != null) NavItem("Buscar", active == "Buscar", onSearch, BrasaIcon.Search)
+            if (onSettings != null) NavItem("Configurações", active == "Configurações", onSettings, BrasaIcon.Settings)
+            if (onProfiles != null) NavItem(profileInitials.ifBlank { "Perfil" }, active == "Perfis", onProfiles)
+        }
     }
 }
 
@@ -358,6 +363,7 @@ fun BrasaTextField(
 ) {
     var focused by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
     val scope = rememberCoroutineScope()
     DisposableEffect(Unit) { onDispose { keyboard?.hide() } }
@@ -376,6 +382,12 @@ fun BrasaTextField(
             .onPreviewKeyEvent { event ->
                 if (event.nativeKeyEvent.action != KeyEvent.ACTION_DOWN) return@onPreviewKeyEvent false
                 when {
+                    event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_DOWN || event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_UP -> {
+                        editing = false
+                        keyboard?.hide()
+                        focusManager.moveFocus(if (event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_DOWN) FocusDirection.Down else FocusDirection.Up)
+                        true
+                    }
                     editing && event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK -> {
                         editing = false
                         keyboard?.hide()

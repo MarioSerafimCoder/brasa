@@ -23,6 +23,9 @@ import com.brasa.tv.data.storage.AppSettings
 import com.brasa.tv.data.storage.AppSettingsStore
 import com.brasa.tv.data.storage.TvCacheStore
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
@@ -201,6 +204,8 @@ class BrasaRepository(
         if (value.isBlank()) return emptyList()
         val base = requireServer()
         return runCatching { api.search(base, profileId, value).map { it.withArtwork(base) } }.getOrElse {
+            currentCoroutineContext().ensureActive()
+            if (it is CancellationException) throw it
             val catalog = catalog(profileId)
             (catalog.movies + catalog.series + catalog.series.flatMap { it.seasons.flatMap { season -> season.episodes } }).filter { item ->
                 listOf(item.title, item.originalTitle, item.overview, item.genres.joinToString()).any { it.contains(value, ignoreCase = true) }

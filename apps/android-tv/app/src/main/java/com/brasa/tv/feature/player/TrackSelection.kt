@@ -10,6 +10,7 @@ import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.TrackSelectionParameters
 import com.brasa.tv.data.storage.AppSettings
 import java.util.Locale
+import java.text.Normalizer
 
 data class PlaybackTrack(val group: TrackGroup, val index: Int, val label: String, val language: String, val selected: Boolean, val supported: Boolean)
 
@@ -28,9 +29,14 @@ private fun trackLabel(format: Format, type: Int): String {
         val country = locale.getDisplayCountry(displayLocale)
         if (country.isBlank()) name else "$name ($country)"
     }.orEmpty()
+    fun identity(value: String) = Normalizer.normalize(value, Normalizer.Form.NFD)
+        .replace(Regex("\\p{M}+"), "").lowercase(Locale.ROOT).trim()
+    val locale = Locale.forLanguageTag(format.language.orEmpty())
+    val languageNames = listOf(language, locale.getDisplayName(Locale.ENGLISH), locale.getDisplayName(locale),
+        locale.getDisplayName(Locale.forLanguageTag("pt-BR"))).map(::identity)
     val parts = mutableListOf(language.ifBlank { "Idioma não informado" })
     format.label?.trim()?.takeIf {
-        it.isNotBlank() && !it.equals(language, true) &&
+        it.isNotBlank() && identity(it) !in languageNames &&
             !it.matches(Regex("(?i)(audio|subtitle|legenda|track|faixa)(?:[ _-]*(track|faixa))?[ _-]*\\d*"))
     }?.let(parts::add)
     if (type == C.TRACK_TYPE_AUDIO) {
