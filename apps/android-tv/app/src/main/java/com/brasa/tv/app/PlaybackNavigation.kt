@@ -8,7 +8,7 @@ import com.brasa.tv.core.model.seriesContinuation
 fun BrasaUiState.beginPlayback(item: CatalogItem, fromBeginning: Boolean = false): BrasaUiState {
     val next = if (fromBeginning) item.copy(progress = null, completed = false) else item
     val origin = if (fromBeginning) withPlaybackProgress(item.mediaKey, WatchProgress(), preserveCompleted = false) else this
-    return origin.copy(playbackItem = next, playback = null, message = "")
+    return origin.copy(playbackItem = next, playback = null)
 }
 
 fun BrasaUiState.withPlaybackProgress(mediaKey: String, progress: WatchProgress, preserveCompleted: Boolean = true): BrasaUiState {

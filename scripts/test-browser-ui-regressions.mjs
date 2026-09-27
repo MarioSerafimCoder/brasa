@@ -17,7 +17,7 @@ const [movieCard, styles, images, sync, seriesPage, seriesHtml, profiles] = awai
     fs.readFile("components/home/movie-card.js", "utf8"),
     fs.readFile("css/style.css", "utf8"),
     fs.readFile("js/utils/tmdb-images.js", "utf8"),
-    fs.readFile("scripts/sync-movies.mjs", "utf8"),
+    fs.readFile("server/sync-catalog-writer.mjs", "utf8"),
     fs.readFile("js/pages/series.js", "utf8"),
     fs.readFile("pages/series.html", "utf8"),
     fs.readFile("js/utils/profiles.js", "utf8")

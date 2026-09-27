@@ -79,7 +79,7 @@ fun HomeScreen(
     if (home == null) {
         MessagePanel(
             "Carregando sua biblioteca",
-            state.message.ifBlank { "O computador precisa estar ligado e conectado à mesma rede." },
+            state.operations.home.message.ifBlank { "O computador precisa estar ligado e conectado à mesma rede." },
             "Tentar novamente",
             onRefresh,
         )

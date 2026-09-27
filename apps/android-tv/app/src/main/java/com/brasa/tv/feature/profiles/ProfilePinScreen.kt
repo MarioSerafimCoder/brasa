@@ -49,9 +49,9 @@ fun ProfilePinScreen(state: BrasaUiState, onVerify: (String) -> Unit, onBack: ()
     val firstKey = remember { FocusRequester() }
     BackHandler(onBack = onBack)
     LaunchedEffect(Unit) { runCatching { firstKey.requestFocus() } }
-    LaunchedEffect(pin) { if (pin.length == 4 && !state.loading) onVerify(pin) }
-    LaunchedEffect(state.message) { if (state.message.isNotBlank()) { delay(450); pin = "";runCatching { firstKey.requestFocus() } } }
-    fun addDigit(digit:String){if(!state.loading&&pin.length<4)pin+=digit}
+    LaunchedEffect(pin) { if (pin.length == 4 && !state.operations.session.loading) onVerify(pin) }
+    LaunchedEffect(state.operations.session.message) { if (state.operations.session.message.isNotBlank()) { delay(450); pin = "";runCatching { firstKey.requestFocus() } } }
+    fun addDigit(digit:String){if(!state.operations.session.loading&&pin.length<4)pin+=digit}
     AmbientBackground {
         Column(Modifier.fillMaxSize().padding(horizontal = BrasaSpacing.safe), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             BrasaLogo()
@@ -61,15 +61,15 @@ fun ProfilePinScreen(state: BrasaUiState, onVerify: (String) -> Unit, onBack: ()
             Text("Use o controle remoto para informar os quatro números.", color = BrasaTextMuted, fontSize = BrasaType.body)
             Spacer(Modifier.height(BrasaSpacing.x3))
             Row(horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x2)) {
-                repeat(4) { index -> Box(Modifier.size(62.dp).background(BrasaSurfaceElevated, RoundedCornerShape(14.dp)).border(2.dp, when { state.message.isNotBlank() -> BrasaRed; index == pin.length -> BrasaFocus; else -> BrasaBorder }, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) { Text(if (index < pin.length) "•" else "", color = BrasaOrange, fontSize = BrasaType.page, fontWeight = FontWeight.Black) } }
+                repeat(4) { index -> Box(Modifier.size(62.dp).background(BrasaSurfaceElevated, RoundedCornerShape(14.dp)).border(2.dp, when { state.operations.session.message.isNotBlank() -> BrasaRed; index == pin.length -> BrasaFocus; else -> BrasaBorder }, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) { Text(if (index < pin.length) "•" else "", color = BrasaOrange, fontSize = BrasaType.page, fontWeight = FontWeight.Black) } }
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
             Column(verticalArrangement=Arrangement.spacedBy(BrasaSpacing.x1),horizontalAlignment=Alignment.CenterHorizontally){
-                listOf(listOf("1","2","3"),listOf("4","5","6"),listOf("7","8","9")).forEachIndexed{rowIndex,row->Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){row.forEachIndexed{index,digit->BrasaButton(digit,{addDigit(digit)},Modifier.width(74.dp).then(if(rowIndex==0&&index==0)Modifier.focusRequester(firstKey) else Modifier),enabled=!state.loading)}}}
-                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){BrasaButton("Apagar",{pin=pin.dropLast(1)},Modifier.width(148.dp),enabled=pin.isNotEmpty()&&!state.loading);BrasaButton("0",{addDigit("0")},Modifier.width(74.dp),enabled=!state.loading)}
+                listOf(listOf("1","2","3"),listOf("4","5","6"),listOf("7","8","9")).forEachIndexed{rowIndex,row->Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){row.forEachIndexed{index,digit->BrasaButton(digit,{addDigit(digit)},Modifier.width(74.dp).then(if(rowIndex==0&&index==0)Modifier.focusRequester(firstKey) else Modifier),enabled=!state.operations.session.loading)}}}
+                Row(horizontalArrangement=Arrangement.spacedBy(BrasaSpacing.x1)){BrasaButton("Apagar",{pin=pin.dropLast(1)},Modifier.width(148.dp),enabled=pin.isNotEmpty()&&!state.operations.session.loading);BrasaButton("0",{addDigit("0")},Modifier.width(74.dp),enabled=!state.operations.session.loading)}
             }
             Spacer(Modifier.height(BrasaSpacing.x2))
-            if (state.message.isNotBlank()) Text(state.message, color = BrasaRed, fontSize = BrasaType.metadata, fontWeight = FontWeight.Bold) else Text(if (state.loading) "Verificando…" else "A entrada será confirmada automaticamente.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
+            if (state.operations.session.message.isNotBlank()) Text(state.operations.session.message, color = BrasaRed, fontSize = BrasaType.metadata, fontWeight = FontWeight.Bold) else Text(if (state.operations.session.loading) "Verificando…" else "A entrada será confirmada automaticamente.", color = BrasaTextMuted, fontSize = BrasaType.metadata)
             Spacer(Modifier.height(BrasaSpacing.x2))
             BrasaButton("Voltar", onBack, style = BrasaButtonStyle.Ghost)
         }

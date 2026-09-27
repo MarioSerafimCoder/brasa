@@ -5,11 +5,31 @@ import path from "node:path";
 import { checkProviderHealth, loadProviderHealth, saveProviderHealth } from "../server/provider-health.mjs";
 import { createMetadataRetryStore } from "../server/metadata-retry-store.mjs";
 import { resolveMovieAvailability } from "./sync-movies.mjs";
+import { chooseSearchResult, findMovieOnOmdb } from "../server/sync-metadata-providers.mjs";
 
 const rootDir = await fs.mkdtemp(path.join(os.tmpdir(), "brasa-recovery-"));
 let now = Date.parse("2026-07-11T12:00:00.000Z");
 
 try {
+    assert.equal(chooseSearchResult([], "2001"), null);
+    const candidates = [{ imdbID: "first", Year: "1990" }, { imdbID: "exact", Year: "2001" }];
+    assert.equal(chooseSearchResult(candidates, "2001").imdbID, "exact");
+    assert.equal(chooseSearchResult(candidates).imdbID, "first");
+    const originalFetch = globalThis.fetch;
+    const requests = [];
+    try {
+        globalThis.fetch = async url => {
+            requests.push(new URL(url));
+            const params = new URL(url).searchParams;
+            const data = params.has("s") ? { Search: candidates }
+                : params.has("i") ? { Type: "movie", imdbID: params.get("i") }
+                : { Response: "False" };
+            return { ok: true, json: async () => data };
+        };
+        const found = await findMovieOnOmdb({ apiKey: "test", parsed: { title: "Example", year: "2001", candidates: [] }, override: {} });
+        assert.equal(found.imdbID, "exact", "fallback por busca deve preservar a escolha pelo ano");
+        assert.equal(requests.at(-1).searchParams.get("i"), "exact");
+    } finally { globalThis.fetch = originalFetch; }
     const fakeFetch = async (url) => ({ ok: !String(url).includes("opensubtitles"), status: String(url).includes("opensubtitles") ? 503 : 200 });
     const checked = await checkProviderHealth({ omdbKey: "secret-omdb", tmdbKey: "secret-tmdb", openSubtitlesKey: "secret-subtitle" }, { fetch: fakeFetch });
     assert.equal(checked.providers.omdb.available, true);

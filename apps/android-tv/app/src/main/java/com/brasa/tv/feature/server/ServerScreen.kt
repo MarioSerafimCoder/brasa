@@ -59,7 +59,7 @@ fun ServerScreen(state: BrasaUiState, container: AppContainer, onPair: () -> Uni
             Column(
                 Modifier.width(760.dp).background(BrasaSurface.copy(alpha = .95f), RoundedCornerShape(16.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(16.dp)).padding(24.dp),
             ) {
-                Text(if (state.loading) "2  Conectando ao computador…" else if (state.server != null) "3  Conectado a ${state.server.name}" else "1  Informe o endereço do computador", color = if (state.server != null) Color(0xFF4ED18B) else Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(if (state.operations.session.loading) "2  Conectando ao computador…" else if (state.server != null) "3  Conectado a ${state.server.name}" else "1  Informe o endereço do computador", color = if (state.server != null) Color(0xFF4ED18B) else Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(14.dp))
                 if (servers.isNotEmpty()) {
                     Text("Computadores encontrados", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
@@ -80,18 +80,18 @@ fun ServerScreen(state: BrasaUiState, container: AppContainer, onPair: () -> Uni
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     BrasaTextField(address, { address = it }, Modifier.weight(1f), "Ex.: 192.168.1.20:4173")
                     BrasaButton(
-                        if (state.loading) "Conectando…" else "Conectar",
+                        if (state.operations.session.loading) "Conectando…" else "Conectar",
                         { onConnect(address) },
-                        enabled = !state.loading && address.isNotBlank(),
+                        enabled = !state.operations.session.loading && address.isNotBlank(),
                         style = BrasaButtonStyle.Primary,
                     )
                 }
                 if (state.connectionProblem == com.brasa.tv.core.network.ConnectionProblem.REVOKED) {
                     BrasaButton("Parear novamente", onPair, style = BrasaButtonStyle.Primary)
                 }
-                if (state.message.isNotBlank()) {
+                if (state.operations.session.message.isNotBlank()) {
                     Spacer(Modifier.height(12.dp))
-                    Text(state.message, color = BrasaRed, fontSize = 15.sp)
+                    Text(state.operations.session.message, color = BrasaRed, fontSize = 15.sp)
                 }
             }
         }

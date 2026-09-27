@@ -58,11 +58,13 @@ import com.brasa.tv.designsystem.BrasaType
 import com.brasa.tv.designsystem.BrasaIcon
 
 @Composable
-fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -> Unit, onExit: () -> Unit) {
+fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -> Unit, onExit: () -> Unit, preferredProfileId: String = "") {
     val firstFocus = remember { FocusRequester() }
+    val preferredId = state.profile?.id?.ifBlank { null } ?: preferredProfileId
+    val preferredIndex = state.profiles.indexOfFirst { it.id == preferredId }.takeIf { it >= 0 } ?: 0
     var confirmExit by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { onLoad() }
-    LaunchedEffect(state.profiles) { if (state.profiles.isNotEmpty()) runCatching { firstFocus.requestFocus() } }
+    LaunchedEffect(state.profiles, preferredIndex) { if (state.profiles.isNotEmpty()) runCatching { firstFocus.requestFocus() } }
     AmbientBackground {
         Column(Modifier.fillMaxSize().padding(horizontal = BrasaSpacing.safe), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             BrasaLogo()
@@ -73,10 +75,10 @@ fun ProfileScreen(state: BrasaUiState, onLoad: () -> Unit, onSelect: (Profile) -
             Spacer(Modifier.height(BrasaSpacing.x6))
             Row(horizontalArrangement = Arrangement.spacedBy(BrasaSpacing.x4)) {
                 state.profiles.forEachIndexed { index, profile ->
-                    ProfileAvatar(profile, { onSelect(profile) }, if (index == 0) Modifier.focusRequester(firstFocus) else Modifier)
+                    ProfileAvatar(profile, { onSelect(profile) }, if (index == preferredIndex) Modifier.focusRequester(firstFocus) else Modifier)
                 }
             }
-            if (state.loading) { Spacer(Modifier.height(BrasaSpacing.x3)); Text("Carregando perfis…", color = BrasaTextMuted, fontSize = BrasaType.metadata) }
+            if (state.operations.session.loading) { Spacer(Modifier.height(BrasaSpacing.x3)); Text("Carregando perfis…", color = BrasaTextMuted, fontSize = BrasaType.metadata) }
             Spacer(Modifier.height(BrasaSpacing.x4))
             BrasaButton("Encerrar aplicativo", { confirmExit = true }, style = BrasaButtonStyle.Ghost, leadingIcon = BrasaIcon.Power)
         }

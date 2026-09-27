@@ -121,7 +121,7 @@ class DetailsPlaybackReturnTest {
         listOf(.8f, .9f, 1f, 1.1f).forEach { testedScale ->
             compose.runOnIdle { scale = testedScale }
             compose.waitForIdle()
-            listOf("Minha lista", "Assistir do início", "Mais opções").forEach {
+            listOf("Minha lista", "Mais opções").forEach {
                 compose.onNodeWithText(it).assertIsDisplayed()
             }
         }
@@ -129,19 +129,22 @@ class DetailsPlaybackReturnTest {
 
     @Test fun remoteMovesAcrossDetailsActionsAndOpensMoreOptions() {
         val movie = CatalogItem(id = "focus", mediaKey = "movie:focus", title = "Filme", streamUrl = "/movie")
+        var startRequested = false
         compose.setContent {
             RemoteInputMode()
             BrasaTheme {
-                DetailsScreen(BrasaUiState(selected = movie), onPlay = {}, onPlayFromStart = {}, onPrefetch = {},
+                DetailsScreen(BrasaUiState(selected = movie), onPlay = {}, onPlayFromStart = { startRequested = true }, onPrefetch = {},
                     onCancelPreload = {}, onFavorite = {}, onSignal = { _, _ -> }, onBack = {})
             }
         }
         compose.onNodeWithText("Assistir").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Minha lista").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
-        compose.onNodeWithText("Assistir do início").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Mais opções").assertIsFocused().performClick()
-        compose.onAllNodesWithText("Mais opções").onLast().assertIsDisplayed()
+        compose.onNodeWithText("Assistir do início").assertIsDisplayed()
         compose.onNodeWithText("Fechar").assertIsDisplayed().performClick()
         compose.onNodeWithText("Mais opções").assertIsFocused()
+        compose.onNodeWithText("Mais opções").performClick()
+        compose.onNodeWithText("Assistir do início").performClick()
+        compose.runOnIdle { assertTrue(startRequested) }
     }
 }

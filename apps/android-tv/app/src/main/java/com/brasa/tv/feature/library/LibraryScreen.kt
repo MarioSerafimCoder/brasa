@@ -23,9 +23,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.withFrameNanos
 import com.brasa.tv.designsystem.rememberCatalogFocus
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -75,6 +78,13 @@ fun LibraryScreen(
     var order by rememberSaveable(type, state.profile?.id) { mutableStateOf(CatalogOrder.ORIGINAL) }
     var unwatchedOnly by rememberSaveable(type, state.profile?.id) { mutableStateOf(false) }
     val focusMemory = rememberCatalogFocus("$type:${state.profile?.id}")
+    val filtersFocus = remember { FocusRequester() }
+    LaunchedEffect(type, state.profile?.id) {
+        if (focusMemory.selectedKey.isBlank()) {
+            withFrameNanos { }
+            runCatching { filtersFocus.requestFocus() }
+        }
+    }
     val items = remember(source, selectedGenre, order, unwatchedOnly) {
         orderCatalog(if (selectedGenre == "Todos") source else source.filter { item -> item.genres.any { genreIdentity(it) == genreIdentity(selectedGenre) } }, order, unwatchedOnly)
     }
@@ -121,6 +131,7 @@ fun LibraryScreen(
                     BrasaButton(
                         genreLabel(genre),
                         { selectedGenre = genre },
+                        modifier = if (genre == "Todos") Modifier.focusRequester(filtersFocus) else Modifier,
                         style = if (genreIdentity(selectedGenre) == genreIdentity(genre)) BrasaButtonStyle.Primary else BrasaButtonStyle.Ghost,
                     )
                 }

@@ -157,7 +157,7 @@ fun BrasaButton(
     }
     val border = when {
         focused && style == BrasaButtonStyle.Primary -> Color.White.copy(alpha = .75f)
-        focused -> BrasaOrange
+        focused -> Color.White
         style == BrasaButtonStyle.Ghost -> BrasaBorder.copy(alpha = .45f)
         else -> BrasaBorder
     }
@@ -225,13 +225,12 @@ fun BrasaTopBar(
 
 @Composable
 private fun NavItem(text: String, active: Boolean, onClick: () -> Unit, icon: BrasaIcon? = null) {
-    BrasaButton(
-        text = text,
-        onClick = onClick,
-        modifier = Modifier.padding(horizontal = 4.dp),
-        style = if (active) BrasaButtonStyle.Secondary else BrasaButtonStyle.Ghost,
-        leadingIcon = icon,
-    )
+    Column(Modifier.padding(horizontal = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        BrasaButton(text = text, onClick = onClick, style = BrasaButtonStyle.Ghost, leadingIcon = icon)
+        Spacer(Modifier.height(2.dp))
+        Box(Modifier.fillMaxWidth().height(3.dp).background(
+            if (active) BrasaOrange else Color.Transparent, RoundedCornerShape(50)))
+    }
 }
 
 @Composable

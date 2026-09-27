@@ -69,4 +69,15 @@ class TrackSelectionTest {
         assertEquals("Português (Brasil) · 5.1", playbackTracks(audioTracks, C.TRACK_TYPE_AUDIO).single().label)
         assertEquals("Inglês", playbackTracks(subtitleTracks, C.TRACK_TYPE_TEXT).single().label)
     }
+    @Test fun subtitleLabelsDoNotRepeatLanguageOrEnglishQualifiers() {
+        val forced = Format.Builder().setSampleMimeType(MimeTypes.TEXT_VTT).setLanguage("pt-BR")
+            .setLabel("Português · Portuguese (Brazil) [Forced]").build()
+        val accessible = Format.Builder().setSampleMimeType(MimeTypes.TEXT_VTT).setLanguage("pt")
+            .setLabel("Português SDH").build()
+        val named = Format.Builder().setSampleMimeType(MimeTypes.TEXT_VTT).setLanguage("en")
+            .setLabel("Diretor").build()
+        assertEquals("Português (Brasil) · Forçada", trackLabel(forced, C.TRACK_TYPE_TEXT))
+        assertEquals("Português · SDH", trackLabel(accessible, C.TRACK_TYPE_TEXT))
+        assertEquals("Inglês · Diretor", trackLabel(named, C.TRACK_TYPE_TEXT))
+    }
 }

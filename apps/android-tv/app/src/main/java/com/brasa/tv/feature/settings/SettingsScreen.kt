@@ -57,6 +57,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val categoryScroll = rememberScrollState()
     val contentFocus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { withFrameNanos { }; runCatching { contentFocus.requestFocus() } }
     LaunchedEffect(category) { categoryScroll.scrollTo(0); confirmForget = false }
     BackHandler { if (confirmForget) confirmForget = false else onBack() }
     LaunchedEffect(Unit) { onLoadCache() }
@@ -102,7 +103,7 @@ fun SettingsScreen(
                                 if (progressStatus.isNotBlank()) Text(progressStatus, color = BrasaTextMuted, fontSize = BrasaType.metadata)
                                 BrasaButton("Histórico de reprodução", onPlaybackHistory, Modifier.fillMaxWidth())
                                 StatusLine("Cache utilizado", formatBytes(state.cacheBytes))
-                                BrasaButton(if (state.loading) "Limpando cache…" else "Limpar cache", onClearCache, Modifier.fillMaxWidth(), enabled = !state.loading)
+                                BrasaButton(if (state.operations.cache.loading) "Limpando cache…" else "Limpar cache", onClearCache, Modifier.fillMaxWidth(), enabled = !state.operations.cache.loading)
                             }
                         }
                         SettingsCategory.INTERFACE -> {

@@ -105,7 +105,7 @@ fun DetailsScreen(
     val seasonState = androidx.compose.foundation.lazy.rememberLazyListState()
     val seasonKeys = item.seasons.map { "season:" + it.seasonNumber }
     val similarKeys = similar.map { "similar:" + it.mediaKey }
-    val focusKeys = listOf("play", "start", "more") + seasonKeys + episodeKeys + similarKeys
+    val focusKeys = listOf("play", "more") + seasonKeys + episodeKeys + similarKeys
     focusMemory.RestoreItems(focusKeys) { index ->
         val key = focusKeys[index]
         val section = when { key in similarKeys -> if (item.seasons.isEmpty()) 1 else 2; key in seasonKeys || key in episodeKeys -> 1; else -> 0 }
@@ -168,7 +168,6 @@ fun DetailsScreen(
                             leadingIcon = BrasaIcon.Play,
                         )
                         BrasaButton(if (item.favorite || item.inMyList) "Remover da lista" else "Minha lista", onFavorite, leadingIcon = if (item.favorite || item.inMyList) BrasaIcon.Check else BrasaIcon.Add)
-                        BrasaButton("Assistir do início", { focusMemory.select("start"); keepPreload = true; onPlayFromStart(firstPlayable) }, focusMemory.modifier("start"))
                         BrasaButton("Mais opções", { focusMemory.select("more"); showMoreOptions = true }, focusMemory.modifier("more"), style = BrasaButtonStyle.Ghost, leadingIcon = BrasaIcon.More)
                     }
                     Spacer(Modifier.height(15.dp))
@@ -231,18 +230,22 @@ fun DetailsScreen(
             }
         }
     }
-    if (showMoreOptions) MoreOptionsDialog(item, onSignal, onDismiss = { showMoreOptions = false; focusMemory.restore("more") })
+    if (showMoreOptions) MoreOptionsDialog(item, onSignal,
+        onPlayFromStart = { showMoreOptions = false; focusMemory.select("more"); keepPreload = true; onPlayFromStart(firstPlayable) },
+        onDismiss = { showMoreOptions = false; focusMemory.restore("more") })
 }
 
 @Composable
-private fun MoreOptionsDialog(item: CatalogItem, onSignal: (String, Boolean) -> Unit, onDismiss: () -> Unit) {
+private fun MoreOptionsDialog(item: CatalogItem, onSignal: (String, Boolean) -> Unit, onPlayFromStart: () -> Unit, onDismiss: () -> Unit) {
     val first = remember { FocusRequester() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .72f)), contentAlignment = Alignment.Center) {
             Column(Modifier.width(580.dp).background(BrasaSurface, RoundedCornerShape(20.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(20.dp)).padding(28.dp)) {
                 Text("Mais opções", color = BrasaText, fontSize = BrasaType.section, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
-                BrasaButton(if (item.reaction == "like") "Gostei — Ativado" else "Gostei — Desativado", { onSignal("like", item.reaction != "like"); onDismiss() }, Modifier.fillMaxWidth().focusRequester(first), style = if (item.reaction == "like") BrasaButtonStyle.Primary else BrasaButtonStyle.Secondary)
+                BrasaButton("Assistir do início", onPlayFromStart, Modifier.fillMaxWidth().focusRequester(first), leadingIcon = BrasaIcon.Play)
+                Spacer(Modifier.height(8.dp))
+                BrasaButton(if (item.reaction == "like") "Gostei — Ativado" else "Gostei — Desativado", { onSignal("like", item.reaction != "like"); onDismiss() }, Modifier.fillMaxWidth(), style = if (item.reaction == "like") BrasaButtonStyle.Primary else BrasaButtonStyle.Secondary)
                 Spacer(Modifier.height(8.dp))
                 BrasaButton(if (item.reaction == "not-for-me") "Não é para mim — Ativado" else "Não é para mim — Desativado", { onSignal("not-for-me", item.reaction != "not-for-me"); onDismiss() }, Modifier.fillMaxWidth(), style = if (item.reaction == "not-for-me") BrasaButtonStyle.Primary else BrasaButtonStyle.Secondary)
                 Spacer(Modifier.height(8.dp))
@@ -257,8 +260,8 @@ private fun MoreOptionsDialog(item: CatalogItem, onSignal: (String, Boolean) -> 
                 BrasaButton("Fechar", onDismiss, Modifier.fillMaxWidth(), style = BrasaButtonStyle.Ghost)
             }
         }
+        LaunchedEffect(Unit) { withFrameNanos { }; runCatching { first.requestFocus() } }
     }
-    LaunchedEffect(Unit) { first.requestFocus() }
 }
 
 @Composable

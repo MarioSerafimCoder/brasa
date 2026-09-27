@@ -70,11 +70,11 @@ fun PairingScreen(state: BrasaUiState, onStart: (String) -> Unit, onBack: () -> 
                     Text("●  Aguardando aprovação…", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(5.dp))
                     Text(if (pairing.remainingMs > 0) "Expira em ${pairing.remainingMs / 60000}:${((pairing.remainingMs / 1000) % 60).toString().padStart(2, '0')}" else "O código expira em poucos minutos.", color = BrasaTextMuted, fontSize = 15.sp)
-                    if (state.message.isNotBlank()) { Spacer(Modifier.height(20.dp)); BrasaButton("Gerar outro código", { onStart(name) }) }
+                    if (state.operations.session.message.isNotBlank()) { Spacer(Modifier.height(20.dp)); BrasaButton("Gerar outro código", { onStart(name) }) }
                 }
-                if (state.message.isNotBlank()) {
+                if (state.operations.session.message.isNotBlank()) {
                     Spacer(Modifier.height(13.dp))
-                    Text(state.message, color = BrasaRed, fontSize = 15.sp)
+                    Text(state.operations.session.message, color = BrasaRed, fontSize = 15.sp)
                 }
             }
             Spacer(Modifier.height(15.dp))

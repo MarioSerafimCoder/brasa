@@ -9,7 +9,9 @@ import { spawn } from "node:child_process";
 const root = await fs.mkdtemp(path.join(os.tmpdir(), "brasa-episode-scan-"));
 try {
     for (const folder of ["scripts", "server", "data", "assets/series/Lanternas"]) await fs.mkdir(path.join(root, folder), { recursive: true });
-    for (const file of ["scripts/sync-movies.mjs", "server/library-config.mjs", "server/metadata-retry-store.mjs"])
+    for (const file of ["scripts/sync-movies.mjs", "server/library-config.mjs", "server/metadata-retry-store.mjs",
+        "server/sync-metadata-providers.mjs", "server/sync-normalization.mjs", "server/sync-movie-scanner.mjs",
+        "server/sync-catalog-writer.mjs", "server/sync-movie-artwork.mjs"])
         await fs.copyFile(file, path.join(root, file));
     await fs.writeFile(path.join(root, "scripts/setup-env.mjs"), "export async function ensureEnvFile() {}\n");
     await fs.writeFile(path.join(root, "server/media-tools.mjs"), "export async function getMediaToolsStatus() { return {ffmpegAvailable:false}; }\n");

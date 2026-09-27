@@ -131,6 +131,8 @@ Os arquivos reais `data/network-settings.json`, `data/devices.json` e seus backu
 - `node scripts/test-tv-focus.mjs`
 - `npm test`
 
+As verificações de push e pull request estão em `.github/workflows/ci.yml`: testes Node no Windows e testes unitários, lint e build debug Android no Linux, sem TV física. No Windows local, use `apps/android-tv/scripts/test-windows.ps1` para a validação Android. Consulte a [refatoração estrutural da TV](docs/refatoracao-estrutural-tv-2026-09-27.md) para os limites dos módulos, resultados e validação física pendente.
+
 ## Diagnóstico e convivência da rede
 
 O painel **Rede e dispositivos** mostra a interface ativa do computador, tipo de conexão, velocidade do link, IP, MAC, gateway, máscara e URL do servidor. Use esses dados para criar uma reserva DHCP no roteador; o BRasa não altera a configuração do roteador. A reserva evita que o endereço usado pela TV mude após uma reinicialização.
