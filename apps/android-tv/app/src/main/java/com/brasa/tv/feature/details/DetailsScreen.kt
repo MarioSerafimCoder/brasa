@@ -4,8 +4,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -123,6 +126,10 @@ fun DetailsScreen(
         if (!initialFocusSet && focusMemory.selectedKey.isBlank()) {
             withFrameNanos { }
             initialFocusSet = runCatching { playFocus.requestFocus() }.getOrDefault(false)
+            if (initialFocusSet) {
+                withFrameNanos { }
+                detailsListState.scrollToItem(0)
+            }
         }
     }
     DisposableEffect(item.mediaKey) { onDispose { if (!keepPreload) onCancelPreload() } }
@@ -239,8 +246,8 @@ fun DetailsScreen(
 private fun MoreOptionsDialog(item: CatalogItem, onSignal: (String, Boolean) -> Unit, onPlayFromStart: () -> Unit, onDismiss: () -> Unit) {
     val first = remember { FocusRequester() }
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .72f)), contentAlignment = Alignment.Center) {
-            Column(Modifier.width(580.dp).background(BrasaSurface, RoundedCornerShape(20.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(20.dp)).padding(28.dp)) {
+        BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .72f)), contentAlignment = Alignment.Center) {
+            Column(Modifier.width(580.dp).heightIn(max = maxHeight - 32.dp).background(BrasaSurface, RoundedCornerShape(20.dp)).border(1.dp, BrasaBorder, RoundedCornerShape(20.dp)).verticalScroll(rememberScrollState()).padding(28.dp)) {
                 Text("Mais opções", color = BrasaText, fontSize = BrasaType.section, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))
                 BrasaButton("Assistir do início", onPlayFromStart, Modifier.fillMaxWidth().focusRequester(first), leadingIcon = BrasaIcon.Play)

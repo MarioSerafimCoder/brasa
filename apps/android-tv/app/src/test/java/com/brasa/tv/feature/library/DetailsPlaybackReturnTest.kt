@@ -124,6 +124,9 @@ class DetailsPlaybackReturnTest {
             listOf("Minha lista", "Mais opções").forEach {
                 compose.onNodeWithText(it).assertIsDisplayed()
             }
+            compose.onNodeWithText("Mais opções").performClick()
+            compose.onNodeWithText("Assistir do início").assertIsDisplayed()
+            compose.onNodeWithText("Fechar").performScrollTo().assertIsDisplayed().performClick()
         }
     }
 
@@ -138,6 +141,7 @@ class DetailsPlaybackReturnTest {
             }
         }
         compose.onNodeWithText("Assistir").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
+        assertTrue(compose.onNodeWithText("Voltar").fetchSemanticsNode().boundsInRoot.top >= 0f)
         compose.onNodeWithText("Minha lista").assertIsFocused().performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithText("Mais opções").assertIsFocused().performClick()
         compose.onNodeWithText("Assistir do início").assertIsDisplayed()
