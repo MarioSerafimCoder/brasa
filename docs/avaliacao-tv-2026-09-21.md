@@ -63,7 +63,7 @@ Evidências: [DetailsScreen.kt](<C:/Users/pc mario/Pictures/brasa-main/apps/andr
 
 **Aceite:** nenhum corte nas escalas 80/90/100/110%, inclusive título longo e sinopse expandida; todas as ações alcançáveis pelas setas.
 
-Evidências: [DetailsScreen.kt](<C:/Users/pc mario/Pictures/brasa-main/apps/android-tv/app/src/main/java/com/brasa/tv/feature/details/DetailsScreen.kt:113>) e [captura dos detalhes](<C:/Users/pc mario/Pictures/brasa-main/preview/android-tv/1.0.35/03-detalhes-serie.png>).
+Evidência de código: [DetailsScreen.kt](../apps/android-tv/app/src/main/java/com/brasa/tv/feature/details/DetailsScreen.kt). A captura histórica de 1.0.35 foi retirada; veja a [galeria atual](../preview/README.md).
 
 ### 5. Foco de entrada e destino de “Início” precisam ser previsíveis — alta
 
@@ -73,7 +73,7 @@ Evidências: [DetailsScreen.kt](<C:/Users/pc mario/Pictures/brasa-main/apps/andr
 
 **Aceite:** cada botão leva ao destino que seu nome promete; abrir Busca e pressionar OK permite pesquisar; retorno de detalhes conserva posição.
 
-Evidências: [SearchScreen.kt](<C:/Users/pc mario/Pictures/brasa-main/apps/android-tv/app/src/main/java/com/brasa/tv/feature/search/SearchScreen.kt:103>), [CatalogFocusMemory.kt](<C:/Users/pc mario/Pictures/brasa-main/apps/android-tv/app/src/main/java/com/brasa/tv/designsystem/CatalogFocusMemory.kt>) e [captura da busca](<C:/Users/pc mario/Pictures/brasa-main/preview/android-tv/1.0.35/15-busca.png>). A orientação oficial também enfatiza navegação completa e previsível pelo [controle direcional](https://developer.android.com/training/tv/get-started/navigation).
+Evidências de código: [SearchScreen.kt](../apps/android-tv/app/src/main/java/com/brasa/tv/feature/search/SearchScreen.kt) e [CatalogFocusMemory.kt](../apps/android-tv/app/src/main/java/com/brasa/tv/designsystem/CatalogFocusMemory.kt). A captura histórica de 1.0.35 foi retirada. A orientação oficial também enfatiza navegação completa e previsível pelo [controle direcional](https://developer.android.com/training/tv/get-started/navigation).
 
 ## Melhorar reprodução e desempenho
 
@@ -180,4 +180,3 @@ A documentação também precisa acompanhar o código: o README principal descre
 | 5 — expansão | QR/celular, integração com tela inicial e otimizações de biblioteca | Benefício e custo medidos no uso doméstico |
 
 A experiência de TV deve orientar a aceitação: abrir, escolher, assistir, pausar e voltar com poucos comandos, mantendo qualidade e o lugar em que a pessoa estava.
-

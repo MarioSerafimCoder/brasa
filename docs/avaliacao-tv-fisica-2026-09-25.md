@@ -30,17 +30,7 @@ Na versão final 1.0.40, instalada por atualização sem apagar dados, foi repet
 
 A compilação assinada passou com 117 testes, zero falhas e zero erros de lint (50 avisos e uma sugestão permanecem). O APK foi publicado no distribuidor local de atualizações. SHA-256: `70BEB4EFF63ABF4446218981A28A7706B6DC500FC746F90C802B5D2A6A0904E3`.
 
-Evidências locais, sem edição das imagens:
-
-- [Menu original com texto cortado](../preview/android-tv/1.0.37/review-home-initial.png).
-- [Detalhes originais sem contraste](../preview/android-tv/1.0.37/review-details-top.png).
-- [Menu em 110% com Configurações focado](../preview/android-tv/1.0.38/menu-110-settings-focused.png).
-- [Configurações em 110%](../preview/android-tv/1.0.38/interface-110-after.png).
-- [Detalhes após correção](../preview/android-tv/1.0.38/details-80-after.png).
-- [Episódio selecionado após voltar do player](../preview/android-tv/1.0.39/final-episode-return.png).
-- [Busca editada sem mensagem técnica](../preview/android-tv/1.0.40/search-edited-query.png).
-- [Resultado alcançado com as setas](../preview/android-tv/1.0.40/search-result-focused.png).
-- [Detalhes na versão final](../preview/android-tv/1.0.40/details-final.png).
+As capturas antigas desta avaliação foram retiradas da árvore atual do repositório em 27/09/2026. O relato acima permanece como histórico dos testes; as [capturas atuais do APK 1.0.43](../preview/README.md) documentam a interface mais recente.
 
 ## Melhorias seguintes
 

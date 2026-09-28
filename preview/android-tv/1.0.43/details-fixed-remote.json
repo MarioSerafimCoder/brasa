@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "file": "details-fixed-remote.png",
+  "capturedAt": "2026-09-27T23:43:45.443Z",
+  "packageName": "com.brasa.tv",
+  "versionName": "1.0.43",
+  "versionCode": 44,
+  "androidApi": 30,
+  "width": 1920,
+  "height": 1080,
+  "density": "Physical density: 320",
+  "source": "physical-device-apk",
+  "mode": "current-app-state",
+  "initialRoute": null,
+  "navigationKeys": [],
+  "uiScale": "app-setting-not-overridden",
+  "imageModified": false,
+  "note": "PNG direto do APK. Nenhuma reconstrução HTML nem edição da imagem.",
+  "sha256": "be3e6923b70f2cd156bc32329979bebecf2f8b05592581cdae82fd2b0ce61de1"
+}

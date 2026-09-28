@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "file": "details-witch-110.png",
+  "capturedAt": "2026-09-27T23:50:06.271Z",
+  "packageName": "com.brasa.tv",
+  "versionName": "1.0.43",
+  "versionCode": 44,
+  "androidApi": 30,
+  "width": 1920,
+  "height": 1080,
+  "density": "Physical density: 320",
+  "source": "physical-device-apk",
+  "mode": "current-app-state",
+  "initialRoute": null,
+  "navigationKeys": [],
+  "uiScale": "app-setting-not-overridden",
+  "imageModified": false,
+  "note": "PNG direto do APK. Nenhuma reconstrução HTML nem edição da imagem.",
+  "sha256": "b1e83aed556c811550fa4a297a7e00610c2ffc77b65ee9046840f8953b34b7e7"
+}
